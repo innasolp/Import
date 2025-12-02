@@ -3,5 +3,6 @@
 ################################################################################
 
 /.vs
-/Import.Factory.Interfaces/bin/Debug/net8.0
-/Import.Factory.Interfaces/obj
+*/bin/Debug/net8.0
+*/obj
+/Import

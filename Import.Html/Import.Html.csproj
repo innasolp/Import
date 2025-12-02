@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <Configurations>Debug;Release</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="1.2.0" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="set importDir=$(SolutionDir)\Import\Html&#xD;&#xA;if not exist &quot;%25importDir%25&quot; mkdir  &quot;%25importDir%25&quot;&#xD;&#xA;xcopy /E /Y  &quot;$(TargetDir)&quot; &quot;%25importDir%25&quot;" />
+  </Target>
+
+</Project>

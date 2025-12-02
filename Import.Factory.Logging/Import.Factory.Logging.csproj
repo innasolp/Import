@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Log.Interceptors" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.Interfaces\Import.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.Settings.Interfaces\Import.Settings.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>

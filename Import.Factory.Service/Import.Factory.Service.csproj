@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Import.Factory.Logging\Import.Factory.Logging.csproj" />
+    <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
+  </ItemGroup>
+	
+</Project>
