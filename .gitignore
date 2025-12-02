@@ -1,0 +1,7 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Import.Factory.Interfaces/bin/Debug/net8.0
+/Import.Factory.Interfaces/obj
