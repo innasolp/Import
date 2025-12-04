@@ -88,15 +88,6 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Importer {0} not started.Warning : {1}..
-        /// </summary>
-        internal static string LoaderNotStartedWarning {
-            get {
-                return ResourceManager.GetString("LoaderNotStartedWarning", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Loader reset successfully..
         /// </summary>
         internal static string LoaderResetSuccessfully {
@@ -124,24 +115,6 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Process url {0} failed.
-        /// </summary>
-        internal static string ProcessUrlFailedError {
-            get {
-                return ResourceManager.GetString("ProcessUrlFailedError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Process url {0} not complete. Warning : {1}..
-        /// </summary>
-        internal static string ProcessUrlNotCompleteWarning {
-            get {
-                return ResourceManager.GetString("ProcessUrlNotCompleteWarning", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Request url {0} failed with error {1}. Loader will be paused on {2} milliseconds..
         /// </summary>
         internal static string RequestFailedAndLoaderWillBePaused {
@@ -160,47 +133,20 @@ namespace Import.Service {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Service {0} failed with error {1}..
+        /// </summary>
+        internal static string ServiceFailedWithError {
+            get {
+                return ResourceManager.GetString("ServiceFailedWithError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Service {0} started..
         /// </summary>
         internal static string ServiceStarted {
             get {
                 return ResourceManager.GetString("ServiceStarted", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Service {0} was cancelled..
-        /// </summary>
-        internal static string ServiceWasCancelled {
-            get {
-                return ResourceManager.GetString("ServiceWasCancelled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Service {0} was cancelled. {1}..
-        /// </summary>
-        internal static string ServiceWasCancelledOn {
-            get {
-                return ResourceManager.GetString("ServiceWasCancelledOn", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Service {0} was cancelled on loading from url {1}..
-        /// </summary>
-        internal static string ServiceWasCancelledOnLoadingFromUrl {
-            get {
-                return ResourceManager.GetString("ServiceWasCancelledOnLoadingFromUrl", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Service {0} was cancelled on loading from url {1} by error {2}..
-        /// </summary>
-        internal static string ServiceWasCancelledOnLoadingFromUrlByError {
-            get {
-                return ResourceManager.GetString("ServiceWasCancelledOnLoadingFromUrlByError", resourceCulture);
             }
         }
         

@@ -1,8 +1,8 @@
 ﻿using Import.Interfaces;
+using Import.Service.Test.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit.Abstractions;
-using Import.Service.Test.Infrastructure;
 
 namespace Import.Service.Test;
 
@@ -37,10 +37,9 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.SetupStartSuccess();
 
         var token = new CancellationTokenSource();
+        await service.StartServiceInFactoryAsync(token.Token);
 
-        var task = service.StartServiceInFactoryAsync(token.Token);
-
-        await Task.Delay(2000);
+        await Task.Delay(500);
 
         LoggerMock.VerifyInfo(LogResourceManager.GetString("ServiceStarted"), name);
     }
@@ -60,32 +59,78 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         await token.CancelAsync();
      
-        await Task.Delay(1000);        
+        await Task.Delay(500);        
 
         await task.WaitAsync(token.Token); 
 
         LoggerMock.VerifyInfo(LogResourceManager.GetString("ServiceWasStopped"), name);
     }
 
-    protected async Task ImportFailedWhenLoaderAlwaysNeedResetingAsync()        
+    protected async Task LogResetingWarningIfLoaderServiceNeedResetingAsync()        
     {
-        var name = Guid.NewGuid().ToString();
-        var service = CreateService(name);
+        var service = CreateService($"{Guid.NewGuid()}");
 
-        LoaderMock.Setup(l => l.Name).Returns(Guid.NewGuid().ToString());
+        LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
         var requestData = new object();
         LoaderMock.SetupGetRequestData(requestData);
 
-        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).Returns(
-            (string url, object? data, CancellationToken token) =>
-                {
-                    throw new LoaderServiceException($"{url} failed.", LoaderServiceAction.Reset);
-                }
-            );
+        var loaderServiceException = new LoaderServiceException("loading failed.", LoaderServiceAction.Reset);
+        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).Throws(loaderServiceException);
 
         var token = new CancellationTokenSource();
-        var exception = await Assert.ThrowsAsync<Exception>(async ()=> await service.Start(token.Token));            
+        await service.Start(token.Token);
+
+        await Task.Delay(500);
+
+        await token.CancelAsync();
+
+        var messagePart = $"completed with error {loaderServiceException.Message} and need in reseting";
+        LoggerMock.VerifyWarning(messagePart, (v,m) => v.Contains(m));
+    }
+
+    
+
+    protected async Task LogServiceFailedErrorWhenUnhandledExceptionThrownAsync()
+    {
+        var service = CreateService($"{Guid.NewGuid()}");
+
+        LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
+        LoaderMock.SetupStartSuccess();
+
+        var requestData = new object();
+        LoaderMock.SetupGetRequestData(requestData);
+
+        var exception = new Exception("loading failed.");
+        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).Throws(exception);
+
+        var token = new CancellationTokenSource();
+        await service.Start(token.Token);
+        
+        LoggerMock.VerifyError(exception, (v,e)=>v.InnerException == e,
+            string.Format(LogResourceManager.GetString("ServiceFailedWithError"), [service.Name, exception.Message]), (v,m)=>v == m);
+    }
+
+    protected async Task LogRequestFailedAndLoaderWillBePausedWarningWhenForbiddenRequestAsync()
+    {
+        var innerException = new HttpRequestException(HttpRequestError.InvalidResponse, "request forbidden", statusCode: System.Net.HttpStatusCode.Forbidden);
+        var exception = new LoaderServiceException("request forbidden", innerException, LoaderServiceAction.Wait);
+
+        LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
+        LoaderMock.SetupStartSuccess();
+        LoaderMock.Setup(w => w.Load(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>())).Throws(exception);
+
+        var service = CreateService($"{Guid.NewGuid()}");
+
+        var token = new CancellationTokenSource();
+        var task = service.StartServiceInFactoryAsync(token.Token);
+
+        await Task.Delay(500);
+
+        var messagePart = "Loader will be paused";
+        LoggerMock.VerifyWarning(exception, (v,e) => v==e, messagePart, (v,m)=>v.Contains(messagePart));
+
+        await token.CancelAsync();
     }
 }

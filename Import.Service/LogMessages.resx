@@ -123,38 +123,17 @@
   <data name="ImportWasStoppedWebLoaderNotExecute" xml:space="preserve">
     <value>WebLoader {0} was not executed. Import was stopped.</value>
   </data>
-  <data name="ProcessUrlFailedError" xml:space="preserve">
-    <value>Process url {0} failed</value>
-  </data>
-  <data name="ProcessUrlNotCompleteWarning" xml:space="preserve">
-    <value>Process url {0} not complete. Warning : {1}.</value>
-  </data>
   <data name="RequestUrlFailedWithError" xml:space="preserve">
     <value>Request url {0} failed with error :  {1}</value>
   </data>
   <data name="ServiceStarted" xml:space="preserve">
     <value>Service {0} started.</value>
   </data>
-  <data name="ServiceWasCancelled" xml:space="preserve">
-    <value>Service {0} was cancelled.</value>
-  </data>
-  <data name="ServiceWasCancelledOn" xml:space="preserve">
-    <value>Service {0} was cancelled. {1}.</value>
-  </data>
-  <data name="ServiceWasCancelledOnLoadingFromUrl" xml:space="preserve">
-    <value>Service {0} was cancelled on loading from url {1}.</value>
-  </data>
-  <data name="ServiceWasCancelledOnLoadingFromUrlByError" xml:space="preserve">
-    <value>Service {0} was cancelled on loading from url {1} by error {2}.</value>
-  </data>
   <data name="ServiceWasStopped" xml:space="preserve">
     <value>Service {0} was stopped.</value>
   </data>
   <data name="LoaderIsReseting" xml:space="preserve">
     <value>Loader is reseting...</value>
-  </data>
-  <data name="LoaderNotStartedWarning" xml:space="preserve">
-    <value>Importer {0} not started.Warning : {1}.</value>
   </data>
   <data name="LoaderResetSuccessfully" xml:space="preserve">
     <value>Loader reset successfully.</value>
@@ -167,5 +146,8 @@
   </data>
   <data name="LoaderServiceResetingFailed" xml:space="preserve">
     <value>Loader service {0} was reset with error {1}.</value>
+  </data>
+  <data name="ServiceFailedWithError" xml:space="preserve">
+    <value>Service {0} failed with error {1}.</value>
   </data>
 </root>

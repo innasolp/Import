@@ -35,6 +35,18 @@ public static class TestExtensions
             (string url, object requestData, CancellationToken token) => LoadItemAsync(item));
     }
 
+    public static void SetupLoadItem<T>(this Mock<ILoaderService> loaderMock,
+        string itemUrl,
+        object requestData,
+        T item,
+        Func<T, Task<Stream>> loadItem)
+        where T : class
+    {
+        loaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).Returns(
+            (string url, object requestData, CancellationToken token) => loadItem(item));
+    }
+
+
     public static void SetupLoadItemsSuccessfull<T>(this Mock<ILoaderService> loaderMock,
         Dictionary<string,T> itemUrls,object requestData)
         where T : class
@@ -60,7 +72,7 @@ public static class TestExtensions
         webLoaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).Throws(exception);
     }
 
-    private static async Task<Stream> LoadItemAsync<T>(T item)
+    public static async Task<Stream> LoadItemAsync<T>(T item)
         where T : class
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(item);
