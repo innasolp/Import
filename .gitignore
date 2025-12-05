@@ -3,6 +3,9 @@
 ################################################################################
 
 /.vs
-*/bin/Debug/net8.0
+*/bin/Debug
+*/bin/debug*
+*/bin/release
 */obj
 /Import
+/packages

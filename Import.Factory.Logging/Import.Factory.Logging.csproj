@@ -4,6 +4,16 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	  <Configurations>Debug;Release;debug libs</Configurations>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	  <Version>1.0.0.0</Version>
+	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	  <Title>Import logging abstractions</Title>
+	  <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
+	  <PackageId>$(AssemblyName)</PackageId>
+	  <PackageVersion>$(Version)</PackageVersion>
+	  <Authors>innasolp</Authors>
+	  <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
-    <ProjectReference Include="..\Import.Interfaces\Import.Interfaces.csproj" />
     <ProjectReference Include="..\Import.Settings.Interfaces\Import.Settings.Interfaces.csproj" />
   </ItemGroup>
 
