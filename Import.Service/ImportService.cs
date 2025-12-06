@@ -16,7 +16,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     public bool IsStarted => _isStarted == true;
 
-    protected object? _loadData;
+    protected object? LoadData { get; private set; }
 
     protected string Host { get; } = host;
 
@@ -38,7 +38,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             else if (_isStarted == null)
             {
                 _isStarted = true;
-                _loadData = await LoaderService.GetData(Host, stoppingToken);
+                LoadData = await LoaderService.GetData(Host, stoppingToken);
                 Logger.LogInformation(LogMessages.ServiceStarted, Name);
             }
 
@@ -147,19 +147,19 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         Logger.LogInformation(LogMessages.LoaderIsReseting);
         await LoaderService.Reset(cancellationToken);
         await LoaderService.UpdateData(url, cancellationToken);
-        _loadData = await LoaderService.GetData(Host, cancellationToken);
+        LoadData = await LoaderService.GetData(Host, cancellationToken);
         _loaderIsReseted = true;
     }
 
-    protected virtual async Task<(bool success, Stream? stream)> TryLoadFromUrlAsync(string url, CancellationToken cancellationToken)
+    protected virtual async Task<(bool success, Stream? stream)> TryLoadFromUrlAsync(string url, object? data, CancellationToken cancellationToken = default)
     {
         await _loadSemaphoreSlim.WaitAsync(cancellationToken);
 
         cancellationToken.Register(() => { if (LoaderService.IsStarted) Task.Run(() => LoaderService.Close(cancellationToken), cancellationToken); });
 
         try
-        {
-            var stream = await LoaderService.Load(url, _loadData, cancellationToken);
+        {            
+            var stream = await LoaderService.Load(url, data, cancellationToken);
             return (true, stream);
         }
         catch (LoaderServiceException loaderServiceException)
