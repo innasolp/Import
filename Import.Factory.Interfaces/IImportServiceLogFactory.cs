@@ -5,5 +5,5 @@ namespace Import.Factory.Interfaces;
 
 public interface IImportServiceLogFactory
 {
-    ILogger<T> GetLogger<T>(ILogger<T> logger, string name, IImportSource shopModel, IShopImportSettings shopImportSettings);
+    ILogger<T> GetLogger<T>(ILogger<T> logger, string name, IImportSource importSource, IImportSettings importSettings);
 }

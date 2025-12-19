@@ -7,5 +7,5 @@ public interface IImportServiceFactory
 {
     Type ServiceImplementationType { get; }
 
-    IImportService Create(string name, IImportSource shopModel, IShopImportSettings shopImportSettings);
+    IImportService Create(string name, IImportSource importSource, IImportSettings importSettings);
 }

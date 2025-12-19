@@ -7,8 +7,8 @@ namespace Import.Factory.Logging;
 
 public static class FactoryLoggingDependencyInjectionExtensions
 {
-    public static IServiceCollection AddImportServiceLogFactory(this IServiceCollection services, Func<ILogger, string, IImportSource, IShopImportSettings, ILogger> getLoggerForShop)
+    public static IServiceCollection AddImportServiceLogFactory(this IServiceCollection services, Func<ILogger, string, IImportSource, IImportSettings, ILogger> getLoggerForSource)
     {
-        return services.AddSingleton<IImportServiceLogFactory>(new ImportServiceLogFactoryImpl(getLoggerForShop));
+        return services.AddSingleton<IImportServiceLogFactory>(new ImportServiceLogFactoryImpl(getLoggerForSource));
     }
 }
