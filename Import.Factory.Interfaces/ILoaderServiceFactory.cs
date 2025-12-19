@@ -5,5 +5,5 @@ namespace Import.Factory.Interfaces;
 
 public interface ILoaderServiceFactory
 {
-    ILoaderService Create(string name, IShopImportSettings shopImportSettings);
+    ILoaderService Create(string name, IImportSettings importSettings);
 }
