@@ -36,10 +36,10 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         LoaderMock.SetupStartSuccess();
 
-        var token = new CancellationTokenSource();
-        await service.StartServiceInFactoryAsync(token.Token);
+        var tokenSource = new CancellationTokenSource();
+        tokenSource.CancelAfter(500);
 
-        await Task.Delay(500);
+        await service.Start(tokenSource.Token);
 
         LoggerMock.VerifyInfo(LogResourceManager.GetString("ServiceStarted"), name);
     }
@@ -51,17 +51,10 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         LoaderMock.SetupStartSuccess();
 
-        var token = new CancellationTokenSource();      
+        var tokenSource = new CancellationTokenSource();     
+        tokenSource.CancelAfter(500);
 
-        var task = service.Start(token.Token);
-
-        await Task.Delay(500);        
-
-        await token.CancelAsync();
-     
-        await Task.Delay(500);        
-
-        await task.WaitAsync(token.Token); 
+        await service.Start(tokenSource.Token); 
 
         LoggerMock.VerifyInfo(LogResourceManager.GetString("ServiceWasStopped"), name);
     }
