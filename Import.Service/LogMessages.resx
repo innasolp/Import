@@ -139,15 +139,21 @@
     <value>Loader reset successfully.</value>
   </data>
   <data name="LoadFromUrlCompletedWithErrorAndNeedReset" xml:space="preserve">
-    <value>Loading from url {0} completed with error {1} and need in reseting.</value>
+    <value>Reset required for {Url}: {Message}</value>
   </data>
   <data name="ImportWasStoppedLoaderServiceAlreadyReseted" xml:space="preserve">
-    <value>Loader service {0} need reset, but it was already reset. Import {1} was stopped.</value>
+    <value>Loader {Loader} for {Service} exceeded reset attempts</value>
   </data>
   <data name="LoaderServiceResetingFailed" xml:space="preserve">
-    <value>Loader service {0} was reset with error {1}.</value>
+    <value>Loader reset failed for {Loader}: {Message}</value>
   </data>
   <data name="ServiceFailedWithError" xml:space="preserve">
     <value>Service {0} failed with error {1}.</value>
+  </data>
+  <data name="FailedToCloseLoaderForService" xml:space="preserve">
+    <value>Failed to close loader for {Service}</value>
+  </data>
+  <data name="ConnectedAsyncHandlerForServiceFailed" xml:space="preserve">
+    <value>ConnectedAsync handler for {Service} failed</value>
   </data>
 </root>
