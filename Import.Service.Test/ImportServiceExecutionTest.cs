@@ -22,7 +22,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(w => w.Start(It.IsAny<CancellationToken>())).Throws(exception);
 
         var token = new CancellationTokenSource();
-        await service.Start(token.Token);
+        await service.Start(null, token.Token);
 
         LoggerMock.VerifyInfo(LogResourceManager.GetString("ServiceWasStopped"), name);
 
@@ -39,7 +39,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         var tokenSource = new CancellationTokenSource();
         tokenSource.CancelAfter(500);
 
-        await service.Start(tokenSource.Token);
+        await service.Start(null, tokenSource.Token);
 
         LoggerMock.VerifyInfo(LogResourceManager.GetString("ServiceStarted"), name);
     }
@@ -54,7 +54,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         var tokenSource = new CancellationTokenSource();     
         tokenSource.CancelAfter(500);
 
-        await service.Start(tokenSource.Token); 
+        await service.Start(null, tokenSource.Token); 
 
         LoggerMock.VerifyInfo(LogResourceManager.GetString("ServiceWasStopped"), name);
     }
@@ -73,7 +73,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).Throws(loaderServiceException);
 
         var token = new CancellationTokenSource();
-        await service.Start(token.Token);
+        await service.Start(null, token.Token);
 
         await Task.Delay(500);
 
@@ -99,7 +99,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).Throws(exception);
 
         var token = new CancellationTokenSource();
-        await service.Start(token.Token);
+        await service.Start(null, token.Token);
         
         LoggerMock.VerifyError(exception, (v,e)=>v.InnerException == e,
             string.Format(LogResourceManager.GetString("ServiceFailedWithError"), [service.Name, exception.Message]), (v,m)=>v == m);

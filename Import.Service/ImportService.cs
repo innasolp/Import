@@ -8,6 +8,8 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 {
     public abstract string Name { get; }
 
+    public event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync;
+
     protected ILoaderService LoaderService { get; } = loaderService;
 
     protected ILogger Logger { get; } = logger;
@@ -26,7 +28,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     private bool _loaderIsReseted = false;
 
-    public virtual async Task Start(CancellationToken stoppingToken)
+    public virtual async Task Start(object? parameter, CancellationToken stoppingToken)
     {
         _loaderIsReseted = false;
 
@@ -34,11 +36,19 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         {
             await StartLoaderIfNeedAsync(stoppingToken);
 
-            if (!LoaderService.IsStarted) break;
+            if (!LoaderService.IsStarted)
+            {
+                await InvokeConnectedAsync(false, parameter, stoppingToken);
+
+                break;
+            }
             else if (_isStarted == null)
             {
                 _isStarted = true;
                 LoadData = await LoaderService.GetData(Host, stoppingToken);
+
+                await InvokeConnectedAsync(true, parameter, stoppingToken);
+
                 Logger.LogInformation(LogMessages.ServiceStarted, Name);
             }
 
@@ -65,6 +75,11 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         Logger.LogInformation(LogMessages.ServiceWasStopped, Name);
     }
 
+    private async Task InvokeConnectedAsync(bool success, object? parameter, CancellationToken cancellationToken)
+    {
+        await ConnectedAsync?.Invoke(this, new  ConnectedAsyncEventArgs(success, parameter, null, cancellationToken))!;
+    }
+
     protected abstract Task ProcessAsync(CancellationToken stoppingToken);
 
     protected virtual async Task StartLoaderIfNeedAsync(CancellationToken stoppingToken)
@@ -74,12 +89,11 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             try
             {
                 if (!LoaderService.IsStarted)
-                    await LoaderService.Start(stoppingToken);
+                    await LoaderService.Start(stoppingToken);                
             }
             catch (Exception e)
             {
-                Logger.LogError(e, LogMessages.ImportWasStoppedWebLoaderNotExecute, LoaderService.Name);
-                return;
+                Logger.LogError(e, LogMessages.ImportWasStoppedWebLoaderNotExecute, LoaderService.Name);                
             }
         }
     }
