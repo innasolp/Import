@@ -61,7 +61,25 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loader service {0} need reset, but it was already reset. Import {1} was stopped..
+        ///   Looks up a localized string similar to ConnectedAsync handler for {Service} failed.
+        /// </summary>
+        internal static string ConnectedAsyncHandlerForServiceFailed {
+            get {
+                return ResourceManager.GetString("ConnectedAsyncHandlerForServiceFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to close loader for {Service}.
+        /// </summary>
+        internal static string FailedToCloseLoaderForService {
+            get {
+                return ResourceManager.GetString("FailedToCloseLoaderForService", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loader {Loader} for {Service} exceeded reset attempts.
         /// </summary>
         internal static string ImportWasStoppedLoaderServiceAlreadyReseted {
             get {
@@ -97,7 +115,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loader service {0} was reset with error {1}..
+        ///   Looks up a localized string similar to Loader reset failed for {Loader}: {Message}.
         /// </summary>
         internal static string LoaderServiceResetingFailed {
             get {
@@ -106,7 +124,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading from url {0} completed with error {1} and need in reseting..
+        ///   Looks up a localized string similar to Reset required for {Url}: {Message}.
         /// </summary>
         internal static string LoadFromUrlCompletedWithErrorAndNeedReset {
             get {

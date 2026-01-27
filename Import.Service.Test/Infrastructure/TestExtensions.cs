@@ -82,7 +82,7 @@ public static class TestExtensions
 
     public static Task StartServiceInFactoryAsync(this IImportService service, CancellationToken token)
     {
-        return Task.Factory.StartNew(async () => await service.Start(token),token,
+        return Task.Factory.StartNew(async () => await service.Start(null, token),token,
             TaskCreationOptions.RunContinuationsAsynchronously,            
            TaskScheduler.Current);
     }
