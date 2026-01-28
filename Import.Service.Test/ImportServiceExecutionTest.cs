@@ -80,7 +80,8 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         await token.CancelAsync();
 
         var messagePart = $"completed with error {loaderServiceException.Message} and need in reseting";
-        LoggerMock.VerifyWarning(messagePart, (v,m) => v.Contains(m));
+        LoggerMock.VerifyError(loaderServiceException, LogResourceManager.GetString("ImportWasStoppedLoaderServiceAlreadyReseted"),
+            LoaderMock.Object.Name, service.Name);
     }
 
     
@@ -102,7 +103,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         await service.Start(null, token.Token);
         
         LoggerMock.VerifyError(exception, (v,e)=>v.InnerException == e,
-            string.Format(LogResourceManager.GetString("ServiceFailedWithError"), [service.Name, exception.Message]), (v,m)=>v == m);
+            LogResourceManager.GetString("ServiceFailedWithError"), service.Name, exception.Message);
     }
 
     protected async Task LogRequestFailedAndLoaderWillBePausedWarningWhenForbiddenRequestAsync()
@@ -116,14 +117,12 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         var service = CreateService($"{Guid.NewGuid()}");
 
-        var token = new CancellationTokenSource();
-        var task = service.StartServiceInFactoryAsync(token.Token);
+        var tokenSource = new CancellationTokenSource();
+        tokenSource.CancelAfter(1000);
 
-        await Task.Delay(500);
+        await service.Start(new object(), tokenSource.Token);        
 
-        var messagePart = "Loader will be paused";
-        LoggerMock.VerifyWarning(exception, (v,e) => v==e, messagePart, (v,m)=>v.Contains(messagePart));
-
-        await token.CancelAsync();
+         var messageFormat = LogResourceManager.GetString("RequestFailedAndLoaderWillBePaused");
+         LoggerMock.VerifyWarning(exception, messageFormat);
     }
 }
