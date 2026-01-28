@@ -134,12 +134,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         const int backoffMs = 500;       
 
         int tryCount = 0;
-        int maxTryCount = 5;
-
-        while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted && tryCount < maxTryCount)
-        {
-        int tryCount = 0;
-        const int maxTryCount = 5;
+        int maxTryCount = 5;       
 
         while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted)
         {
