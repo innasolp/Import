@@ -34,39 +34,35 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await StartLoaderIfNeedAsync(stoppingToken);
+            try
+            {
+                await StartLoaderIfNeedAsync(stoppingToken);
 
-            if (!LoaderService.IsStarted)
-            {
-                await InvokeConnectedAsync(false, parameter, stoppingToken);
-                break;
-            }
-            else if (_isStarted == null)
-            {
-                try
+                if (!LoaderService.IsStarted)
                 {
-                    LoadData = await LoaderService.GetData(Host, stoppingToken);
-                    _isStarted = true;
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    _isStarted = false;
-                    Logger.LogError(ex, LogMessages.ServiceFailedWithError, [Name, ex.Message]);
                     await InvokeConnectedAsync(false, parameter, stoppingToken);
                     break;
                 }
+                else if (_isStarted == null)
+                {
+                    try
+                    {
+                        LoadData = await LoaderService.GetData(Host, stoppingToken);
+                        _isStarted = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        _isStarted = false;
+                        Logger.LogError(ex, LogMessages.ServiceFailedWithError, [Name, ex.Message]);
+                        await InvokeConnectedAsync(false, parameter, stoppingToken);
+                        break;
+                    }
 
-                await InvokeConnectedAsync(true, parameter, stoppingToken);
+                    await InvokeConnectedAsync(true, parameter, stoppingToken);
 
-                Logger.LogInformation(LogMessages.ServiceStarted, Name);
-            }
+                    Logger.LogInformation(LogMessages.ServiceStarted, Name);
+                }
 
-            try
-            {
                 await ProcessAsync(stoppingToken);
             }
             catch (OperationCanceledException)
@@ -93,7 +89,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
                     }
                 }
 
-                await Task.Delay(100);                
+                await Task.Delay(100);
             }
         }
 
@@ -131,10 +127,10 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     protected virtual async Task StartLoaderIfNeedAsync(CancellationToken stoppingToken)
     {
-        const int backoffMs = 500;       
+        const int backoffMs = 500;
 
         int tryCount = 0;
-        int maxTryCount = 5;       
+        int maxTryCount = 5;
 
         while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted)
         {
