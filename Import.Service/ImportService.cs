@@ -138,6 +138,11 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
         while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted && tryCount < maxTryCount)
         {
+        int tryCount = 0;
+        const int maxTryCount = 5;
+
+        while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted)
+        {
             try
             {
                 if (!LoaderService.IsStarted)
@@ -151,6 +156,12 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             {
                 tryCount++;
                 Logger.LogError(e, LogMessages.ImportWasStoppedWebLoaderNotExecute ?? "Failed to start loader {Loader}", LoaderService.Name);
+
+                if (tryCount >= maxTryCount)
+                {
+                    throw;
+                }
+
                 try
                 {
                     await Task.Delay(backoffMs, stoppingToken);
