@@ -122,7 +122,6 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, LogMessages.ConnectedAsyncHandlerForServiceFailed, Name);
-                    // continue to next handler
                 }
             }
         }
@@ -132,8 +131,15 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     protected virtual async Task StartLoaderIfNeedAsync(CancellationToken stoppingToken)
     {
-       var backoffMs = 200;
-        const int maxBackoffMs = 5000;
+        const int backoffMs = 500;       
+
+        int tryCount = 0;
+        int maxTryCount = 5;
+
+        while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted && tryCount < maxTryCount)
+        {
+        int tryCount = 0;
+        const int maxTryCount = 5;
 
         while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted)
         {
@@ -148,7 +154,14 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             }
             catch (Exception e)
             {
+                tryCount++;
                 Logger.LogError(e, LogMessages.ImportWasStoppedWebLoaderNotExecute ?? "Failed to start loader {Loader}", LoaderService.Name);
+
+                if (tryCount >= maxTryCount)
+                {
+                    throw;
+                }
+
                 try
                 {
                     await Task.Delay(backoffMs, stoppingToken);
@@ -157,8 +170,6 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
                 {
                     throw;
                 }
-
-                backoffMs = Math.Min(backoffMs * 2, maxBackoffMs);
             }
         }
     }
