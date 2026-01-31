@@ -118,22 +118,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="RequestFailedAndLoaderWillBePaused" xml:space="preserve">
-    <value>Request url {0} failed with error {1}. Loader will be paused on {2} milliseconds.</value>
+    <value>Request url {Url} failed with error {ErrorMessage}. Loader will be paused on {DelayInMilliseconds} milliseconds.</value>
   </data>
-  <data name="ImportWasStoppedWebLoaderNotExecute" xml:space="preserve">
-    <value>WebLoader {0} was not executed. Import was stopped.</value>
+  <data name="FailedToStartLoader" xml:space="preserve">
+    <value>Failed to start loader {Loader}</value>
   </data>
   <data name="RequestUrlFailedWithError" xml:space="preserve">
-    <value>Request url {0} failed with error :  {1}</value>
+    <value>Request url {Url} failed with error :  {ErrorMessage}</value>
   </data>
   <data name="ServiceStarted" xml:space="preserve">
-    <value>Service {0} started.</value>
+    <value>Service {Name} started.</value>
   </data>
   <data name="ServiceWasStopped" xml:space="preserve">
-    <value>Service {0} was stopped.</value>
+    <value>Service {Name} was stopped.</value>
   </data>
-  <data name="LoaderIsReseting" xml:space="preserve">
-    <value>Loader is reseting...</value>
+  <data name="LoaderIsResetting" xml:space="preserve">
+    <value>Loader is reseting, attempt {AttemptNumber}</value>
   </data>
   <data name="LoaderResetSuccessfully" xml:space="preserve">
     <value>Loader reset successfully.</value>
@@ -144,16 +144,22 @@
   <data name="ImportWasStoppedLoaderServiceAlreadyReseted" xml:space="preserve">
     <value>Loader {Loader} for {Service} exceeded reset attempts</value>
   </data>
-  <data name="LoaderServiceResetingFailed" xml:space="preserve">
+  <data name="LoaderServiceResettingFailed" xml:space="preserve">
     <value>Loader reset failed for {Loader}: {Message}</value>
   </data>
   <data name="ServiceFailedWithError" xml:space="preserve">
-    <value>Service {0} failed with error {1}.</value>
+    <value>Service {Name} failed. See error log.</value>
   </data>
   <data name="FailedToCloseLoaderForService" xml:space="preserve">
     <value>Failed to close loader for {Service}</value>
   </data>
   <data name="ConnectedAsyncHandlerForServiceFailed" xml:space="preserve">
     <value>ConnectedAsync handler for {Service} failed</value>
+  </data>
+  <data name="ServiceWasCancelled" xml:space="preserve">
+    <value>Service {Name} was cancelled.</value>
+  </data>
+  <data name="LoaderDataReceivedSuccessfully" xml:space="preserve">
+    <value>Data for loader {LoaderName} received successfully.</value>
   </data>
 </root>

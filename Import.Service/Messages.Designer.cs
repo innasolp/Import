@@ -61,7 +61,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import {0} was cancelled on url {1} because loader {2} failed..
+        ///   Looks up a localized string similar to Import {ServiceName} was cancelled on url {Url} because loader {LoaderName} failed..
         /// </summary>
         internal static string ImportWasCancelledOnUrlBecauseLoaderFailed {
             get {

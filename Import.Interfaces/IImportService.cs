@@ -1,21 +1,19 @@
 ﻿
 namespace Import.Interfaces;
 
-public class ConnectedAsyncEventArgs(bool success, object? parameter, Exception? exception = null, CancellationToken cancellationToken = default)
+public class ConnectedAsyncEventArgs(bool success, Exception? exception = null, CancellationToken cancellationToken = default)
     : AsyncEventArgs(exception, cancellationToken)
 {
-    public object? Parameter { get; } = parameter;
-
     public bool Success { get; } = success;
 }
 
 public interface IImportService
 {
-    Task Start(object? parameter, CancellationToken stoppingToken);
+    Task Start(CancellationToken stoppingToken);
+
+    Task Stop(CancellationToken stoppingToken);
 
     string Name { get; }
-
-    bool IsStarted { get; }
 
     event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync;
 }
