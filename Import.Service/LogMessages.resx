@@ -148,7 +148,7 @@
     <value>Loader reset failed for {Loader}: {Message}</value>
   </data>
   <data name="ServiceFailedWithError" xml:space="preserve">
-    <value>Service {Name} failed. See error log.</value>
+    <value>Service {Name} failed.</value>
   </data>
   <data name="FailedToCloseLoaderForService" xml:space="preserve">
     <value>Failed to close loader for {Service}</value>

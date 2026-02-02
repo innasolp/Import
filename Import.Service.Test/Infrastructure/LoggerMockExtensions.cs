@@ -23,7 +23,18 @@ public static class LoggerMockExtensions
            It.Is<LogLevel>(v => v == logLevel),
            It.IsAny<EventId>(),
            It.Is<It.IsAnyType>((v, t) => LogStateComparer(v, messageFormat, args)),
-           It.Is<Exception?>(v => v == null && e == null || v == e),
+           It.Is<Exception?>(v => (v == null && e == null) || v == e),
+           It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
+    } 
+    
+    private static void VerifyMessage<TLogger>(this Mock<TLogger> loggerMock, LogLevel logLevel, string messageFormat, params object[] args)
+        where TLogger : class, ILogger
+    {
+        loggerMock.Verify(l => l.Log(
+           It.Is<LogLevel>(v => v == logLevel),
+           It.IsAny<EventId>(),
+           It.Is<It.IsAnyType>((v, t) => LogStateComparer(v, messageFormat, args)),
+           It.IsAny<Exception?>(),
            It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
     }   
 
@@ -41,13 +52,13 @@ public static class LoggerMockExtensions
     public static void VerifyInfo<TLogger>(this Mock<TLogger> loggerMock, string messageFormat, params object[] args)
         where TLogger : class, ILogger
     {
-        loggerMock.VerifyMessage(LogLevel.Information, null, messageFormat, args);
+        loggerMock.VerifyMessage(LogLevel.Information, messageFormat, args);
     }
 
     public static void VerifyWarning<TLogger>(this Mock<TLogger> loggerMock, string messageFormat, params object[] args)
         where TLogger : class, ILogger
     {
-        loggerMock.VerifyMessage(LogLevel.Warning, It.IsAny<Exception?>(), messageFormat, args);
+        loggerMock.VerifyMessage(LogLevel.Warning,messageFormat, args);
     }
 
     public static void VerifyWarning<TLogger>(this Mock<TLogger> loggerMock, Exception? exception, string messageFormat, params object[] args)

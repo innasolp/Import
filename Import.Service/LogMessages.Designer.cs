@@ -160,7 +160,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Service {Name} failed. See error log..
+        ///   Looks up a localized string similar to Service {Name} failed..
         /// </summary>
         internal static string ServiceFailedWithError {
             get {

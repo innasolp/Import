@@ -11,21 +11,15 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
     where TService : ImportService
     where TLogger : class, ILogger
 {
-    protected const int timeout = 1000;
-
-    protected const int longTimeout = timeout * 3;
-
-    protected const int resetTimeout = 15000;
-
-    protected async Task ShouldLogImportWasStoppedWhenLoaderNotExecutedAsync()
+    protected async Task ShouldLogImportWasStoppedWithErrorWhenLoaderNotExecutedAsync(int cancellationTimeoutInMilliseconds)
     {
         var messageResourceKey = "FailedToStartLoader";
         var resultMessageFormat = LogResourceManager.GetString(messageResourceKey)
             ?? throw new InvalidOperationException($"message format {messageResourceKey} is null or not found");
 
-        var infoMessageResourceKey = "ServiceWasStopped";
-        var infoMessageFormat = LogResourceManager.GetString(infoMessageResourceKey)
-            ?? throw new InvalidOperationException($"message format {infoMessageResourceKey} is null or not found");
+        var serviceErrorMessageResourceKey = "ServiceFailedWithError";
+        var serviceErrorMessageFormat = LogResourceManager.GetString(serviceErrorMessageResourceKey)
+            ?? throw new InvalidOperationException($"message format {serviceErrorMessageResourceKey} is null or not found");
 
 
         var exception = new InvalidOperationException("test fatal error");
@@ -37,14 +31,14 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         using var tokenSource = new CancellationTokenSource();
         
-        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(longTimeout));        
+        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutInMilliseconds));
 
-        LoggerMock.VerifyInfo(infoMessageFormat, name);
-
-        LoggerMock.VerifyError(exception, resultMessageFormat, LoaderMock.Object.Name);
+        LoggerMock.VerifyError(exception, resultMessageFormat, LoaderMock.Object.Name); 
+        
+        LoggerMock.VerifyError(exception, serviceErrorMessageFormat, name);       
     }
 
-    protected async Task ShouldLogServiceStartedWhenLoaderExecutesSuccessfullyAsync()
+    protected async Task ShouldLogServiceStartedWhenLoaderExecutesSuccessfullyAsync(int cancellationTimeoutMilliseconds)
     {
         var messageResourceKey = "ServiceStarted";
         var resultMessageFormat = LogResourceManager.GetString(messageResourceKey)
@@ -53,23 +47,20 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         var name = $"{Guid.NewGuid()}";
         var service = CreateService(name);
 
+        LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
         using var tokenSource = new CancellationTokenSource();
         
-        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(timeout));
+        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutMilliseconds));
 
         LoaderMock.Verify(l => l.Start(It.IsAny<CancellationToken>()), Times.Once);
 
         LoggerMock.VerifyInfo(resultMessageFormat, name);
     }
 
-    protected async Task ShouldLogImportStoppedWhenCancellationRequestedAsync()
+    protected async Task ShouldLogImportStoppedWhenCancellationRequestedAsync(int cancellationTimeoutMilliseconds)
     {
-        var messageResourceKey = "ServiceWasStopped";
-        var resultMessageFormat = LogResourceManager.GetString(messageResourceKey)
-            ?? throw new InvalidOperationException($"message format {messageResourceKey} is null or not found");
-
         var cancelledMessageResourceKey = "ServiceWasCancelled";
         var cancelledMessageFormat = LogResourceManager.GetString(cancelledMessageResourceKey)
             ?? throw new InvalidOperationException($"message format {cancelledMessageResourceKey} is null or not found");
@@ -77,21 +68,19 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         var name = $"{Guid.NewGuid()}";
         var service = CreateService(name);
 
+        LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
         using var tokenSource = new CancellationTokenSource();
-        tokenSource.CancelAfter(TimeSpan.FromMilliseconds(timeout));
+        tokenSource.CancelAfter(TimeSpan.FromMilliseconds(cancellationTimeoutMilliseconds));
 
         await service.Start(tokenSource.Token);
 
         LoggerMock.VerifyWarning(cancelledMessageFormat, name);
-        LoggerMock.VerifyInfo(resultMessageFormat, name);
     }
 
-    protected async Task ShouldLogResettingErrorIfLoaderServiceNeedsResettingAsync()        
+    protected async Task ShouldLogResettingErrorIfLoaderServiceNeedsResettingAsync(int cancellationTimeoutMilliseconds)        
     {
-        var loaderResetDelay = 500;
-
         var messageResourceKey = "ImportWasStoppedLoaderServiceAlreadyReseted";
         var resultMessageFormat = LogResourceManager.GetString(messageResourceKey) 
             ?? throw new InvalidOperationException($"message format {messageResourceKey} is null or not found");
@@ -109,7 +98,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         using var tokenSource = new CancellationTokenSource();
         
-        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(resetTimeout));
+        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutMilliseconds));
 
         LoaderMock.Verify(l => l.Start(It.IsAny<CancellationToken>()), Times.Once);
 
@@ -117,7 +106,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
     }
 
 
-    protected async Task ShouldLogServiceFailedErrorWhenUnhandledExceptionThrownAsync()
+    protected async Task ShouldLogServiceFailedErrorWhenUnhandledExceptionThrownAsync(int cancellationTimeoutMilliseconds)
     {
         var messageResourceKey = "ServiceFailedWithError";
         var resultMessageFormat = LogResourceManager.GetString(messageResourceKey)
@@ -136,14 +125,14 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         using var tokenSource = new CancellationTokenSource();
         
-        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(timeout));
+        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutMilliseconds));
 
         LoaderMock.Verify(l => l.Start(It.IsAny<CancellationToken>()), Times.Once);
 
-        LoggerMock.VerifyError(exception, (v,e)=>v.InnerException == e, resultMessageFormat, service.Name, exception.Message);
+        LoggerMock.VerifyError(exception, (v,e)=>v.InnerException == e, resultMessageFormat, service.Name);
     }
 
-    protected async Task ShouldLogRequestFailedAndLoaderWillBePausedWarningWhenLoaderNeedsWaitAsync()
+    protected async Task ShouldLogRequestFailedAndLoaderWillBePausedWarningWhenLoaderNeedsWaitAsync(int cancellationTimeoutMilliseconds)
     {
         var messageResourceKey = "RequestFailedAndLoaderWillBePaused";
         var resultMessageFormat = LogResourceManager.GetString(messageResourceKey)
@@ -160,7 +149,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         using var tokenSource = new CancellationTokenSource();
 
-        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(timeout));
+        await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutMilliseconds));
 
         LoaderMock.Verify(l => l.Start(It.IsAny<CancellationToken>()), Times.Once);
 

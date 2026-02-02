@@ -44,6 +44,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             _stoppingCts?.Dispose();
             _stoppingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _runTask = ExecuteAsync(_stoppingCts.Token);
+            await _runTask;
         }
         finally
         {
@@ -159,7 +160,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         int tryCount = 0;
         int maxTryCount = 5;
 
-        while (!cancellationToken.IsCancellationRequested && !LoaderService.IsStarted)
+        while (!LoaderService.IsStarted)
         {
             try
             {
