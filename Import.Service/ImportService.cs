@@ -289,7 +289,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
     }
 
-    protected void Dispose()
+    protected virtual void Dispose()
     {
         _startSemaphoreSlim.Dispose();
         _loadSemaphoreSlim.Dispose();
