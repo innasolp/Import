@@ -8,9 +8,6 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 {
     private CancellationTokenSource? _stoppingCts;
 
-    private Task? _runTask;
-
-
     public abstract string Name { get; }
 
     public event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync;
@@ -38,13 +35,9 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         await _startSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_runTask is { IsCompleted: false })
-                return;
-
             _stoppingCts?.Dispose();
             _stoppingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _runTask = ExecuteAsync(_stoppingCts.Token);
-            await _runTask;
+            await ExecuteAsync(_stoppingCts.Token);
         }
         finally
         {
@@ -300,9 +293,6 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
         await Stop();
-
-        if (_runTask != null)
-            await _runTask.ConfigureAwait(false);
 
         if (LoaderService.IsStarted)
             await CloseLoaderAsync();
