@@ -79,6 +79,15 @@ namespace Import.Service {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to start loader {Loader}.
+        /// </summary>
+        internal static string FailedToStartLoader {
+            get {
+                return ResourceManager.GetString("FailedToStartLoader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loader {Loader} for {Service} exceeded reset attempts.
         /// </summary>
         internal static string ImportWasStoppedLoaderServiceAlreadyReseted {
@@ -88,20 +97,20 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to WebLoader {0} was not executed. Import was stopped..
+        ///   Looks up a localized string similar to Data for loader {LoaderName} received successfully..
         /// </summary>
-        internal static string ImportWasStoppedWebLoaderNotExecute {
+        internal static string LoaderDataReceivedSuccessfully {
             get {
-                return ResourceManager.GetString("ImportWasStoppedWebLoaderNotExecute", resourceCulture);
+                return ResourceManager.GetString("LoaderDataReceivedSuccessfully", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loader is reseting....
+        ///   Looks up a localized string similar to Loader is reseting, attempt {AttemptNumber}.
         /// </summary>
-        internal static string LoaderIsReseting {
+        internal static string LoaderIsResetting {
             get {
-                return ResourceManager.GetString("LoaderIsReseting", resourceCulture);
+                return ResourceManager.GetString("LoaderIsResetting", resourceCulture);
             }
         }
         
@@ -117,9 +126,9 @@ namespace Import.Service {
         /// <summary>
         ///   Looks up a localized string similar to Loader reset failed for {Loader}: {Message}.
         /// </summary>
-        internal static string LoaderServiceResetingFailed {
+        internal static string LoaderServiceResettingFailed {
             get {
-                return ResourceManager.GetString("LoaderServiceResetingFailed", resourceCulture);
+                return ResourceManager.GetString("LoaderServiceResettingFailed", resourceCulture);
             }
         }
         
@@ -133,7 +142,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Request url {0} failed with error {1}. Loader will be paused on {2} milliseconds..
+        ///   Looks up a localized string similar to Request url {Url} failed with error {ErrorMessage}. Loader will be paused on {DelayInMilliseconds} milliseconds..
         /// </summary>
         internal static string RequestFailedAndLoaderWillBePaused {
             get {
@@ -142,7 +151,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Request url {0} failed with error :  {1}.
+        ///   Looks up a localized string similar to Request url {Url} failed with error :  {ErrorMessage}.
         /// </summary>
         internal static string RequestUrlFailedWithError {
             get {
@@ -151,7 +160,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Service {0} failed with error {1}..
+        ///   Looks up a localized string similar to Service {Name} failed..
         /// </summary>
         internal static string ServiceFailedWithError {
             get {
@@ -160,7 +169,7 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Service {0} started..
+        ///   Looks up a localized string similar to Service {Name} started..
         /// </summary>
         internal static string ServiceStarted {
             get {
@@ -169,7 +178,16 @@ namespace Import.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Service {0} was stopped..
+        ///   Looks up a localized string similar to Service {Name} was cancelled..
+        /// </summary>
+        internal static string ServiceWasCancelled {
+            get {
+                return ResourceManager.GetString("ServiceWasCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Service {Name} was stopped..
         /// </summary>
         internal static string ServiceWasStopped {
             get {

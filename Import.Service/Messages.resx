@@ -118,6 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ImportWasCancelledOnUrlBecauseLoaderFailed" xml:space="preserve">
-    <value>Import {0} was cancelled on url {1} because loader {2} failed.</value>
+    <value>Import {ServiceName} was cancelled on url {Url} because loader {LoaderName} failed.</value>
   </data>
 </root>

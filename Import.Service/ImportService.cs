@@ -4,8 +4,10 @@ using Microsoft.Extensions.Logging;
 namespace Import.Service;
 
 public abstract class ImportService(ILogger logger, ILoaderService loaderService, string host)
-    : IImportService
+    : IImportService, IAsyncDisposable
 {
+    private CancellationTokenSource? _stoppingCts;
+
     public abstract string Name { get; }
 
     public event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync;
@@ -14,130 +16,148 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     protected ILogger Logger { get; } = logger;
 
-    private bool? _isStarted = null;
-
-    public bool IsStarted => _isStarted == true;
-
-    protected object? LoadData { get; private set; }
+    private object? LoaderData { get; set; }
 
     protected string Host { get; } = host;
 
-    private readonly SemaphoreSlim _resetSemaphoreSlim = new(1, 1);
-
     private readonly SemaphoreSlim _loadSemaphoreSlim = new(1, 1);
+
+    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, 1);
 
     private int _resetTryCount = 0;
 
-    private const int _maxResetTryCount = 3;
+    private const int MaxResetTryCount = 3;
 
-    public virtual async Task Start(object? parameter, CancellationToken stoppingToken)
+    private const int WaitingLoaderDelayMilliseconds = 500;
+
+    public virtual async Task Start(CancellationToken cancellationToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        await _startSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            try
-            {
-                await StartLoaderIfNeedAsync(stoppingToken);
+            _stoppingCts?.Dispose();
+            _stoppingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            await ExecuteAsync(_stoppingCts.Token);
+        }
+        finally
+        {
+            _startSemaphoreSlim.Release();
+        }
+    }
 
-                if (!LoaderService.IsStarted)
+    private async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await StartLoaderIfNeededAsync(cancellationToken);
+
+            if (!LoaderService.IsStarted)
+            {
+                await InvokeConnectedAsync(false, cancellationToken: cancellationToken);
+                return false;
+            }
+            else
+            {
+                try
                 {
-                    await InvokeConnectedAsync(false, parameter, stoppingToken);
-                    break;
+                    await LoadData(cancellationToken);
                 }
-                else if (_isStarted == null)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        LoadData = await LoaderService.GetData(Host, stoppingToken);
-                        _isStarted = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        _isStarted = false;
-                        Logger.LogError(ex, LogMessages.ServiceFailedWithError, [Name, ex.Message]);
-                        await InvokeConnectedAsync(false, parameter, stoppingToken);
-                        break;
-                    }
-
-                    await InvokeConnectedAsync(true, parameter, stoppingToken);
-
-                    Logger.LogInformation(LogMessages.ServiceStarted, Name);
-                }
-
-                await ProcessAsync(stoppingToken);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                _isStarted = false;
-                Logger.LogError(ex, LogMessages.ServiceFailedWithError, Name, ex.Message);
-                break;
-            }
-            finally
-            {
-                if (LoaderService.IsStarted)
-                {
-                    try
-                    {
-                        await LoaderService.Close(cancellationToken: stoppingToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogWarning(ex, LogMessages.FailedToCloseLoaderForService, Name);
-                    }
+                    Logger.LogError(ex, LogMessages.ServiceFailedWithError, Name);
+                    await InvokeConnectedAsync(false, ex, cancellationToken);
+                    return false;
                 }
 
-                await Task.Delay(100);
+                await InvokeConnectedAsync(true, cancellationToken: cancellationToken);
+
+                Logger.LogInformation(LogMessages.ServiceStarted, Name);
             }
+
+            await ProcessAsync(cancellationToken);
+
+            await InvokeConnectedAsync(false, cancellationToken: cancellationToken);
+        }
+        catch (OperationCanceledException e)
+        {
+            Logger.LogWarning(e, LogMessages.ServiceWasCancelled, Name);
+            await InvokeConnectedAsync(false, e, cancellationToken);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, LogMessages.ServiceFailedWithError, Name);
+            await InvokeConnectedAsync(false, ex, cancellationToken);
+            return false;
         }
 
         Logger.LogInformation(LogMessages.ServiceWasStopped, Name);
+        return true;
     }
 
-    private async Task InvokeConnectedAsync(bool success, object? parameter, CancellationToken cancellationToken)
+    private async Task CloseLoaderAsync()
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        try
+        {
+            await LoaderService.Close(cts.Token).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, LogMessages.FailedToCloseLoaderForService, Name);
+        }
+    }
+
+    private async Task LoadData(CancellationToken cancellationToken)
+    {
+        LoaderData = await LoaderService.GetData(Host, cancellationToken).ConfigureAwait(false);
+        Logger.LogInformation(LogMessages.LoaderDataReceivedSuccessfully, LoaderService.Name);
+    }
+
+    protected object? GetLoaderData() => LoaderData;
+
+    private async Task InvokeConnectedAsync(bool success, Exception? exception = null, CancellationToken cancellationToken = default)
     {
         // Safe event invocation: capture and iterate to isolate handler failures
         var handlers = ConnectedAsync;
         if (handlers == null)
             return;
 
-        var args = new ConnectedAsyncEventArgs(success, parameter, null, cancellationToken);
+        var args = new ConnectedAsyncEventArgs(success, exception, cancellationToken);
 
-        foreach (var d in handlers.GetInvocationList())
+        async Task HandlerTask(AsyncEventHandler<ConnectedAsyncEventArgs> handler)
         {
-            if (d is AsyncEventHandler<ConnectedAsyncEventArgs> handler)
+            try
             {
-                try
-                {
-                    var t = handler.Invoke(this, args);
-                    if (t != null)
-                        await t;
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, LogMessages.ConnectedAsyncHandlerForServiceFailed, Name);
-                }
+                await handler(this, args).ConfigureAwait(false);
             }
-        }
+            catch (Exception e)
+            {
+                Logger.LogError(e, LogMessages.ConnectedAsyncHandlerForServiceFailed, Name);
+            }
+        };
+
+        var tasks = handlers.GetInvocationList()
+            .OfType<AsyncEventHandler<ConnectedAsyncEventArgs>>()
+            .Select(HandlerTask);
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
-    protected abstract Task ProcessAsync(CancellationToken stoppingToken);
+    protected abstract Task ProcessAsync(CancellationToken cancellationToken);
 
-    protected virtual async Task StartLoaderIfNeedAsync(CancellationToken stoppingToken)
+    protected virtual async Task StartLoaderIfNeededAsync(CancellationToken cancellationToken)
     {
         const int backoffMs = 500;
 
         int tryCount = 0;
         int maxTryCount = 5;
 
-        while (!stoppingToken.IsCancellationRequested && !LoaderService.IsStarted)
+        while (!LoaderService.IsStarted)
         {
             try
             {
-                if (!LoaderService.IsStarted)
-                    await LoaderService.Start(stoppingToken);
+                await LoaderService.Start(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -146,7 +166,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             catch (Exception e)
             {
                 tryCount++;
-                Logger.LogError(e, LogMessages.ImportWasStoppedWebLoaderNotExecute ?? "Failed to start loader {Loader}", LoaderService.Name);
+                Logger.LogError(e, LogMessages.FailedToStartLoader, LoaderService.Name);
 
                 if (tryCount >= maxTryCount)
                 {
@@ -155,7 +175,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
                 try
                 {
-                    await Task.Delay(backoffMs, stoppingToken);
+                    await Task.Delay(backoffMs, cancellationToken).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -172,12 +192,12 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             switch (e.NeedAction)
             {
                 case LoaderServiceAction.Reset:
-                    await HandleResetingAsync(e, url, cancellationToken);
+                    await HandleResettingAsync(e, url, cancellationToken);
                     break;
 
                 case LoaderServiceAction.Wait:
-                    Logger.LogWarning(e, LogMessages.RequestFailedAndLoaderWillBePaused, url, e.Message, 500);
-                    await Task.Delay(500, cancellationToken);
+                    Logger.LogWarning(e, LogMessages.RequestFailedAndLoaderWillBePaused, url, e.Message, WaitingLoaderDelayMilliseconds);
+                    await Task.Delay(WaitingLoaderDelayMilliseconds, cancellationToken);
                     break;
 
                 default:
@@ -191,15 +211,15 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
     }
 
-    private async Task HandleResetingAsync(LoaderServiceException e, string url, CancellationToken cancellationToken = default)
+    private async Task HandleResettingAsync(LoaderServiceException e, string url, CancellationToken cancellationToken = default)
     {
-        await _resetSemaphoreSlim.WaitAsync(cancellationToken);
+        //await _resetSemaphoreSlim.WaitAsync(cancellationToken);
 
-        if (_resetTryCount >= _maxResetTryCount)
+        if (_resetTryCount >= MaxResetTryCount)
         {
             Logger.LogError(e, LogMessages.ImportWasStoppedLoaderServiceAlreadyReseted, LoaderService.Name, Name);
             var message = string.Format(Messages.ImportWasCancelledOnUrlBecauseLoaderFailed, new object[] { Name, url, LoaderService.Name });
-            _resetSemaphoreSlim.Release();
+            //_resetSemaphoreSlim.Release();
             throw new ImportErrorException(message, e);
         }
 
@@ -213,53 +233,78 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
         catch (Exception resetException)
         {
-            Logger.LogError(resetException, LogMessages.LoaderServiceResetingFailed, LoaderService.Name, resetException.Message);
-        }
-        finally
-        {
-            _resetSemaphoreSlim.Release();
+            Logger.LogError(resetException, LogMessages.LoaderServiceResettingFailed, LoaderService.Name, resetException.Message);
         }
     }
 
     private async Task ResetLoaderAsync(string url, CancellationToken cancellationToken = default)
     {
-        Logger.LogInformation(LogMessages.LoaderIsReseting);
+        Logger.LogInformation(LogMessages.LoaderIsResetting, _resetTryCount + 1);
 
-        await LoaderService.Reset(cancellationToken);
-        await LoaderService.UpdateData(url, cancellationToken);
-        LoadData = await LoaderService.GetData(Host, cancellationToken);
-        _resetTryCount++;
+        try
+        {
+            await LoaderService.Reset(cancellationToken).ConfigureAwait(false);
+            await LoaderService.UpdateData(url, cancellationToken).ConfigureAwait(false);
+            await LoadData(cancellationToken);
+        }
+        finally
+        {
+            Interlocked.Increment(ref _resetTryCount);
+        }
     }
 
     protected virtual async Task<(bool success, Stream? stream)> TryLoadFromUrlAsync(string url, object? data, CancellationToken cancellationToken = default)
     {
-        bool released = false;
-        await _loadSemaphoreSlim.WaitAsync(cancellationToken);
+        await _loadSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
-            try
-            {
-                var stream = await LoaderService.Load(url, data, cancellationToken);
-                return (true, stream);
-            }
-            catch (LoaderServiceException loaderServiceException)
-            {
-                _loadSemaphoreSlim.Release();
-                released = true;
-
-                await HandleLoaderServiceExceptionAsync(loaderServiceException, url, cancellationToken);
-                return (false, default(Stream));
-            }
-            catch (Exception e)
-            {
-                throw new LoadFromUrlException(url, e.Message, e);
-            }
+            var stream = await LoaderService.Load(url, data, cancellationToken).ConfigureAwait(false);
+            Interlocked.Exchange(ref _resetTryCount, 0);
+            return (true, stream);
+        }
+        catch (LoaderServiceException loaderServiceException)
+        {
+            await HandleLoaderServiceExceptionAsync(loaderServiceException, url, cancellationToken);
+            return (false, default(Stream));
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            throw new LoadFromUrlException(url, e.Message, e);
         }
         finally
         {
-            if (!released)
-                _loadSemaphoreSlim.Release();
+            _loadSemaphoreSlim.Release();
         }
+    }
+
+    protected virtual void Dispose()
+    {
+        _startSemaphoreSlim.Dispose();
+        _loadSemaphoreSlim.Dispose();
+
+        _stoppingCts?.Cancel();
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await Stop();
+
+        if (LoaderService.IsStarted)
+            await CloseLoaderAsync();
+
+        Dispose();
+
+        _stoppingCts?.Dispose();
+    }
+
+    public virtual Task Stop(CancellationToken cancellationToken = default)
+    {
+        _stoppingCts?.Cancel();
+        return Task.CompletedTask;
     }
 }
