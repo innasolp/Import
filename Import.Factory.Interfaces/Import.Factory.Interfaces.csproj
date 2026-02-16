@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 	  <Configurations>Debug;Release;debug libs</Configurations>
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-	  <Version>1.0.0.2</Version>
+	  <Version>1.0.0.3</Version>
 	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	  <Title>Import service factories interfaces</Title>
 	  <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
