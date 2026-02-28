@@ -28,31 +28,33 @@ public static class TestExtensions
     public static void SetupLoadItem<T>(this Mock<ILoaderService> loaderMock,
         string itemUrl, 
         object requestData,
-        T item)
+        T item, 
+        Func<CancellationToken, Task>? onLoad = null)
         where T:class
     {
         loaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).Returns(
-            (string url, object requestData, CancellationToken token) => LoadItemAsync(item));
+            (string url, object requestData, CancellationToken token) => LoadItemAsync(item, token, onLoad));
     }
 
     public static void SetupLoadItem<T>(this Mock<ILoaderService> loaderMock,
         string itemUrl,
         object requestData,
         T item,
-        Func<T, Task<Stream>> loadItem)
+        Func<T, CancellationToken, Task<Stream>> loadItem)
         where T : class
     {
         loaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).Returns(
-            (string url, object requestData, CancellationToken token) => loadItem(item));
+            (string url, object requestData, CancellationToken token) => loadItem(item, token));
     }
 
 
     public static void SetupLoadItemsSuccessfull<T>(this Mock<ILoaderService> loaderMock,
-        Dictionary<string,T> itemUrls,object requestData)
+        Dictionary<string,T> itemUrls, object requestData, Func<CancellationToken,Task>? onLoad = null)
         where T : class
     {
         foreach(var itemUrl in itemUrls)
-        loaderMock.Setup(w => w.Load(itemUrl.Key, requestData, It.IsAny<CancellationToken>())).Returns(LoadItemAsync(itemUrl.Value));
+        loaderMock.Setup(w => w.Load(itemUrl.Key, requestData, It.IsAny<CancellationToken>()))
+                .Returns((string url, object? data, CancellationToken token)=> LoadItemAsync(itemUrl.Value, token, onLoad));
     }
 
     public static void SetupLoadItemsThrowsExceptions(this Mock<ILoaderService> webLoaderMock,
@@ -69,14 +71,16 @@ public static class TestExtensions
         Exception exception,
         object requestData)
     {
-        webLoaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).Throws(exception);
+        webLoaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).ThrowsAsync(exception);
     }
 
-    public static async Task<Stream> LoadItemAsync<T>(T item)
+    public static async Task<Stream> LoadItemAsync<T>(T item, CancellationToken cancellationToken, Func<CancellationToken, Task>? onLoad = null)
         where T : class
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(item);
         var fs = new MemoryStream(bytes);
+        if (onLoad != null)
+            await onLoad(cancellationToken);
         return await Task.FromResult(fs);
     }
 
