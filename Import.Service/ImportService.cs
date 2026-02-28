@@ -4,17 +4,9 @@ using Microsoft.Extensions.Logging;
 namespace Import.Service;
 
 public abstract class ImportService(ILogger logger, ILoaderService loaderService, string host)
-    : IImportService, IAsyncDisposable
-{
-    private CancellationTokenSource? _stoppingCts;
-
-    public abstract string Name { get; }
-
-    public event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync;
-
+    : Service(logger)
+{  
     protected ILoaderService LoaderService { get; } = loaderService;
-
-    protected ILogger Logger { get; } = logger;
 
     private object? LoaderData { get; set; }
 
@@ -22,30 +14,13 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     private readonly SemaphoreSlim _loadSemaphoreSlim = new(1, 1);
 
-    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, 1);
-
     private int _resetTryCount = 0;
 
     private const int MaxResetTryCount = 3;
 
     private const int WaitingLoaderDelayMilliseconds = 500;
 
-    public virtual async Task Start(CancellationToken cancellationToken)
-    {
-        await _startSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            _stoppingCts?.Dispose();
-            _stoppingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            await ExecuteAsync(_stoppingCts.Token);
-        }
-        finally
-        {
-            _startSemaphoreSlim.Release();
-        }
-    }
-
-    private async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -115,35 +90,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
     }
 
     protected object? GetLoaderData() => LoaderData;
-
-    private async Task InvokeConnectedAsync(bool success, Exception? exception = null, CancellationToken cancellationToken = default)
-    {
-        // Safe event invocation: capture and iterate to isolate handler failures
-        var handlers = ConnectedAsync;
-        if (handlers == null)
-            return;
-
-        var args = new ConnectedAsyncEventArgs(success, exception, cancellationToken);
-
-        async Task HandlerTask(AsyncEventHandler<ConnectedAsyncEventArgs> handler)
-        {
-            try
-            {
-                await handler(this, args).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, LogMessages.ConnectedAsyncHandlerForServiceFailed, Name);
-            }
-        };
-
-        var tasks = handlers.GetInvocationList()
-            .OfType<AsyncEventHandler<ConnectedAsyncEventArgs>>()
-            .Select(HandlerTask);
-
-        await Task.WhenAll(tasks).ConfigureAwait(false);
-    }
-
+    
     protected abstract Task ProcessAsync(CancellationToken cancellationToken);
 
     protected virtual async Task StartLoaderIfNeededAsync(CancellationToken cancellationToken)
@@ -282,29 +229,11 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
     }
 
-    protected virtual void Dispose()
+    protected override async Task CloseAsync()
     {
-        _startSemaphoreSlim.Dispose();
-        _loadSemaphoreSlim.Dispose();
-
-        _stoppingCts?.Cancel();
-    }
-
-    async ValueTask IAsyncDisposable.DisposeAsync()
-    {
-        await Stop();
+        await  base.CloseAsync();
 
         if (LoaderService.IsStarted)
             await CloseLoaderAsync();
-
-        Dispose();
-
-        _stoppingCts?.Dispose();
-    }
-
-    public virtual Task Stop(CancellationToken cancellationToken = default)
-    {
-        _stoppingCts?.Cancel();
-        return Task.CompletedTask;
     }
 }
