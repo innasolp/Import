@@ -29,7 +29,7 @@ public static class TestExtensions
         string itemUrl, 
         object requestData,
         T item, 
-        Func<CancellationToken, Task>? onLoad = null)
+        Func<T, CancellationToken, Task>? onLoad = null)
         where T:class
     {
         loaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).Returns(
@@ -49,7 +49,7 @@ public static class TestExtensions
 
 
     public static void SetupLoadItemsSuccessfull<T>(this Mock<ILoaderService> loaderMock,
-        Dictionary<string,T> itemUrls, object requestData, Func<CancellationToken,Task>? onLoad = null)
+        Dictionary<string,T> itemUrls, object requestData, Func<T,CancellationToken,Task>? onLoad = null)
         where T : class
     {
         foreach(var itemUrl in itemUrls)
@@ -74,13 +74,13 @@ public static class TestExtensions
         webLoaderMock.Setup(w => w.Load(itemUrl, requestData, It.IsAny<CancellationToken>())).ThrowsAsync(exception);
     }
 
-    public static async Task<Stream> LoadItemAsync<T>(T item, CancellationToken cancellationToken, Func<CancellationToken, Task>? onLoad = null)
+    public static async Task<Stream> LoadItemAsync<T>(T item, CancellationToken cancellationToken, Func<T,CancellationToken, Task>? onLoad = null)
         where T : class
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(item);
         var fs = new MemoryStream(bytes);
         if (onLoad != null)
-            await onLoad(cancellationToken);
+            await onLoad(item, cancellationToken);
         return await Task.FromResult(fs);
     }
 

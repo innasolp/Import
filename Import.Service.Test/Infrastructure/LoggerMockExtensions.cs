@@ -5,7 +5,7 @@ namespace Import.Service.Test.Infrastructure;
 
 public static class LoggerMockExtensions
 {
-    private static bool LogStateComparer(object state, string messageFormat, params object[] args)
+    public static bool LogStateComparer(object state, string messageFormat, params object[] args)
     {
         if (state is IReadOnlyList<KeyValuePair<string, object>> stateDictionary)
         {
