@@ -3,13 +3,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Service;
 
-public class AggregateImportService(ILogger logger, string serviceName, Func<IEnumerable<IImportService>, CancellationToken, Task> executionTask) : Service(logger), IAggregateImportService
+
+public class WorkItem(IImportService importService)
 {
-    private readonly List<IImportService> _importServices = [];
+    public IImportService ImportService { get; } = importService;
+
+    public bool Completed { get; internal protected set; }
+
+    public bool? Success { get; internal protected set; }
+}
+
+public class AggregateImportService(ILogger logger, string serviceName, Func<IImportService, CancellationToken, Task> executionTask) 
+    : Service(logger), IAggregateImportService
+{
+    private const int WorkitemsChunkSize = 10;
+
+    private readonly List<WorkItem> _workItems = [];
 
     private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1);
 
-    private readonly Func<IEnumerable<IImportService>, CancellationToken, Task> _executionTask = executionTask;
+    private readonly Func<IImportService, CancellationToken, Task> _executionTask = executionTask;
 
     public override string Name => serviceName;
 
@@ -19,7 +32,7 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IEn
 
         try
         {
-            _importServices.Add(service);
+            _workItems.Add(new WorkItem(service));
         }
         finally
         {
@@ -27,17 +40,22 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IEn
         }
     }
 
-    IEnumerable<IImportService> IAggregateImportService.GetImportServices() => _importServices;
+    IEnumerable<(IImportService Service, bool Completed, bool? Success)> IAggregateImportService.GetImportServices() 
+        => [.. _workItems.Select(w=>(w.ImportService, w.Completed, w.Success))];
 
-    async Task IAggregateImportService.Dequeue(IImportService service, CancellationToken cancellationToken)
+    async Task<bool> IAggregateImportService.TryRemove(IImportService service, CancellationToken cancellationToken)
     {
         await _servicesSemaphoreSlim.WaitAsync(cancellationToken);
 
         try
         {
-            _importServices.Remove(service);
+            var workItem = _workItems.FirstOrDefault(w => w.ImportService == service);
+            if (workItem == null) return false;
+
+            _workItems.Remove(workItem);
+            return true;
         }
-        catch
+        finally
         {
             _servicesSemaphoreSlim.Release();
         }
@@ -49,9 +67,7 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IEn
         {            
             await InvokeConnectedAsync(true, cancellationToken : cancellationToken);
 
-            var importServices = new List<IImportService>(_importServices);
-
-            await _executionTask(importServices, cancellationToken);
+            await ProcessAsync(cancellationToken);
 
             await InvokeConnectedAsync(false, cancellationToken: cancellationToken);
         }
@@ -70,5 +86,45 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IEn
 
         Logger.LogInformation(LogMessages.ServiceWasStopped, Name);
         return true;
+    }
+
+    protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
+    {
+        while(!cancellationToken.IsCancellationRequested)
+        {
+            if(_workItems.Count == 0)
+            {
+                await Task.Delay(50, cancellationToken);
+                continue;
+            }
+
+            var workItemsChunk = _workItems.Where(w=>!w.Completed).Take(WorkitemsChunkSize).ToList();
+            var workItemsChunkTasks = workItemsChunk.Select(w=>ProcessWorkItem(w, cancellationToken));
+            await Task.WhenAll(workItemsChunkTasks);
+        }
+    }
+
+    private async Task ProcessWorkItem(WorkItem workItem, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _executionTask(workItem.ImportService, cancellationToken);
+            workItem.Completed = true;
+            workItem.Success = true;
+            Logger.LogInformation("Service item {ServiceName} was completed successfully", workItem.ImportService.Name);
+        }
+        catch(OperationCanceledException)
+        {
+            workItem.Completed = true;
+            workItem.Success = false;
+            Logger.LogInformation("Service item {ServiceName} was canceled", workItem.ImportService.Name);
+        }
+        catch(Exception e)
+        {
+            workItem.Completed = true;
+            workItem.Success = false;
+            Logger.LogInformation("Service item {ServiceName} handling was failed, see error log.", workItem.ImportService.Name);
+            Logger.LogError(e, "Service item {ServiceName} was failed with error.", workItem.ImportService.Name);
+        }
     }
 }
