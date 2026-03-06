@@ -29,12 +29,12 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
 
     protected virtual void ConnectedAdd(AsyncEventHandler<ConnectedAsyncEventArgs> value)
     {
-        Interlocked.CompareExchange(ref _connectedAsync, _connectedAsync + value, _connectedAsync);
+        _connectedAsync += value;
     }
 
     protected virtual void ConnectedRemove(AsyncEventHandler<ConnectedAsyncEventArgs> value)
     {
-        Interlocked.CompareExchange(ref _connectedAsync, _connectedAsync - value, _connectedAsync);
+        _connectedAsync -= value;
     }
 
     protected async Task InvokeConnectedAsync(bool success, Exception? exception = null, CancellationToken cancellationToken = default)

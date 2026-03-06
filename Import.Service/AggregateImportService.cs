@@ -98,7 +98,10 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
                 continue;
             }
 
-            var workItemsChunk = _workItems.Where(w=>!w.Completed).Take(WorkitemsChunkSize).ToList();
+            var notCompletedWorkItems = new List<WorkItem>(_workItems.Where(w=>!w.Completed));
+            if (notCompletedWorkItems.Count == 0) continue;
+
+            var workItemsChunk = notCompletedWorkItems.Take(WorkitemsChunkSize).ToList();
             var workItemsChunkTasks = workItemsChunk.Select(w=>ProcessWorkItem(w, cancellationToken));
             await Task.WhenAll(workItemsChunkTasks);
         }
@@ -126,5 +129,13 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
             Logger.LogInformation("Service item {ServiceName} handling was failed, see error log.", workItem.ImportService.Name);
             Logger.LogError(e, "Service item {ServiceName} was failed with error.", workItem.ImportService.Name);
         }
+    }
+
+    protected override async Task CloseAsync()
+    {
+        _servicesSemaphoreSlim.Release();
+        _servicesSemaphoreSlim.Dispose();
+
+        await base.CloseAsync();
     }
 }
