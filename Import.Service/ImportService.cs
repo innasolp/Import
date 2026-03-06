@@ -231,9 +231,18 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     protected override async Task CloseAsync()
     {
+        _loadSemaphoreSlim.Release();
+
         await  base.CloseAsync();
 
         if (LoaderService.IsStarted)
             await CloseLoaderAsync();
+    }
+
+    protected override void Dispose()
+    {
+        _loadSemaphoreSlim.Dispose();
+
+        base.Dispose();
     }
 }

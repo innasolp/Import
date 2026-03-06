@@ -97,6 +97,8 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
 
     protected virtual Task CloseAsync()
     {
+        _startSemaphoreSlim.Release();
+
         return Stop();
     }
 

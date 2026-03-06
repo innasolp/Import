@@ -131,11 +131,17 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
         }
     }
 
-    protected override async Task CloseAsync()
+    protected override Task CloseAsync()
     {
         _servicesSemaphoreSlim.Release();
+        
+        return base.CloseAsync();
+    }
+
+    protected override void Dispose()
+    {
         _servicesSemaphoreSlim.Dispose();
 
-        await base.CloseAsync();
+        base.Dispose();
     }
 }
