@@ -1,0 +1,14 @@
+<Solution>
+    <Folder Name="/Factory/">
+        <Project Path="Import.Factory.Interfaces/Import.Factory.Interfaces.csproj" />
+        <Project Path="Import.Factory.Logging/Import.Factory.Logging.csproj" />
+        <Project Path="Import.Factory.Service/Import.Factory.Service.csproj" />
+        <Project Path="Import.Settings.Interfaces/Import.Settings.Interfaces.csproj" />
+    </Folder>
+  
+  <Project Path="Import.Html.Factory/Import.Html.Factory.csproj" />
+  <Project Path="Import.Html/Import.Html.csproj" />
+  <Project Path="Import.Interfaces/Import.Interfaces.csproj" />
+  <Project Path="Import.Service.Test/Import.Service.Test.csproj" />
+  <Project Path="Import.Service/Import.Service.csproj" />
+</Solution>

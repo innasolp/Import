@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <Configurations>Debug;Release;debug libs</Configurations>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	  <Version>1.0.0.5</Version>
+	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	  <Title>Import service factories interfaces</Title>
+	  <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
+	  <PackageId>$(AssemblyName)</PackageId>
+	  <PackageVersion>$(Version)</PackageVersion>
+	  <Authors>innasolp</Authors>
+	  <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
+  </PropertyGroup>
+
+  
+
+  <ItemGroup>
+    <ProjectReference Include="..\Import.Interfaces\Import.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.Settings.Interfaces\Import.Settings.Interfaces.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
+  </ItemGroup>
+
+</Project>
