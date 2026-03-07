@@ -2,7 +2,6 @@
 
 public enum LoaderServiceAction
 {
-    None = 0,
     Reset = 1,
     RetryAfter = 2
 }

@@ -14,5 +14,5 @@ public class NoActionLoaderServiceException : LoaderServiceException
     {
     }
 
-    public override LoaderServiceAction? NeedsAction => LoaderServiceAction.None;
+    public override LoaderServiceAction? NeedsAction => null;
 }

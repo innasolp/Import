@@ -20,7 +20,8 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
 
     private readonly List<WorkItem> _workItems = [];
 
-    private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1);
+    private const int ServicesSemaphoreMaxCount = 1;
+    private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1,ServicesSemaphoreMaxCount);
 
     private readonly Func<IImportService, CancellationToken, Task> _executionTask = executionTask;
 
@@ -133,7 +134,8 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
 
     protected override Task CloseAsync()
     {
-        _servicesSemaphoreSlim.Release();
+        if(_servicesSemaphoreSlim.CurrentCount < ServicesSemaphoreMaxCount)
+            _servicesSemaphoreSlim.Release();
         
         return base.CloseAsync();
     }

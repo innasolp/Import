@@ -20,6 +20,10 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     private const int MaxResetTryCount = 3;
 
+    private int _retryCount = 0;
+
+    private const int MaxRetryCount = 3;
+
     protected override async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
     {
         try
@@ -132,7 +136,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
     }
 
-    private async Task HandleLoaderServiceExceptionAsync(LoaderServiceException e, string url, CancellationToken cancellationToken = default)
+    private async Task<bool> HandleLoaderServiceExceptionForContinueAsync(LoaderServiceException e, string url, CancellationToken cancellationToken = default)
     {
         if (e.NeedsAction != null)
         {
@@ -140,15 +144,10 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             {
                 case LoaderServiceAction.Reset:
                     await HandleResettingAsync(e, url, cancellationToken);
-                    break;
+                    return true;
 
                 case LoaderServiceAction.RetryAfter:
-                    if (e is not RetryAfterLoaderServiceException retryAfterEx)
-                        throw new InvalidOperationException($"Invalid loader error {e.GetType().Name} for action {LoaderServiceAction.RetryAfter}.");
-
-                    Logger.LogWarning(e, LogMessages.RequestFailedAndLoaderWillBePaused, url, e.Message, retryAfterEx.RetryAfter.TotalMilliseconds);
-                    await Task.Delay(retryAfterEx.RetryAfter, cancellationToken);
-                    break;
+                    return await HandleRetryAsync(e, url, cancellationToken);
 
                 default:
                     Logger.LogWarning(e, LogMessages.RequestUrlFailedWithError, url, e.Message);
@@ -159,6 +158,25 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         {
             Logger.LogWarning(e.InnerException ?? e, LogMessages.RequestUrlFailedWithError, url, e.Message);
         }
+
+        return false;
+    }
+
+    private async Task<bool> HandleRetryAsync(LoaderServiceException e, string url, CancellationToken cancellationToken)
+    {
+        if (e is not RetryAfterLoaderServiceException retryAfterEx)
+            throw new InvalidOperationException($"Invalid loader error {e.GetType().Name} for action {LoaderServiceAction.RetryAfter}.");
+
+        if (_retryCount >= MaxRetryCount)
+        {
+            Interlocked.Exchange(ref _retryCount, 0);
+            return false;
+        }
+
+        Logger.LogWarning(e, LogMessages.RequestFailedAndLoaderWillBePaused, url, e.Message, retryAfterEx.RetryAfter.TotalMilliseconds);
+        await Task.Delay(retryAfterEx.RetryAfter, cancellationToken);
+        Interlocked.Increment(ref _retryCount);
+        return true;
     }
 
     private async Task HandleResettingAsync(LoaderServiceException e, string url, CancellationToken cancellationToken = default)
@@ -215,12 +233,13 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
                     var stream = await LoaderService.Load(url, data, cancellationToken).ConfigureAwait(false);
                     loaded = true;
                     Interlocked.Exchange(ref _resetTryCount, 0);
+                    Interlocked.Exchange(ref _retryCount, 0);
                     return (true, stream);
                 }
                 catch (LoaderServiceException loaderServiceException)
                 {
-                    await HandleLoaderServiceExceptionAsync(loaderServiceException, url, cancellationToken);
-                    return (false, default(Stream));
+                    if(!await HandleLoaderServiceExceptionForContinueAsync(loaderServiceException, url, cancellationToken))
+                        return (false, default(Stream));
                 }
                 catch (OperationCanceledException)
                 {
