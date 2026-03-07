@@ -5,12 +5,12 @@ namespace Import.Service.Test.Infrastructure;
 
 public static class LoggerMockExtensions
 {
-    public static bool LogStateComparer(object state, string messageFormat, params object[] args)
+    public static bool LogStateComparer(object state, string messageFormat, params object?[] args)
     {
-        if (state is IReadOnlyList<KeyValuePair<string, object>> stateDictionary)
+        if (state is IReadOnlyList<KeyValuePair<string, object?>> stateDictionary)
         {
-            return stateDictionary.Any(s => s.Value.ToString() == messageFormat)
-                && (args.Length == 0 || args.All(arg => stateDictionary.Any(s => s.Value.Equals(arg))));
+            return stateDictionary.Any(s => s.Value?.ToString() == messageFormat)
+                && (args.Length == 0 || args.All(arg => stateDictionary.Any(s => s.Value?.Equals(arg) == true)));
         }
         else
             return state.ToString() == string.Format(messageFormat, args);
