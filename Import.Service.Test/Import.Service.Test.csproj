@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 	  <Configurations>Debug;Release;debug libs</Configurations>
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-	  <Version>1.0.0.4</Version>
+	  <Version>1.0.0.5</Version>
 	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	  <IsPackable>true</IsPackable>
 	  <Title>Import service test abstractions</Title>

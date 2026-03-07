@@ -13,7 +13,8 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
 
     private event AsyncEventHandler<ConnectedAsyncEventArgs>? _connectedAsync;
 
-    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, 1);
+    private const int StartSemaphoreMaxCount = 1; 
+    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, StartSemaphoreMaxCount);
 
     public event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync
     {
@@ -97,7 +98,8 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
 
     protected virtual Task CloseAsync()
     {
-        _startSemaphoreSlim.Release();
+        if(_startSemaphoreSlim.CurrentCount < StartSemaphoreMaxCount)
+            _startSemaphoreSlim.Release();
 
         return Stop();
     }

@@ -1,4 +1,4 @@
-﻿using Import.Interfaces;
+﻿using Import.Interfaces.Exceptions;
 using Import.Service.Test.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -93,7 +93,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         var requestData = new object();
         LoaderMock.SetupGetRequestData(requestData);
 
-        var loaderServiceException = new LoaderServiceException("loading failed.", LoaderServiceAction.Reset);
+        var loaderServiceException = new ResetLoaderServiceException("loading failed.");
         LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).ThrowsAsync(loaderServiceException);
 
         using var tokenSource = new CancellationTokenSource();
@@ -139,7 +139,8 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
             ?? throw new InvalidOperationException($"message format {messageResourceKey} is null or not found");
 
         var innerException = new Exception("status code 403");
-        var exception = new LoaderServiceException("request forbidden", innerException, LoaderServiceAction.Wait);
+        var retryAfter = TimeSpan.FromMilliseconds(2000);
+        var exception = new RetryAfterLoaderServiceException("request forbidden", innerException, retryAfter);
 
         LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
