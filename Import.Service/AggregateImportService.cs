@@ -37,7 +37,7 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
         }
         finally
         {
-            _servicesSemaphoreSlim.Release();
+            ReleaseSemaphoreIfNeed();
         }
     }
 
@@ -58,7 +58,7 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
         }
         finally
         {
-            _servicesSemaphoreSlim.Release();
+            ReleaseSemaphoreIfNeed();
         }
     }
 
@@ -132,10 +132,15 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
         }
     }
 
+    private void ReleaseSemaphoreIfNeed()
+    {
+        if (_servicesSemaphoreSlim.CurrentCount < ServicesSemaphoreMaxCount)
+            _servicesSemaphoreSlim.Release();
+    }
+
     protected override Task CloseAsync()
     {
-        if(_servicesSemaphoreSlim.CurrentCount < ServicesSemaphoreMaxCount)
-            _servicesSemaphoreSlim.Release();
+        ReleaseSemaphoreIfNeed();
         
         return base.CloseAsync();
     }

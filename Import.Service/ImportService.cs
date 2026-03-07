@@ -255,16 +255,19 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
         finally
         {
-            _loadSemaphoreSlim.Release();
+            ReleaseSemaphoreIfNeed();
         }
+    }
+
+    private void ReleaseSemaphoreIfNeed()
+    {
+        if (_loadSemaphoreSlim.CurrentCount < LoaderMaxCount)
+            _loadSemaphoreSlim.Release();
     }
 
     protected override async Task CloseAsync()
     {
-        if (_loadSemaphoreSlim.CurrentCount < LoaderMaxCount)
-        {
-            _loadSemaphoreSlim.Release();
-        }       
+        ReleaseSemaphoreIfNeed();
 
         await  base.CloseAsync();
 

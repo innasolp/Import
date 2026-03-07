@@ -83,7 +83,7 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         }
         finally
         {
-            _startSemaphoreSlim.Release();
+            ReleaseSemaphoreIfNeed();
         }
     }
 
@@ -96,10 +96,15 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         _stoppingCts?.Cancel();
     }
 
+    private void ReleaseSemaphoreIfNeed()
+    {
+        if (_startSemaphoreSlim.CurrentCount < StartSemaphoreMaxCount)
+            _startSemaphoreSlim.Release();
+    }
+
     protected virtual Task CloseAsync()
     {
-        if(_startSemaphoreSlim.CurrentCount < StartSemaphoreMaxCount)
-            _startSemaphoreSlim.Release();
+        ReleaseSemaphoreIfNeed();
 
         return Stop();
     }
