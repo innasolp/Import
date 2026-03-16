@@ -13,12 +13,13 @@ public class WorkItem(IImportService importService)
     public bool? Success { get; internal protected set; }
 }
 
-public class AggregateImportService(ILogger logger, string serviceName, Func<IImportService, CancellationToken, Task> executionTask) 
+public class AggregateService(ILogger logger, string serviceName, Func<IImportService, CancellationToken, Task> executionTask) 
     : Service(logger), IAggregateImportService
 {
     private const int WorkitemsChunkSize = 10;
 
-    private readonly List<WorkItem> _workItems = [];
+    private readonly Dictionary<Guid, WorkItem> _workItems = [];
+    private readonly Dictionary<Guid, AsyncEventHandler<ConnectedAsyncEventArgs>> _workItemHandlers = [];
 
     private const int ServicesSemaphoreMaxCount = 1;
     private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1,ServicesSemaphoreMaxCount);
@@ -33,7 +34,11 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
 
         try
         {
-            _workItems.Add(new WorkItem(service));
+            var guid = Guid.NewGuid();
+            _workItems.Add(guid, new WorkItem(service));
+            AsyncEventHandler<ConnectedAsyncEventArgs> serviceConnected = (sender, args) => ServiceItemConnectedAsync(guid, sender, args);
+            service.ConnectedAsync += serviceConnected;
+            _workItemHandlers.Add(guid, serviceConnected);
         }
         finally
         {
@@ -41,8 +46,45 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
         }
     }
 
+    private async Task ServiceItemConnectedAsync(Guid guid, object sender, ConnectedAsyncEventArgs eventArgs)
+    {
+        if(sender is not IImportService service)
+            throw new InvalidOperationException($"Invalid type {sender.GetType().Name}. Must be assignable to {nameof(IImportService)}.");
+
+        if(!_workItems.TryGetValue(guid, out var workItem) || workItem == null)
+            throw new InvalidOperationException($"No item with id {guid}.");
+
+        if (eventArgs.Success)
+        {
+            workItem.Completed = false;
+            workItem.Success = null;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasStarted, service.Name);
+            return;
+        }
+
+        if (eventArgs.Exception == null)
+        {
+            workItem.Completed = true;
+            workItem.Success = true;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCompletedSuccessfully, service.Name);
+        }
+        else if (eventArgs.CancellationToken.IsCancellationRequested)
+        {
+            workItem.Completed = true;
+            workItem.Success = false;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, service.Name);
+        }
+        else
+        {
+            workItem.Completed = true;
+            workItem.Success = false;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, service.Name);
+            Logger.LogError(eventArgs.Exception, AggregateLogMessages.ServiceItemWasFailedError, service.Name);
+        }
+    }
+
     IEnumerable<(IImportService Service, bool Completed, bool? Success)> IAggregateImportService.GetImportServices() 
-        => [.. _workItems.Select(w=>(w.ImportService, w.Completed, w.Success))];
+        => [.. _workItems.Values.Select(w=>(w.ImportService, w.Completed, w.Success))];
 
     async Task<bool> IAggregateImportService.TryRemove(IImportService service, CancellationToken cancellationToken)
     {
@@ -50,10 +92,11 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
 
         try
         {
-            var workItem = _workItems.FirstOrDefault(w => w.ImportService == service);
-            if (workItem == null) return false;
+            var workItem = _workItems.FirstOrDefault(w => w.Value.ImportService == service);
+            if (workItem.Value == null) return false;
+            RemoveConnectedHandlerIfAvailable(workItem);
 
-            _workItems.Remove(workItem);
+            _workItems.Remove(workItem.Key);
             return true;
         }
         finally
@@ -62,10 +105,21 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
         }
     }
 
+    private void RemoveConnectedHandlerIfAvailable(KeyValuePair<Guid, WorkItem> workItem)
+    {
+        if (_workItemHandlers.TryGetValue(workItem.Key, out var serviceConnected))
+        {
+            workItem.Value.ImportService.ConnectedAsync -= serviceConnected;
+            _workItemHandlers.Remove(workItem.Key);
+        }
+    }
+
     protected override async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
     {
         try
-        {            
+        {
+            Logger.LogInformation(LogMessages.ServiceStarted, Name);
+
             await InvokeConnectedAsync(true, cancellationToken : cancellationToken);
 
             await ProcessAsync(cancellationToken);
@@ -99,7 +153,7 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
                 continue;
             }
 
-            var notCompletedWorkItems = new List<WorkItem>(_workItems.Where(w=>!w.Completed));
+            var notCompletedWorkItems = new List<WorkItem>(_workItems.Values.Where(w=>!w.Completed));
             if (notCompletedWorkItems.Count == 0) continue;
 
             var workItemsChunk = notCompletedWorkItems.Take(WorkitemsChunkSize).ToList();
@@ -112,23 +166,16 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
     {
         try
         {
-            await _executionTask(workItem.ImportService, cancellationToken);
-            workItem.Completed = true;
-            workItem.Success = true;
-            Logger.LogInformation("Service item {ServiceName} was completed successfully", workItem.ImportService.Name);
+            await _executionTask(workItem.ImportService, cancellationToken);            
         }
         catch(OperationCanceledException)
         {
-            workItem.Completed = true;
-            workItem.Success = false;
-            Logger.LogInformation("Service item {ServiceName} was canceled", workItem.ImportService.Name);
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, workItem.ImportService.Name);
         }
         catch(Exception e)
         {
-            workItem.Completed = true;
-            workItem.Success = false;
-            Logger.LogInformation("Service item {ServiceName} handling was failed, see error log.", workItem.ImportService.Name);
-            Logger.LogError(e, "Service item {ServiceName} was failed with error.", workItem.ImportService.Name);
+            Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, workItem.ImportService.Name);
+            Logger.LogError(e, AggregateLogMessages.ServiceItemWasFailedError, workItem.ImportService.Name);
         }
     }
 
@@ -147,6 +194,9 @@ public class AggregateImportService(ILogger logger, string serviceName, Func<IIm
 
     protected override void Dispose()
     {
+        foreach(var workItem in _workItems)
+          RemoveConnectedHandlerIfAvailable(workItem);
+
         _servicesSemaphoreSlim.Dispose();
 
         base.Dispose();
