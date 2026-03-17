@@ -51,35 +51,43 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
         if(sender is not IImportService service)
             throw new InvalidOperationException($"Invalid type {sender.GetType().Name}. Must be assignable to {nameof(IImportService)}.");
 
-        if(!_workItems.TryGetValue(guid, out var workItem) || workItem == null)
-            throw new InvalidOperationException($"No item with id {guid}.");
+        await _servicesSemaphoreSlim.WaitAsync();
 
-        if (eventArgs.Success)
+        try
         {
-            workItem.Completed = false;
-            workItem.Success = null;
-            Logger.LogInformation(AggregateLogMessages.ServiceItemWasStarted, service.Name);
-            return;
-        }
+            if (!_workItems.TryGetValue(guid, out var workItem) || workItem == null)
+                throw new InvalidOperationException($"No item with id {guid}.");
 
-        if (eventArgs.Exception == null)
-        {
+            if (eventArgs.Connected)
+            {
+                workItem.Completed = false;
+                workItem.Success = null;
+                Logger.LogInformation(AggregateLogMessages.ServiceItemWasStarted, service.Name);
+                return;
+            }
+
             workItem.Completed = true;
-            workItem.Success = true;
-            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCompletedSuccessfully, service.Name);
+
+            if (eventArgs.Exception == null)
+            {
+                workItem.Success = true;
+                Logger.LogInformation(AggregateLogMessages.ServiceItemWasCompletedSuccessfully, service.Name);
+            }
+            else if (eventArgs.CancellationToken.IsCancellationRequested)
+            {
+                workItem.Success = false;
+                Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, service.Name);
+            }
+            else
+            {
+                workItem.Success = false;
+                Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, service.Name);
+                Logger.LogError(eventArgs.Exception, AggregateLogMessages.ServiceItemWasFailedError, service.Name);
+            }
         }
-        else if (eventArgs.CancellationToken.IsCancellationRequested)
+        finally
         {
-            workItem.Completed = true;
-            workItem.Success = false;
-            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, service.Name);
-        }
-        else
-        {
-            workItem.Completed = true;
-            workItem.Success = false;
-            Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, service.Name);
-            Logger.LogError(eventArgs.Exception, AggregateLogMessages.ServiceItemWasFailedError, service.Name);
+            ReleaseSemaphoreIfNeed();
         }
     }
 

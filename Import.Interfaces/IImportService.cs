@@ -1,10 +1,10 @@
 ﻿
 namespace Import.Interfaces;
 
-public class ConnectedAsyncEventArgs(bool success, Exception? exception = null, CancellationToken cancellationToken = default)
+public class ConnectedAsyncEventArgs(bool connected, Exception? exception = null, CancellationToken cancellationToken = default)
     : AsyncEventArgs(exception, cancellationToken)
 {
-    public bool Success { get; } = success;
+    public bool Connected { get; } = connected;
 }
 
 public interface IImportService
