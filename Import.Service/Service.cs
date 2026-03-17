@@ -38,14 +38,13 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         _connectedAsync -= value;
     }
 
-    protected async Task InvokeConnectedAsync(bool success, Exception? exception = null, CancellationToken cancellationToken = default)
+    protected async Task InvokeConnectedAsync(bool connected, Exception? exception = null, CancellationToken cancellationToken = default)
     {
-        // Safe event invocation: capture and iterate to isolate handler failures
         var handlers = GetConnectedHandlers();
         if (handlers == null)
             return;
 
-        var args = new ConnectedAsyncEventArgs(success, exception, cancellationToken);
+        var args = new ConnectedAsyncEventArgs(connected, exception, cancellationToken);
 
         async Task HandlerTask(AsyncEventHandler<ConnectedAsyncEventArgs> handler)
         {
