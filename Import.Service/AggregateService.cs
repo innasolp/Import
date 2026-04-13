@@ -36,10 +36,12 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
         try
         {
             var guid = Guid.NewGuid();
-            _workItems.TryAdd(guid, new WorkItem(service));
-            AsyncEventHandler<ConnectedAsyncEventArgs> serviceConnected = (sender, args) => ServiceItemConnectedAsync(guid, sender, args);
-            service.ConnectedAsync += serviceConnected;
-            _workItemHandlers.TryAdd(guid, serviceConnected);
+            if (_workItems.TryAdd(guid, new WorkItem(service)))
+            {
+                Task serviceConnected(object sender, ConnectedAsyncEventArgs args) => ServiceItemConnectedAsync(guid, sender, args);
+                service.ConnectedAsync += serviceConnected;
+                _workItemHandlers.TryAdd(guid, serviceConnected);
+            }
         }
         finally
         {
