@@ -162,7 +162,8 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
                 continue;
             }
 
-            var notCompletedWorkItems = new List<WorkItem>(_workItems.Values.Where(w=>!w.Completed));
+            var workItems = new List<WorkItem>(_workItems.Values);
+            var notCompletedWorkItems = workItems.Where(w=>!w.Completed).ToList();
             if (notCompletedWorkItems.Count == 0) continue;
 
             var workItemsChunk = notCompletedWorkItems.Take(WorkitemsChunkSize).ToList();
