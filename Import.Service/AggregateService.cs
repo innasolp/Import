@@ -1,5 +1,6 @@
 ﻿using Import.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 
 namespace Import.Service;
 
@@ -18,8 +19,8 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
 {
     private const int WorkitemsChunkSize = 10;
 
-    private readonly Dictionary<Guid, WorkItem> _workItems = [];
-    private readonly Dictionary<Guid, AsyncEventHandler<ConnectedAsyncEventArgs>> _workItemHandlers = [];
+    private readonly ConcurrentDictionary<Guid, WorkItem> _workItems = [];
+    private readonly ConcurrentDictionary<Guid, AsyncEventHandler<ConnectedAsyncEventArgs>> _workItemHandlers = [];
 
     private const int ServicesSemaphoreMaxCount = 1;
     private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1,ServicesSemaphoreMaxCount);
@@ -35,10 +36,12 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
         try
         {
             var guid = Guid.NewGuid();
-            _workItems.Add(guid, new WorkItem(service));
-            AsyncEventHandler<ConnectedAsyncEventArgs> serviceConnected = (sender, args) => ServiceItemConnectedAsync(guid, sender, args);
-            service.ConnectedAsync += serviceConnected;
-            _workItemHandlers.Add(guid, serviceConnected);
+            if (_workItems.TryAdd(guid, new WorkItem(service)))
+            {
+                Task serviceConnected(object sender, ConnectedAsyncEventArgs args) => ServiceItemConnectedAsync(guid, sender, args);
+                service.ConnectedAsync += serviceConnected;
+                _workItemHandlers.TryAdd(guid, serviceConnected);
+            }
         }
         finally
         {
@@ -104,7 +107,7 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
             if (workItem.Value == null) return false;
             RemoveConnectedHandlerIfAvailable(workItem);
 
-            _workItems.Remove(workItem.Key);
+            _workItems.TryRemove(workItem.Key, out var _);
             return true;
         }
         finally
@@ -118,7 +121,7 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
         if (_workItemHandlers.TryGetValue(workItem.Key, out var serviceConnected))
         {
             workItem.Value.ImportService.ConnectedAsync -= serviceConnected;
-            _workItemHandlers.Remove(workItem.Key);
+            _workItemHandlers.TryRemove(workItem.Key, out var _);
         }
     }
 
@@ -155,13 +158,14 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
     {
         while(!cancellationToken.IsCancellationRequested)
         {
-            if(_workItems.Count == 0)
+            if(_workItems.IsEmpty)
             {
                 await Task.Delay(50, cancellationToken);
                 continue;
             }
 
-            var notCompletedWorkItems = new List<WorkItem>(_workItems.Values.Where(w=>!w.Completed));
+            var workItems = new List<WorkItem>(_workItems.Values);
+            var notCompletedWorkItems = workItems.Where(w=>!w.Completed).ToList();
             if (notCompletedWorkItems.Count == 0) continue;
 
             var workItemsChunk = notCompletedWorkItems.Take(WorkitemsChunkSize).ToList();
