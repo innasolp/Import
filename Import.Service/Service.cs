@@ -11,10 +11,17 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
 
     protected ILogger Logger { get; } = logger;
 
+    private int _connected; // 0 = false, 1 = true
+
+    public bool Connected => Volatile.Read(ref _connected) == 1;
+
     private event AsyncEventHandler<ConnectedAsyncEventArgs>? _connectedAsync;
 
-    private const int StartSemaphoreMaxCount = 1; 
-    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, StartSemaphoreMaxCount);
+    private const int SemaphoreMaxCount = 1; 
+
+    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, SemaphoreMaxCount);
+
+    private readonly SemaphoreSlim _connectedSemaphoreSlim = new(1, SemaphoreMaxCount);
 
     public event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync
     {
@@ -38,8 +45,10 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         _connectedAsync -= value;
     }
 
-    protected async Task InvokeConnectedAsync(bool connected, Exception? exception = null, CancellationToken cancellationToken = default)
+    protected virtual async Task InvokeConnectedAsync(bool connected, Exception? exception = null, CancellationToken cancellationToken = default)
     {
+        await SetConnectedAsync(connected);
+
         var handlers = GetConnectedHandlers();
         if (handlers == null)
             return;
@@ -65,6 +74,20 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
+    protected async Task SetConnectedAsync(bool connected)
+    {
+        await _connectedSemaphoreSlim.WaitAsync();
+
+        try
+        {
+            Interlocked.Exchange(ref _connected, connected ? 1 : 0);
+        }
+        finally
+        {
+            ReleaseSemaphoreIfNeed(_connectedSemaphoreSlim);
+        }
+    }
+
     protected AsyncEventHandler<ConnectedAsyncEventArgs>? GetConnectedHandlers()
     {
         var handlers = _connectedAsync;
@@ -82,7 +105,7 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         }
         finally
         {
-            ReleaseSemaphoreIfNeed();
+            ReleaseSemaphoreIfNeed(_startSemaphoreSlim);
         }
     }
 
@@ -95,15 +118,16 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         _stoppingCts?.Cancel();
     }
 
-    private void ReleaseSemaphoreIfNeed()
+    private static void ReleaseSemaphoreIfNeed(SemaphoreSlim semaphoreSlim)
     {
-        if (_startSemaphoreSlim.CurrentCount < StartSemaphoreMaxCount)
-            _startSemaphoreSlim.Release();
+        if (semaphoreSlim.CurrentCount < SemaphoreMaxCount)
+            semaphoreSlim.Release();
     }
 
     protected virtual Task CloseAsync()
     {
-        ReleaseSemaphoreIfNeed();
+        ReleaseSemaphoreIfNeed(_startSemaphoreSlim);
+        ReleaseSemaphoreIfNeed(_connectedSemaphoreSlim);
 
         return Stop();
     }

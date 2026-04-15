@@ -16,4 +16,6 @@ public interface IImportService
     string Name { get; }
 
     event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync;
+
+    bool Connected { get; }
 }
