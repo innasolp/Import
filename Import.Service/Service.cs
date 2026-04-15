@@ -11,6 +11,8 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
 
     protected ILogger Logger { get; } = logger;
 
+    public bool Connected { get; private set; }
+
     private event AsyncEventHandler<ConnectedAsyncEventArgs>? _connectedAsync;
 
     private const int StartSemaphoreMaxCount = 1; 
@@ -38,8 +40,10 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         _connectedAsync -= value;
     }
 
-    protected async Task InvokeConnectedAsync(bool connected, Exception? exception = null, CancellationToken cancellationToken = default)
+    protected virtual async Task InvokeConnectedAsync(bool connected, Exception? exception = null, CancellationToken cancellationToken = default)
     {
+        SetConnected(connected);
+
         var handlers = GetConnectedHandlers();
         if (handlers == null)
             return;
@@ -63,6 +67,11 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
             .Select(HandlerTask);
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
+    }
+
+    protected virtual void SetConnected(bool connected)
+    {
+        Connected = connected;
     }
 
     protected AsyncEventHandler<ConnectedAsyncEventArgs>? GetConnectedHandlers()
