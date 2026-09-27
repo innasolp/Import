@@ -1,1 +1,2 @@
 .github/workflows/** linguist-generated=true
+*.{yaml,yml} linguist-generated=true
