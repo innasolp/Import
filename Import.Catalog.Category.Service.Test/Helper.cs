@@ -25,6 +25,7 @@ public static class Helper
             var child = CreateCategory();
             child.ItemParent = parentCategory;
             child.ParentId = parentCategory.Id;
+            children.Add(child);
         }
         parentCategory.Children = children;
         parentCategory.ChildrenIds = [.. children.Select(c => c.Id)];

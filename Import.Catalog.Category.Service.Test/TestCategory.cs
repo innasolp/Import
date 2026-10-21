@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Specialized;
+using System.Text.Json.Serialization;
 using Import.TreeItem;
 
 namespace Import.Catalog.Category.Service.Test;
@@ -18,6 +19,7 @@ public class TestCategory : ITreeItem
 
     public bool? IsParented { get; set; }
 
+    [JsonIgnore]
     public List<TestCategory> Children { get; set; } = [];
 
     ICollection ITreeItem.Children => Children;
