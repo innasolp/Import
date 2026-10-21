@@ -257,16 +257,8 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
     }
 
-    private void ReleaseSemaphoreIfNeed()
-    {
-        if (_loadSemaphoreSlim.CurrentCount < LoaderMaxCount)
-            _loadSemaphoreSlim.Release();
-    }
-
     protected override async Task CloseAsync()
     {
-        ReleaseSemaphoreIfNeed();
-
         await base.CloseAsync();
 
         if (LoaderService.IsStarted)
