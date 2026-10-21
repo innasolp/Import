@@ -5,123 +5,125 @@ using System.Collections.Concurrent;
 namespace Import.Service;
 
 
-public class WorkItem(IImportService importService)
+public class WorkItem(IService importService)
 {
-    public IImportService ImportService { get; } = importService;
+    private int _completed;
+    private int _successState;
 
-    public bool Completed { get; internal protected set; }
+    public IService ImportService { get; } = importService;
 
-    public bool? Success { get; internal protected set; }
+    public bool Completed
+    {
+        get => Volatile.Read(ref _completed) == 1;
+        protected internal set => Volatile.Write(ref _completed, value ? 1 : 0);
+    }
+
+    public bool? Success
+    {
+        get => Volatile.Read(ref _successState) switch
+        {
+            1 => false,
+            2 => true,
+            _ => null
+        };
+        protected internal set => Volatile.Write(ref _successState, value switch
+        {
+            false => 1,
+            true => 2,
+            null => 0
+        });
+    }
+
+    internal AsyncEventHandler<ConnectedAsyncEventArgs>? ConnectedHandler { get; set; }
 }
 
-public class AggregateService(ILogger logger, string serviceName, Func<IImportService, CancellationToken, Task> executionTask) 
+public class AggregateService(
+    ILogger logger,
+    string serviceName,
+    Func<IService, CancellationToken, Task> executionTask)
     : Service(logger), IAggregateImportService
 {
     private const int WorkitemsChunkSize = 10;
 
-    private readonly ConcurrentDictionary<Guid, WorkItem> _workItems = [];
-    private readonly ConcurrentDictionary<Guid, AsyncEventHandler<ConnectedAsyncEventArgs>> _workItemHandlers = [];
-
-    private const int ServicesSemaphoreMaxCount = 1;
-    private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1,ServicesSemaphoreMaxCount);
-
-    private readonly Func<IImportService, CancellationToken, Task> _executionTask = executionTask;
+    private readonly ConcurrentDictionary<IService, WorkItem> _workItems = new(ReferenceEqualityComparer.Instance);
+    private readonly Func<IService, CancellationToken, Task> _executionTask = executionTask;
 
     public override string Name => serviceName;
 
-    async Task IAggregateImportService.Enqueue(IImportService service, CancellationToken cancellationToken)
+    Task IAggregateImportService.Enqueue(IService service, CancellationToken cancellationToken)
     {
-        await _servicesSemaphoreSlim.WaitAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        try
+        var workItem = new WorkItem(service);
+        AsyncEventHandler<ConnectedAsyncEventArgs> handler = (sender, args) =>
+            ServiceItemConnectedAsync(workItem, sender, args);
+
+        workItem.ConnectedHandler = handler;
+
+        service.ConnectedAsync += handler;
+
+        if (!_workItems.TryAdd(service, workItem))
         {
-            var guid = Guid.NewGuid();
-            if (_workItems.TryAdd(guid, new WorkItem(service)))
-            {
-                Task serviceConnected(object sender, ConnectedAsyncEventArgs args) => ServiceItemConnectedAsync(guid, sender, args);
-                service.ConnectedAsync += serviceConnected;
-                _workItemHandlers.TryAdd(guid, serviceConnected);
-            }
+            service.ConnectedAsync -= handler;
         }
-        finally
-        {
-            ReleaseSemaphoreIfNeed();
-        }
+
+        return Task.CompletedTask;
     }
 
-    private async Task ServiceItemConnectedAsync(Guid guid, object sender, ConnectedAsyncEventArgs eventArgs)
+    private Task ServiceItemConnectedAsync(WorkItem workItem, object sender, ConnectedAsyncEventArgs eventArgs)
     {
-        if(sender is not IImportService service)
-            throw new InvalidOperationException($"Invalid type {sender.GetType().Name}. Must be assignable to {nameof(IImportService)}.");
+        if (sender is not IService service)
+            throw new InvalidOperationException($"Invalid type {sender.GetType().Name}. Must be assignable to {nameof(IService)}.");
 
-        await _servicesSemaphoreSlim.WaitAsync();
-
-        try
+        if (eventArgs.Connected)
         {
-            if (!_workItems.TryGetValue(guid, out var workItem) || workItem == null)
-                throw new InvalidOperationException($"No item with id {guid}.");
-
-            if (eventArgs.Connected)
-            {
-                workItem.Completed = false;
-                workItem.Success = null;
-                Logger.LogInformation(AggregateLogMessages.ServiceItemWasStarted, service.Name);
-                return;
-            }
-
-            workItem.Completed = true;
-
-            if (eventArgs.Exception == null)
-            {
-                workItem.Success = true;
-                Logger.LogInformation(AggregateLogMessages.ServiceItemWasCompletedSuccessfully, service.Name);
-            }
-            else if (eventArgs.CancellationToken.IsCancellationRequested)
-            {
-                workItem.Success = false;
-                Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, service.Name);
-            }
-            else
-            {
-                workItem.Success = false;
-                Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, service.Name);
-                Logger.LogError(eventArgs.Exception, AggregateLogMessages.ServiceItemWasFailedError, service.Name);
-            }
+            workItem.Completed = false;
+            workItem.Success = null;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasStarted, service.Name);
+            return Task.CompletedTask;
         }
-        finally
+
+        if (eventArgs.CancellationToken.IsCancellationRequested || eventArgs.Exception is OperationCanceledException)
         {
-            ReleaseSemaphoreIfNeed();
+            workItem.Success = false;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, service.Name);
         }
+        else if (eventArgs.Exception != null)
+        {
+            workItem.Success = false;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, service.Name);
+            Logger.LogError(eventArgs.Exception, AggregateLogMessages.ServiceItemWasFailedError, service.Name);
+        }
+        else
+        {
+            workItem.Success = true;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCompletedSuccessfully, service.Name);
+        }
+
+        workItem.Completed = true;
+        return Task.CompletedTask;
     }
 
-    IEnumerable<(IImportService Service, bool Completed, bool? Success)> IAggregateImportService.GetImportServices() 
-        => [.. _workItems.Values.Select(w=>(w.ImportService, w.Completed, w.Success))];
+    IEnumerable<(IService Service, bool Completed, bool? Success)> IAggregateImportService.GetImportServices()
+        => [.. _workItems.Values.Select(w => (w.ImportService, w.Completed, w.Success))];
 
-    async Task<bool> IAggregateImportService.TryRemove(IImportService service, CancellationToken cancellationToken)
+    Task<bool> IAggregateImportService.TryRemove(IService service, CancellationToken cancellationToken)
     {
-        await _servicesSemaphoreSlim.WaitAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        try
-        {
-            var workItem = _workItems.FirstOrDefault(w => w.Value.ImportService == service);
-            if (workItem.Value == null) return false;
-            RemoveConnectedHandlerIfAvailable(workItem);
+        if (!_workItems.TryRemove(service, out var workItem))
+            return Task.FromResult(false);
 
-            _workItems.TryRemove(workItem.Key, out var _);
-            return true;
-        }
-        finally
-        {
-            ReleaseSemaphoreIfNeed();
-        }
+        DetachHandler(workItem);
+        return Task.FromResult(true);
     }
 
-    private void RemoveConnectedHandlerIfAvailable(KeyValuePair<Guid, WorkItem> workItem)
+    private static void DetachHandler(WorkItem workItem)
     {
-        if (_workItemHandlers.TryGetValue(workItem.Key, out var serviceConnected))
+        if (workItem.ConnectedHandler is { } handler)
         {
-            workItem.Value.ImportService.ConnectedAsync -= serviceConnected;
-            _workItemHandlers.TryRemove(workItem.Key, out var _);
+            workItem.ImportService.ConnectedAsync -= handler;
+            workItem.ConnectedHandler = null;
         }
     }
 
@@ -131,22 +133,20 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
         {
             Logger.LogInformation(LogMessages.ServiceStarted, Name);
 
-            await InvokeConnectedAsync(true, cancellationToken : cancellationToken);
-
-            await ProcessAsync(cancellationToken);
-
-            await InvokeConnectedAsync(false, cancellationToken: cancellationToken);
+            await InvokeConnectedAsync(true, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await ProcessAsync(cancellationToken).ConfigureAwait(false);
+            await InvokeConnectedAsync(false, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException e)
         {
             Logger.LogWarning(e, LogMessages.ServiceWasCancelled, Name);
-            await InvokeConnectedAsync(false, e, cancellationToken);
+            await InvokeConnectedAsync(false, e, cancellationToken).ConfigureAwait(false);
             return false;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, LogMessages.ServiceFailedWithError, Name);
-            await InvokeConnectedAsync(false, ex, cancellationToken);
+            await InvokeConnectedAsync(false, ex, cancellationToken).ConfigureAwait(false);
             return false;
         }
 
@@ -156,21 +156,23 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
 
     protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        while(!cancellationToken.IsCancellationRequested)
+        while (true)
         {
-            if(_workItems.IsEmpty)
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var workItemsChunk = _workItems.Values
+                .Where(w => !w.Completed)
+                .Take(WorkitemsChunkSize)
+                .ToList();
+
+            if (workItemsChunk.Count == 0)
             {
-                await Task.Delay(50, cancellationToken);
+                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
                 continue;
             }
 
-            var workItems = new List<WorkItem>(_workItems.Values);
-            var notCompletedWorkItems = workItems.Where(w=>!w.Completed).ToList();
-            if (notCompletedWorkItems.Count == 0) continue;
-
-            var workItemsChunk = notCompletedWorkItems.Take(WorkitemsChunkSize).ToList();
-            var workItemsChunkTasks = workItemsChunk.Select(w=>ProcessWorkItem(w, cancellationToken));
-            await Task.WhenAll(workItemsChunkTasks);
+            var workItemsChunkTasks = workItemsChunk.Select(w => ProcessWorkItem(w, cancellationToken));
+            await Task.WhenAll(workItemsChunkTasks).ConfigureAwait(false);
         }
     }
 
@@ -178,39 +180,42 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
     {
         try
         {
-            await _executionTask(workItem.ImportService, cancellationToken);            
+            await _executionTask(workItem.ImportService, cancellationToken).ConfigureAwait(false);
+
+            if (!workItem.Completed)
+            {
+                workItem.Success ??= true;
+                workItem.Completed = true;
+            }
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            workItem.Success = false;
+            workItem.Completed = true;
+            Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, workItem.ImportService.Name);
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            workItem.Success = false;
+            workItem.Completed = true;
             Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, workItem.ImportService.Name);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
+            workItem.Success = false;
+            workItem.Completed = true;
             Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, workItem.ImportService.Name);
             Logger.LogError(e, AggregateLogMessages.ServiceItemWasFailedError, workItem.ImportService.Name);
         }
     }
 
-    private void ReleaseSemaphoreIfNeed()
-    {
-        if (_servicesSemaphoreSlim.CurrentCount < ServicesSemaphoreMaxCount)
-            _servicesSemaphoreSlim.Release();
-    }
-
-    protected override Task CloseAsync()
-    {
-        ReleaseSemaphoreIfNeed();
-        
-        return base.CloseAsync();
-    }
-
     protected override void Dispose()
     {
-        foreach(var workItem in _workItems)
-          RemoveConnectedHandlerIfAvailable(workItem);
+        foreach (var workItem in _workItems.Values)
+            DetachHandler(workItem);
 
-        _servicesSemaphoreSlim.Dispose();
-
+        _workItems.Clear();
         base.Dispose();
     }
 }

@@ -41,8 +41,8 @@ public class JsonTreeItemTest(ITestOutputHelper testOutputHelper)
         Assert.NotEmpty(firstItem.Url);
         Assert.True(firstItem.Id > 0);
 
-        var parentCount = treeItems.Count(i => i.Children.Any());
-        var parentAndWithParentCount = treeItems.Count(i => i.ItemParent != null && i.Children.Any());
+        var parentCount = treeItems.Count(i => (i as ITreeItem).Children.Count > 0);
+        var parentAndWithParentCount = treeItems.Count(i => (i as ITreeItem).ItemParent != null && (i as ITreeItem).Children.Count > 0);
         try
         {
             Assert.True(parentCount > 1);
@@ -89,8 +89,8 @@ public class JsonTreeItemTest(ITestOutputHelper testOutputHelper)
         Assert.NotEmpty(firstItem.Url);
         Assert.True(firstItem.Id > 0);
 
-        var parentCount = treeItems.Count(i => i.Children.Any());
-        var parentAndWithParentCount = treeItems.Count(i => i.ItemParent != null && i.Children.Any());
+        var parentCount = treeItems.Count(i => (i as ITreeItem).Children.Count > 0);
+        var parentAndWithParentCount = treeItems.Count(i => (i as ITreeItem).ItemParent != null && (i as ITreeItem).Children.Count > 0);
         try
         {
             Assert.True(parentCount > 1);

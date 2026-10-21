@@ -4,17 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	  <Configurations>Debug;Release;debug libs</Configurations>
-	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-	  <Version>1.0.0.5</Version>
-	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-	  <IsPackable>true</IsPackable>
-	  <Title>Import service test abstractions</Title>
-	  <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
-	  <PackageId>$(AssemblyName)</PackageId>
-	  <PackageVersion>$(Version)</PackageVersion>
-	  <Authors>innasolp</Authors>
-	  <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
+	  <Configurations>Debug;Release;debug libs</Configurations>	  
   </PropertyGroup>
 
 	<ItemGroup>

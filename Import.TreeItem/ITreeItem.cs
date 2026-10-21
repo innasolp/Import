@@ -1,4 +1,6 @@
-﻿namespace Import.TreeItem;
+﻿using System.Collections;
+
+namespace Import.TreeItem;
 
 public interface ITreeItem
 {
@@ -10,7 +12,7 @@ public interface ITreeItem
 
     int? ParentId { get; }
 
-    IEnumerable<ITreeItem> Children { get; }
+    ICollection Children { get; }
 
     public bool? IsParented { get; }
 

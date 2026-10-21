@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/Catalog/" />
+  <Folder Name="/Catalog/Category/">
+    <Project Path="Import.Catalog.Category.Interfaces/Import.Catalog.Category.Interfaces.csproj" />
+    <Project Path="Import.Catalog.Category.Service/Import.Catalog.Category.Service.csproj" /> 
+    <Project Path="Import.Catalog.Category.Service.Test/Import.Catalog.Category.Service.Test.csproj" />  
+  </Folder>
   <Folder Name="/Factory/">
     <Project Path="Import.Factory.Interfaces/Import.Factory.Interfaces.csproj" />
     <Project Path="Import.Factory.Logging/Import.Factory.Logging.csproj" />
@@ -15,5 +21,5 @@
   <Project Path="Import.Html/Import.Html.csproj" />
   <Project Path="Import.Interfaces/Import.Interfaces.csproj" />
   <Project Path="Import.Service.Test/Import.Service.Test.csproj" />
-  <Project Path="Import.Service/Import.Service.csproj" />
+  <Project Path="Import.Service/Import.Service.csproj" />  
 </Solution>
