@@ -16,6 +16,7 @@ public class JsonTreeItemTest(ITestOutputHelper testOutputHelper)
 
         var propertyPaths = new Dictionary<string, PropertyPath>
         {
+            { "Id", new PropertyPath("Id","id") },
             { "Url", new PropertyPath("Url","url") },
             {"Description",new PropertyPath("Description","title") },
             {"Name",new PropertyPath("Name","title") },
@@ -39,7 +40,19 @@ public class JsonTreeItemTest(ITestOutputHelper testOutputHelper)
         Assert.NotEmpty(firstItem.Name);
         Assert.NotEmpty(firstItem.Url);
         Assert.True(firstItem.Id > 0);
-        Assert.True(firstItem.Children.Any() || firstItem.ItemParent?.Children.Any() == true);
+
+        var parentCount = treeItems.Count(i => i.Children.Any());
+        var parentAndWithParentCount = treeItems.Count(i => i.ItemParent != null && i.Children.Any());
+        try
+        {
+            Assert.True(parentCount > 1);
+            Assert.Equal(0, parentAndWithParentCount);
+        }
+        finally
+        {
+            _testOutputHelper.WriteLine($"parentCount {parentCount}");
+            _testOutputHelper.WriteLine($"parentAndWithParentCount {parentAndWithParentCount}");
+        }
     }
 
     [Fact]

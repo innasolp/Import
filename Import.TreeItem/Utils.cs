@@ -39,8 +39,8 @@ public static class Utils
                 break;
         }
 
-        formattedUrl = split?.Last(s => s != string.Empty);
-        if (formattedUrl == null)
+        formattedUrl = split?.LastOrDefault(s => s != string.Empty);
+        if (string.IsNullOrEmpty(formattedUrl))
             return false;
 
         if (TryGetIdFromUrl(formattedUrl, out int id))

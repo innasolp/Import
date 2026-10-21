@@ -89,8 +89,15 @@ public abstract class TreeItem : ITreeItem
     {
         if (elementHelper.TryGetByProperty(element, propertyPath.Path, out TElement newElement))
         {
-            result = getValue(newElement);
-            return true;
+            try
+            {
+                result = getValue(newElement);
+                return true;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or FormatException)
+            {
+                throw new InvalidOperationException($"Element parsing error {element}, path {propertyPath.Path}", ex);
+            }
         }
 
         result = default;
@@ -148,11 +155,11 @@ public abstract class TreeItem : ITreeItem
         IElementHelper<TElement> elementHelper)
     {
         var results = new List<TElement>();
-        CollectAllElementsByNodePathes(element, nodePath.AsSpan(), elementHelper, results);
+        GetElementsByAnyNodePathes(element, nodePath.AsSpan(), elementHelper, results);
         return results;
     }
 
-    private static void CollectAllElementsByNodePathes<TElement>(
+    private static void GetElementsByAnyNodePathes<TElement>(
         TElement currentElement,
         ReadOnlySpan<string> remainingPathes,
         IElementHelper<TElement> elementHelper,
@@ -169,7 +176,7 @@ public abstract class TreeItem : ITreeItem
                 {
                     if (!elementHelper.IsEmpty(innerElement))
                     {
-                        CollectAllElementsByNodePathes(innerElement, nextPath, elementHelper, results);
+                        GetElementsByAnyNodePathes(innerElement, nextPath, elementHelper, results);
                     }
                 }
                 return;
