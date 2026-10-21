@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Import.Catalog.Category.Interfaces\Import.Catalog.Category.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.TreeItem\Import.TreeItem.csproj" />
+    <ProjectReference Include="..\Import.Service\Import.Service.csproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+    <ItemGroup>
+  <Compile Update="ImportCategoryLogMessages.Designer.cs">
+    <DesignTime>True</DesignTime>
+    <AutoGen>True</AutoGen>
+    <DependentUpon>ImportCategoryLogMessages.resx</DependentUpon>
+  </Compile>
+</ItemGroup>
+
+<ItemGroup>
+  <EmbeddedResource Update="ImportCategoryLogMessages.resx" VisualStudioMode="true">
+    <Generator>ResXFileCodeGenerator</Generator>
+    <LastGenOutput>ImportCategoryLogMessages.Designer.cs</LastGenOutput>
+    <LogicalName>Import.Catalog.Category.Service.ImportCategoryLogMessages.resources</LogicalName>
+  </EmbeddedResource>
+</ItemGroup>
+</Project>

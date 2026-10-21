@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Text.Json.Serialization;
+﻿using System.Collections;
+using System.Collections.Concurrent;
 
 namespace Import.TreeItem;
 
@@ -13,14 +13,15 @@ public abstract class TreeItem : ITreeItem
 
     public int? ParentId { get; protected set; }
 
-    private readonly List<ITreeItem> _children = [];
-
-    [JsonIgnore]
-    public IEnumerable<ITreeItem> Children => _children;
+    protected abstract IList Children { get; }
 
     public bool? IsParented { get; protected set; }
 
-    public ITreeItem? ItemParent { get; protected set; }
+    protected abstract TreeItem? ItemParent { get; set; }
+
+    ICollection ITreeItem.Children => Children;
+
+    ITreeItem? ITreeItem.ItemParent => ItemParent;
 
     protected abstract void SetProperties<TElement>(
         TElement element,
@@ -80,7 +81,7 @@ public abstract class TreeItem : ITreeItem
         return true;
     }
 
-    private static bool TryGetProperty<TElement, T>(
+    protected static bool TryGetProperty<TElement, T>(
         TElement element,
         PropertyPath propertyPath,
         Func<TElement, T> getValue,
@@ -143,9 +144,9 @@ public abstract class TreeItem : ITreeItem
         treeItem.ParentId = parent.Id;
         treeItem.ItemParent = parent;
 
-        lock (parent._children)
+        lock (parent.Children)
         {
-            parent._children.Add(treeItem);
+            parent.Children.Add(treeItem);
         }
     }
 

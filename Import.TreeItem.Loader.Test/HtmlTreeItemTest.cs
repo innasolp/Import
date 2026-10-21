@@ -48,6 +48,6 @@ public class HtmlTreeItemTest
         Assert.NotEmpty(firstItem.Name);
         Assert.NotEmpty(firstItem.Url);
         Assert.True(firstItem.Id > 0);
-        Assert.True(treeItems.All(i => !i.Children.Any()));
+        Assert.True(treeItems.All(i => (i as ITreeItem).Children.Count == 0));
     }
 }

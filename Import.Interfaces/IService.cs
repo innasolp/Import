@@ -7,7 +7,7 @@ public class ConnectedAsyncEventArgs(bool connected, Exception? exception = null
     public bool Connected { get; } = connected;
 }
 
-public interface IImportService
+public interface IService
 {
     Task Start(CancellationToken stoppingToken);
 

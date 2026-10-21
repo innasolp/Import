@@ -1,4 +1,5 @@
-﻿using Import.Interfaces.Exceptions;
+﻿using Import.Interfaces;
+using Import.Interfaces.Exceptions;
 using Import.Service.Test.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -6,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Import.Service.Test;
 
-public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputHelper outputHelper) 
+public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputHelper outputHelper)
     : ImportServiceTest<TService, TLogger>(outputHelper)
     where TService : ImportService
     where TLogger : class, ILogger
@@ -30,12 +31,12 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(w => w.Start(It.IsAny<CancellationToken>())).ThrowsAsync(exception);
 
         using var tokenSource = new CancellationTokenSource();
-        
+
         await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutInMilliseconds));
 
-        LoggerMock.VerifyError(exception, resultMessageFormat, LoaderMock.Object.Name); 
-        
-        LoggerMock.VerifyError(exception, serviceErrorMessageFormat, name);       
+        LoggerMock.VerifyError(exception, resultMessageFormat, LoaderMock.Object.Name);
+
+        LoggerMock.VerifyError(exception, serviceErrorMessageFormat, name);
     }
 
     protected async Task ShouldLogServiceStartedWhenLoaderExecutesSuccessfullyAsync(int cancellationTimeoutMilliseconds)
@@ -51,7 +52,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.SetupStartSuccess();
 
         using var tokenSource = new CancellationTokenSource();
-        
+
         await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutMilliseconds));
 
         LoaderMock.Verify(l => l.Start(It.IsAny<CancellationToken>()), Times.Once);
@@ -71,18 +72,38 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
+        AutoResetEvent autoResetEvent = new AutoResetEvent(true);
+        var stopped = false;
+        async Task ConnectedAsync(object sender, ConnectedAsyncEventArgs e)
+        {
+            if (!e.Connected)
+            {
+                stopped = true;
+                LoggerMock.VerifyWarning(cancelledMessageFormat, name);
+                autoResetEvent.Set();
+            }
+        }
+
+        service.ConnectedAsync += ConnectedAsync;
+
         using var tokenSource = new CancellationTokenSource();
         tokenSource.CancelAfter(TimeSpan.FromMilliseconds(cancellationTimeoutMilliseconds));
-
-        await service.Start(tokenSource.Token);
-
-        LoggerMock.VerifyWarning(cancelledMessageFormat, name);
+        try
+        {
+            await service.Start(tokenSource.Token);
+            if (!stopped)
+                autoResetEvent.WaitOne();
+        }
+        finally
+        {
+            service.ConnectedAsync -= ConnectedAsync;
+        }
     }
 
-    protected async Task ShouldLogResettingErrorIfLoaderServiceNeedsResettingAsync(int cancellationTimeoutMilliseconds)        
+    protected async Task ShouldLogResettingErrorIfLoaderServiceNeedsResettingAsync(int cancellationTimeoutMilliseconds)
     {
         var messageResourceKey = "ImportWasStoppedLoaderServiceAlreadyReseted";
-        var resultMessageFormat = LogResourceManager.GetString(messageResourceKey) 
+        var resultMessageFormat = LogResourceManager.GetString(messageResourceKey)
             ?? throw new InvalidOperationException($"message format {messageResourceKey} is null or not found");
 
         await using var service = CreateService($"{Guid.NewGuid()}");
@@ -97,7 +118,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).ThrowsAsync(loaderServiceException);
 
         using var tokenSource = new CancellationTokenSource();
-        
+
         await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutMilliseconds));
 
         LoaderMock.Verify(l => l.Start(It.IsAny<CancellationToken>()), Times.Once);
@@ -124,12 +145,12 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).ThrowsAsync(exception);
 
         using var tokenSource = new CancellationTokenSource();
-        
+
         await Task.WhenAny(service.Start(tokenSource.Token), Task.Delay(cancellationTimeoutMilliseconds));
 
         LoaderMock.Verify(l => l.Start(It.IsAny<CancellationToken>()), Times.Once);
 
-        LoggerMock.VerifyError(exception, (v,e)=>v.InnerException == e, resultMessageFormat, service.Name);
+        LoggerMock.VerifyError(exception, (v, e) => v.InnerException == e, resultMessageFormat, service.Name);
     }
 
     protected async Task ShouldLogWarningAboutRetryAndLogSuccessAfterRetryAsync(int cancellationTimeoutMilliseconds, TimeSpan retryAfter)

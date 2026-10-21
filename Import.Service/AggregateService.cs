@@ -5,16 +5,16 @@ using System.Collections.Concurrent;
 namespace Import.Service;
 
 
-public class WorkItem(IImportService importService)
+public class WorkItem(IService importService)
 {
-    public IImportService ImportService { get; } = importService;
+    public IService ImportService { get; } = importService;
 
     public bool Completed { get; internal protected set; }
 
     public bool? Success { get; internal protected set; }
 }
 
-public class AggregateService(ILogger logger, string serviceName, Func<IImportService, CancellationToken, Task> executionTask) 
+public class AggregateService(ILogger logger, string serviceName, Func<IService, CancellationToken, Task> executionTask)
     : Service(logger), IAggregateImportService
 {
     private const int WorkitemsChunkSize = 10;
@@ -23,13 +23,13 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
     private readonly ConcurrentDictionary<Guid, AsyncEventHandler<ConnectedAsyncEventArgs>> _workItemHandlers = [];
 
     private const int ServicesSemaphoreMaxCount = 1;
-    private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1,ServicesSemaphoreMaxCount);
+    private readonly SemaphoreSlim _servicesSemaphoreSlim = new(1, ServicesSemaphoreMaxCount);
 
-    private readonly Func<IImportService, CancellationToken, Task> _executionTask = executionTask;
+    private readonly Func<IService, CancellationToken, Task> _executionTask = executionTask;
 
     public override string Name => serviceName;
 
-    async Task IAggregateImportService.Enqueue(IImportService service, CancellationToken cancellationToken)
+    async Task IAggregateImportService.Enqueue(IService service, CancellationToken cancellationToken)
     {
         await _servicesSemaphoreSlim.WaitAsync(cancellationToken);
 
@@ -51,8 +51,8 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
 
     private async Task ServiceItemConnectedAsync(Guid guid, object sender, ConnectedAsyncEventArgs eventArgs)
     {
-        if(sender is not IImportService service)
-            throw new InvalidOperationException($"Invalid type {sender.GetType().Name}. Must be assignable to {nameof(IImportService)}.");
+        if (sender is not IService service)
+            throw new InvalidOperationException($"Invalid type {sender.GetType().Name}. Must be assignable to {nameof(IService)}.");
 
         await _servicesSemaphoreSlim.WaitAsync();
 
@@ -94,10 +94,10 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
         }
     }
 
-    IEnumerable<(IImportService Service, bool Completed, bool? Success)> IAggregateImportService.GetImportServices() 
-        => [.. _workItems.Values.Select(w=>(w.ImportService, w.Completed, w.Success))];
+    IEnumerable<(IService Service, bool Completed, bool? Success)> IAggregateImportService.GetImportServices()
+        => [.. _workItems.Values.Select(w => (w.ImportService, w.Completed, w.Success))];
 
-    async Task<bool> IAggregateImportService.TryRemove(IImportService service, CancellationToken cancellationToken)
+    async Task<bool> IAggregateImportService.TryRemove(IService service, CancellationToken cancellationToken)
     {
         await _servicesSemaphoreSlim.WaitAsync(cancellationToken);
 
@@ -131,7 +131,7 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
         {
             Logger.LogInformation(LogMessages.ServiceStarted, Name);
 
-            await InvokeConnectedAsync(true, cancellationToken : cancellationToken);
+            await InvokeConnectedAsync(true, cancellationToken: cancellationToken);
 
             await ProcessAsync(cancellationToken);
 
@@ -156,20 +156,20 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
 
     protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        while(!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            if(_workItems.IsEmpty)
+            if (_workItems.IsEmpty)
             {
                 await Task.Delay(50, cancellationToken);
                 continue;
             }
 
             var workItems = new List<WorkItem>(_workItems.Values);
-            var notCompletedWorkItems = workItems.Where(w=>!w.Completed).ToList();
+            var notCompletedWorkItems = workItems.Where(w => !w.Completed).ToList();
             if (notCompletedWorkItems.Count == 0) continue;
 
             var workItemsChunk = notCompletedWorkItems.Take(WorkitemsChunkSize).ToList();
-            var workItemsChunkTasks = workItemsChunk.Select(w=>ProcessWorkItem(w, cancellationToken));
+            var workItemsChunkTasks = workItemsChunk.Select(w => ProcessWorkItem(w, cancellationToken));
             await Task.WhenAll(workItemsChunkTasks);
         }
     }
@@ -178,13 +178,13 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
     {
         try
         {
-            await _executionTask(workItem.ImportService, cancellationToken);            
+            await _executionTask(workItem.ImportService, cancellationToken);
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             Logger.LogInformation(AggregateLogMessages.ServiceItemWasCanceled, workItem.ImportService.Name);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Logger.LogInformation(AggregateLogMessages.ServiceItemHandlingWasFailedInfo, workItem.ImportService.Name);
             Logger.LogError(e, AggregateLogMessages.ServiceItemWasFailedError, workItem.ImportService.Name);
@@ -200,14 +200,14 @@ public class AggregateService(ILogger logger, string serviceName, Func<IImportSe
     protected override Task CloseAsync()
     {
         ReleaseSemaphoreIfNeed();
-        
+
         return base.CloseAsync();
     }
 
     protected override void Dispose()
     {
-        foreach(var workItem in _workItems)
-          RemoveConnectedHandlerIfAvailable(workItem);
+        foreach (var workItem in _workItems)
+            RemoveConnectedHandlerIfAvailable(workItem);
 
         _servicesSemaphoreSlim.Dispose();
 

@@ -3,95 +3,63 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Service;
 
-public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
+public abstract class Service(ILogger logger) : IService, IAsyncDisposable
 {
+    private readonly Lock _ctsLock = new();
     private CancellationTokenSource? _stoppingCts;
+    private Task? _executingTask;
 
     public abstract string Name { get; }
-
     protected ILogger Logger { get; } = logger;
 
-    private int _connected; // 0 = false, 1 = true
-
+    private int _connected;
     public bool Connected => Volatile.Read(ref _connected) == 1;
 
-    private event AsyncEventHandler<ConnectedAsyncEventArgs>? _connectedAsync;
+    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, 1);
+    private readonly SemaphoreSlim _connectedSemaphoreSlim = new(1, 1);
 
-    private const int SemaphoreMaxCount = 1; 
+    public event AsyncEventHandler<ConnectedAsyncEventArgs>? ConnectedAsync;
 
-    private readonly SemaphoreSlim _startSemaphoreSlim = new(1, SemaphoreMaxCount);
-
-    private readonly SemaphoreSlim _connectedSemaphoreSlim = new(1, SemaphoreMaxCount);
-
-    public event AsyncEventHandler<ConnectedAsyncEventArgs> ConnectedAsync
+    protected virtual async Task InvokeConnectedAsync(
+        bool connected,
+        Exception? exception = null,
+        CancellationToken cancellationToken = default)
     {
-        add
-        {
-            ConnectedAdd(value);
-        }
-        remove
-        {
-            ConnectedRemove(value);
-        }
-    }
-
-    protected virtual void ConnectedAdd(AsyncEventHandler<ConnectedAsyncEventArgs> value)
-    {
-        _connectedAsync += value;
-    }
-
-    protected virtual void ConnectedRemove(AsyncEventHandler<ConnectedAsyncEventArgs> value)
-    {
-        _connectedAsync -= value;
-    }
-
-    protected virtual async Task InvokeConnectedAsync(bool connected, Exception? exception = null, CancellationToken cancellationToken = default)
-    {
-        await SetConnectedAsync(connected);
-
-        var handlers = GetConnectedHandlers();
-        if (handlers == null)
-            return;
-
-        var args = new ConnectedAsyncEventArgs(connected, exception, cancellationToken);
-
-        async Task HandlerTask(AsyncEventHandler<ConnectedAsyncEventArgs> handler)
-        {
-            try
-            {
-                await handler(this, args).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, LogMessages.ConnectedAsyncHandlerForServiceFailed, Name);
-            }
-        };
-
-        var tasks = handlers.GetInvocationList()
-            .OfType<AsyncEventHandler<ConnectedAsyncEventArgs>>()
-            .Select(HandlerTask);
-
-        await Task.WhenAll(tasks).ConfigureAwait(false);
-    }
-
-    protected async Task SetConnectedAsync(bool connected)
-    {
-        await _connectedSemaphoreSlim.WaitAsync();
-
+        await _connectedSemaphoreSlim.WaitAsync(CancellationToken.None).ConfigureAwait(false);
         try
         {
-            Interlocked.Exchange(ref _connected, connected ? 1 : 0);
+            Volatile.Write(ref _connected, connected ? 1 : 0);
+
+            var handlers = ConnectedAsync;
+            if (handlers == null)
+                return;
+
+            var effectiveToken = cancellationToken.IsCancellationRequested
+                ? CancellationToken.None
+                : cancellationToken;
+
+            var args = new ConnectedAsyncEventArgs(connected, exception, effectiveToken);
+
+            var tasks = handlers.GetInvocationList()
+                .OfType<AsyncEventHandler<ConnectedAsyncEventArgs>>()
+                .Select(async handler =>
+                {
+                    try
+                    {
+                        await handler(this, args).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError(e, LogMessages.ConnectedAsyncHandlerForServiceFailed, Name);
+                    }
+                });
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
         finally
         {
-            ReleaseSemaphoreIfNeed(_connectedSemaphoreSlim);
+            _connectedSemaphoreSlim.Release();
         }
-    }
-
-    protected AsyncEventHandler<ConnectedAsyncEventArgs>? GetConnectedHandlers()
-    {
-        var handlers = _connectedAsync;
-        return handlers;
     }
 
     public virtual async Task Start(CancellationToken cancellationToken)
@@ -99,51 +67,58 @@ public abstract class Service(ILogger logger) : IImportService, IAsyncDisposable
         await _startSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            _stoppingCts?.Dispose();
-            _stoppingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            await ExecuteAsync(_stoppingCts.Token);
+            CancellationToken token;
+            lock (_ctsLock)
+            {
+                _stoppingCts?.Dispose();
+                _stoppingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                token = _stoppingCts.Token;
+            }
+
+            _executingTask = ExecuteAsync(token);
+            await _executingTask.ConfigureAwait(false);
         }
         finally
         {
-            ReleaseSemaphoreIfNeed(_startSemaphoreSlim);
+            _startSemaphoreSlim.Release();
         }
     }
 
     protected abstract Task<bool> ExecuteAsync(CancellationToken cancellationToken);
 
+    public virtual async Task Stop(CancellationToken cancellationToken = default)
+    {
+        lock (_ctsLock)
+        {
+            _stoppingCts?.Cancel();
+        }
+
+        if (_executingTask != null)
+        {
+            await Task.WhenAny(_executingTask, Task.Delay(Timeout.Infinite, cancellationToken))
+                .ConfigureAwait(false);
+        }
+    }
+
+    protected virtual Task CloseAsync() => Stop();
+
     protected virtual void Dispose()
     {
+        lock (_ctsLock)
+        {
+            _stoppingCts?.Cancel();
+            _stoppingCts?.Dispose();
+            _stoppingCts = null;
+        }
+
         _startSemaphoreSlim.Dispose();
-
-        _stoppingCts?.Cancel();
+        _connectedSemaphoreSlim.Dispose();
     }
 
-    private static void ReleaseSemaphoreIfNeed(SemaphoreSlim semaphoreSlim)
+    public async ValueTask DisposeAsync()
     {
-        if (semaphoreSlim.CurrentCount < SemaphoreMaxCount)
-            semaphoreSlim.Release();
-    }
-
-    protected virtual Task CloseAsync()
-    {
-        ReleaseSemaphoreIfNeed(_startSemaphoreSlim);
-        ReleaseSemaphoreIfNeed(_connectedSemaphoreSlim);
-
-        return Stop();
-    }
-
-    async ValueTask IAsyncDisposable.DisposeAsync()
-    {
-        await CloseAsync();
-
+        await CloseAsync().ConfigureAwait(false);
         Dispose();
-
-        _stoppingCts?.Dispose();
-    }
-
-    public virtual Task Stop(CancellationToken cancellationToken = default)
-    {
-        _stoppingCts?.Cancel();
-        return Task.CompletedTask;
+        GC.SuppressFinalize(this);
     }
 }

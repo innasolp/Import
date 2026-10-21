@@ -6,7 +6,7 @@ namespace Import.Service;
 
 public abstract class ImportService(ILogger logger, ILoaderService loaderService, string host)
     : Service(logger)
-{  
+{
     protected ILoaderService LoaderService { get; } = loaderService;
 
     private object? LoaderData { get; set; }
@@ -14,6 +14,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
     protected string Host { get; } = host;
 
     private const int LoaderMaxCount = 1;
+
     private readonly SemaphoreSlim _loadSemaphoreSlim = new(1, LoaderMaxCount);
 
     private int _resetTryCount = 0;
@@ -94,21 +95,25 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
     }
 
     protected object? GetLoaderData() => LoaderData;
-    
+
     protected abstract Task ProcessAsync(CancellationToken cancellationToken);
 
     protected virtual async Task StartLoaderIfNeededAsync(CancellationToken cancellationToken)
     {
         const int backoffMs = 500;
-
+        const int maxTryCount = 5;
         int tryCount = 0;
-        int maxTryCount = 5;
 
         while (!LoaderService.IsStarted)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             try
             {
                 await LoaderService.Start(cancellationToken).ConfigureAwait(false);
+                if (!LoaderService.IsStarted)
+                {
+                    throw new InvalidOperationException($"Loader '{LoaderService.Name}' completed Start() but IsStarted is still false.");
+                }
             }
             catch (OperationCanceledException)
             {
@@ -120,22 +125,12 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
                 Logger.LogError(e, LogMessages.FailedToStartLoader, LoaderService.Name);
 
                 if (tryCount >= maxTryCount)
-                {
                     throw;
-                }
 
-                try
-                {
-                    await Task.Delay(backoffMs, cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
+                await Task.Delay(backoffMs, cancellationToken).ConfigureAwait(false);
             }
         }
     }
-
     private async Task<bool> HandleLoaderServiceExceptionForContinueAsync(LoaderServiceException e, string url, CancellationToken cancellationToken = default)
     {
         if (e.NeedsAction != null)
@@ -183,8 +178,9 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
     {
         if (_resetTryCount >= MaxResetTryCount)
         {
+            Interlocked.Exchange(ref _resetTryCount, 0); // Сбрасываем счётчик перед выбросом фатального исключения
             Logger.LogError(e, LogMessages.ImportWasStoppedLoaderServiceAlreadyReseted, LoaderService.Name, Name);
-            var message = string.Format(Messages.ImportWasCancelledOnUrlBecauseLoaderFailed, new object[] { Name, url, LoaderService.Name });
+            var message = string.Format(Messages.ImportWasCancelledOnUrlBecauseLoaderFailed, Name, url, LoaderService.Name);
             throw new ImportErrorException(message, e);
         }
 
@@ -192,16 +188,18 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
         try
         {
-            await ResetLoaderAsync(url, cancellationToken);
-
+            await ResetLoaderAsync(url, cancellationToken).ConfigureAwait(false);
             Logger.LogInformation(LogMessages.LoaderResetSuccessfully);
+        }
+        catch (OperationCanceledException)
+        {
+            throw; // Нельзя проглатывать отмену операции
         }
         catch (Exception resetException)
         {
             Logger.LogError(resetException, LogMessages.LoaderServiceResettingFailed, LoaderService.Name, resetException.Message);
         }
     }
-
     private async Task ResetLoaderAsync(string url, CancellationToken cancellationToken = default)
     {
         Logger.LogInformation(LogMessages.LoaderIsResetting, _resetTryCount + 1);
@@ -218,28 +216,30 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
         }
     }
 
-    protected virtual async Task<(bool success, Stream? stream)> TryLoadFromUrlAsync(string url, object? data, CancellationToken cancellationToken = default)
+    protected virtual async Task<(bool success, Stream? stream)> TryLoadFromUrlAsync(
+    string url,
+    object? data,
+    CancellationToken cancellationToken = default)
     {
         await _loadSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-        var loaded = false;
-
         try
         {
-            while (!loaded && !cancellationToken.IsCancellationRequested)
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     var stream = await LoaderService.Load(url, data, cancellationToken).ConfigureAwait(false);
-                    loaded = true;
                     Interlocked.Exchange(ref _resetTryCount, 0);
                     Interlocked.Exchange(ref _retryCount, 0);
                     return (true, stream);
                 }
                 catch (LoaderServiceException loaderServiceException)
                 {
-                    if(!await HandleLoaderServiceExceptionForContinueAsync(loaderServiceException, url, cancellationToken))
-                        return (false, default(Stream));
+                    var shouldContinue = await HandleLoaderServiceExceptionForContinueAsync(loaderServiceException, url, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (!shouldContinue)
+                        return (false, null);
                 }
                 catch (OperationCanceledException)
                 {
@@ -250,12 +250,10 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
                     throw new LoadFromUrlException(url, e.Message, e);
                 }
             }
-
-            return (false, null);
         }
         finally
         {
-            ReleaseSemaphoreIfNeed();
+            _loadSemaphoreSlim.Release();
         }
     }
 
@@ -269,7 +267,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
     {
         ReleaseSemaphoreIfNeed();
 
-        await  base.CloseAsync();
+        await base.CloseAsync();
 
         if (LoaderService.IsStarted)
             await CloseLoaderAsync();
