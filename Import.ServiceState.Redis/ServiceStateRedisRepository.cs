@@ -109,7 +109,7 @@ public class ServiceStateRedisRepository(string connectionString) : IServiceStat
             throw new InvalidOperationException("Redis service state repository is not connected.");
 
         var json = JsonSerializer.Serialize(value);
-        return _database!.StringSetAsync(key, json);
+        return _database!.StringSetAsync(key, json, TimeSpan.FromHours(24));
     }
 
     public Task Remove(byte[] key, CancellationToken cancellationToken = default)
