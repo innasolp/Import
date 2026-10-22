@@ -20,6 +20,7 @@ public abstract class CategoryService<TCategory>(
     where TCategory : ITreeItem
 {
     private const int ConcurrencyDegree = 8;
+    private readonly object _visitedIdsLock = new();
 
     protected sealed record ImportCategory(
         TCategory Category,
@@ -162,8 +163,11 @@ public abstract class CategoryService<TCategory>(
                 {
                     foreach (var category in loadedCategories)
                     {
-                        if (visitedIds.Add(category.Id))
-                            currentCategories.Add(category);
+                        lock (_visitedIdsLock)
+                        {
+                            if (visitedIds.Add(category.Id))
+                                currentCategories.Add(category);
+                        }
                     }
                 }
             }).ConfigureAwait(false);
@@ -183,8 +187,11 @@ public abstract class CategoryService<TCategory>(
 
                 foreach (var category in loadedCategories)
                 {
-                    if (visitedIds.Add(category.Id))
-                        currentCategories.Add(category);
+                    lock (_visitedIdsLock)
+                    {
+                        if (visitedIds.Add(category.Id))
+                            currentCategories.Add(category);
+                    }
                 }
             }
         }
@@ -215,7 +222,6 @@ public abstract class CategoryService<TCategory>(
             await using (stream.ConfigureAwait(false))
             {
                 var loadedCategories = await stage.LoadAsync(parentCategory, stream, cancellationToken).ConfigureAwait(false);
-                // Материализуем коллекцию до закрытия потока
                 return (true, loadedCategories as IReadOnlyList<TCategory> ?? [.. loadedCategories]);
             }
         }
