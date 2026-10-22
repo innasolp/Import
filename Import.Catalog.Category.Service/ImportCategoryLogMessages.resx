@@ -117,14 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CategoryNameIdForShopWasLoaded" xml:space="preserve">
-    <value>Category {0}-{1} for shop {2} was loaded.</value>
+  <data name="CategoryNameIdForCatalogWasLoaded" xml:space="preserve">
+    <value>Category {0}-{1} for catalog {2} was loaded.</value>
   </data>
-  <data name="CategoryNameIdForShopWasHandled" xml:space="preserve">
-    <value>Category {0}-{1} for shop {2} was handled.</value>
+  <data name="CategoryNameIdForCatalogWasHandled" xml:space="preserve">
+    <value>Category {0}-{1} for catalog {2} was handled with status {3}.</value>
   </data>
   <data name="CategoriesWereNotLoaded" xml:space="preserve">
-    <value>Categories for shop {0} {1} was not loaded. See error log.</value>
+    <value>Categories for catalog {0} {1} was not loaded. See error log.</value>
   </data>
   <data name="ChildrenForCategoryWereNotLoaded" xml:space="preserve">
     <value>Children for category {0} were not loaded. See error log.</value>
@@ -140,5 +140,8 @@
   </data>
   <data name="CategoryWasNotLoaded" xml:space="preserve">
     <value>Category from url {0} was not loaded. See error log.</value>
+  </data>
+  <data name="CategoryHandlingError" xml:space="preserve">
+    <value>Category {0}-{1} handling failed: {2}</value>
   </data>
 </root>

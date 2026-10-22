@@ -72,32 +72,19 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
-        AutoResetEvent autoResetEvent = new AutoResetEvent(true);
-        var stopped = false;
-        async Task ConnectedAsync(object sender, ConnectedAsyncEventArgs e)
-        {
-            if (!e.Connected)
+        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Returns(async (string url, object? data, CancellationToken token) =>
             {
-                stopped = true;
-                LoggerMock.VerifyWarning(cancelledMessageFormat, name);
-                autoResetEvent.Set();
-            }
-        }
-
-        service.ConnectedAsync += ConnectedAsync;
+                await Task.Delay(1000, token);
+                return null;
+            });
 
         using var tokenSource = new CancellationTokenSource();
         tokenSource.CancelAfter(TimeSpan.FromMilliseconds(cancellationTimeoutMilliseconds));
-        try
-        {
-            await service.Start(tokenSource.Token);
-            if (!stopped)
-                autoResetEvent.WaitOne();
-        }
-        finally
-        {
-            service.ConnectedAsync -= ConnectedAsync;
-        }
+
+        await service.Start(tokenSource.Token);
+
+        LoggerMock.VerifyWarning(cancelledMessageFormat, name);
     }
 
     protected async Task ShouldLogResettingErrorIfLoaderServiceNeedsResettingAsync(int cancellationTimeoutMilliseconds)

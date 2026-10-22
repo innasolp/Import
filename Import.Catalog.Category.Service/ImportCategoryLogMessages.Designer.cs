@@ -23,7 +23,7 @@ namespace Import.Catalog.Category.Service
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class ImportCategoryLogMessages
+    internal class ImportCategoryLogMessages
     {
 
         private static global::System.Resources.ResourceManager resourceMan;
@@ -70,7 +70,7 @@ namespace Import.Catalog.Category.Service
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Categories for shop {0} {1} was not loaded. See error log..
+        ///   Looks up a localized string similar to Categories for catalog {0} {1} was not loaded. See error log..
         /// </summary>
         internal static string CategoriesWereNotLoaded
         {
@@ -81,24 +81,35 @@ namespace Import.Catalog.Category.Service
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Category {0}-{1} for shop {2} was handled..
+        ///   Looks up a localized string similar to Category {0}-{1} handling failed: {2}.
         /// </summary>
-        internal static string CategoryNameIdForShopWasHandled
+        internal static string CategoryHandlingError
         {
             get
             {
-                return ResourceManager.GetString("CategoryNameIdForShopWasHandled", resourceCulture);
+                return ResourceManager.GetString("CategoryHandlingError", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Category {0}-{1} for shop {2} was loaded..
+        ///   Looks up a localized string similar to Category {0}-{1} for catalog {2} was handled with status {3}..
         /// </summary>
-        internal static string CategoryNameIdForShopWasLoaded
+        internal static string CategoryNameIdForCatalogWasHandled
         {
             get
             {
-                return ResourceManager.GetString("CategoryNameIdForShopWasLoaded", resourceCulture);
+                return ResourceManager.GetString("CategoryNameIdForCatalogWasHandled", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Category {0}-{1} for catalog {2} was loaded..
+        /// </summary>
+        internal static string CategoryNameIdForCatalogWasLoaded
+        {
+            get
+            {
+                return ResourceManager.GetString("CategoryNameIdForCatalogWasLoaded", resourceCulture);
             }
         }
 

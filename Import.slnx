@@ -22,4 +22,19 @@
   <Project Path="Import.Interfaces/Import.Interfaces.csproj" />
   <Project Path="Import.Service.Test/Import.Service.Test.csproj" />
   <Project Path="Import.Service/Import.Service.csproj" />  
+   <Folder Name="/State/"> 
+      <Project Path="Import.KeyHash/Import.KeyHash.csproj" />  
+      <Project Path="Import.KeyHash.XxHash64/Import.KeyHash.XxHash64.csproj" /> 
+      <Project Path="Import.ServiceState.Redis/Import.ServiceState.Redis.csproj" />
+      <Project Path="Import.ServiceState.InMemory/Import.ServiceState.InMemory.csproj" />
+      <Project Path="Import.ServiceState/Import.ServiceState.csproj" />
+   </Folder>
+   <Folder Name="/Catalog/Product/"> 
+   <Project Path="Import.Catalog.Product.Interfaces/Import.Catalog.Product.Interfaces.csproj" />
+    <Project Path="Import.Catalog.Product.Service/Import.Catalog.Product.Service.csproj" />
+    <Project Path="Import.Catalog.Product.Service.Stateful/Import.Catalog.Product.Service.Stateful.csproj" />  
+    <Project Path="Import.Catalog.Product.Service.Test/Import.Catalog.Product.Service.Test.csproj" />
+    <Project Path="Import.Catalog.Product.Service.Test.Infrastructure/Import.Catalog.Product.Service.Test.Infrastructure.csproj" />
+    <Project Path="Import.Catalog.Product.Service.Stateful.Test/Import.Catalog.Product.Service.Stateful.Test.csproj" />  
+   </Folder>
 </Solution>
