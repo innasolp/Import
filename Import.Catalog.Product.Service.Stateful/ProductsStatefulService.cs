@@ -188,9 +188,6 @@ public abstract class ProductsStatefulService<TCategory, TProductItem>(
         if (_serviceStateWorker.IsCategoryProductItemHandled(categoryProductItem))
             return true;
 
-        await _serviceStateWorker.SetCurrentCategoryProductItemAsync(categoryProductItem, cancellationToken)
-            .ConfigureAwait(false);
-
         var result = await base.TryProcessCategoryProductAsync(categoryProductItem, cancellationToken)
             .ConfigureAwait(false);
 
