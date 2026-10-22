@@ -34,11 +34,7 @@ public abstract class Service(ILogger logger) : IService, IAsyncDisposable
             if (handlers == null)
                 return;
 
-            var effectiveToken = cancellationToken.IsCancellationRequested
-                ? CancellationToken.None
-                : cancellationToken;
-
-            var args = new ConnectedAsyncEventArgs(connected, exception, effectiveToken);
+            var args = new ConnectedAsyncEventArgs(connected, exception, cancellationToken);
 
             var tasks = handlers.GetInvocationList()
                 .OfType<AsyncEventHandler<ConnectedAsyncEventArgs>>()
@@ -67,6 +63,12 @@ public abstract class Service(ILogger logger) : IService, IAsyncDisposable
         await _startSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (Volatile.Read(ref _disposed) == 1)
+            {
+                _startSemaphoreSlim.Release();
+                throw new ObjectDisposedException(nameof(Service));
+            }
+
             CancellationToken token;
             lock (_ctsLock)
             {
@@ -115,9 +117,18 @@ public abstract class Service(ILogger logger) : IService, IAsyncDisposable
         _connectedSemaphoreSlim.Dispose();
     }
 
+    private int _disposed;
+
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+            return;
+
         await CloseAsync().ConfigureAwait(false);
+
+        // Ensure Start() has released the semaphore before it is disposed.
+        await _startSemaphoreSlim.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+
         Dispose();
         GC.SuppressFinalize(this);
     }

@@ -12,7 +12,7 @@ namespace Import.Catalog.Category.Service.Test;
 
 public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServiceTest, ILogger<CategoryTimerServiceTest>>
 {
-    private readonly Mock<ICategoryShopModel> _categoryShopModelMock = new();
+    private readonly Mock<ICategoryCatalogModel> _categoryCatalogModelMock = new();
 
     private readonly int _secondsInterval = 30;
 
@@ -32,10 +32,10 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
                                typeof(CategoryService<>).Assembly);
 
         LoaderMock.SetupLoadCookies();
-        _categoryShopModelMock.Setup(s => s.CategorySourceUrl).Returns(Guid.NewGuid().ToString());
-        _categoryShopModelMock.Setup(s => s.Name).Returns(Guid.NewGuid().ToString());
-        _categoryShopModelMock.Setup(s => s.SourceName).Returns(Guid.NewGuid().ToString());
-        _categoryShopModelMock.Setup(s => s.SourceUrl).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.CategorySourceUrl).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.Name).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.SourceName).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.SourceUrl).Returns(Guid.NewGuid().ToString());
     }
 
     protected override CategoryTimerServiceTest CreateService(string name)
@@ -43,7 +43,7 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
         return new CategoryTimerServiceTest(LoggerMock.Object,
             name,
             LoaderMock.Object,
-            _categoryShopModelMock.Object,
+            _categoryCatalogModelMock.Object,
             _categoryLoadersMock.Select(m => m.Object),
             _secondsInterval,
             _categoryItemHandlerMock.Object
@@ -75,7 +75,7 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
         var loadAutoResetEvent = new AutoResetEvent(true);
         LoaderMock.SetupGetRequestData(requestData);
         LoaderMock.Setup(w =>
-           w.Load(_categoryShopModelMock.Object.CategorySourceUrl,
+           w.Load(_categoryCatalogModelMock.Object.CategorySourceUrl,
            It.Is<object?>(data => data == requestData),
            It.IsAny<CancellationToken>()))
            .Returns(async (string url, object? data, CancellationToken cancellationToken) =>
@@ -92,8 +92,8 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
 
         await ExecuteServiceAsync(name, 1000);
 
-        LoggerMock.VerifyInfo(ImportCategoriesResourceManager.GetString("CategoryNameIdForShopWasLoaded"),
-            category.Name, category.Id, _categoryShopModelMock.Object.SourceName);
+        LoggerMock.VerifyInfo(ImportCategoriesResourceManager.GetString("CategoryNameIdForCatalogWasLoaded"),
+            category.Name, category.Id, _categoryCatalogModelMock.Object.SourceName);
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
         var requestData = new { id = 10 };
         LoaderMock.SetupGetRequestData(requestData);
         LoaderMock.Setup(w =>
-            w.Load(It.Is<string>(url => url == _categoryShopModelMock.Object.CategorySourceUrl),
+            w.Load(It.Is<string>(url => url == _categoryCatalogModelMock.Object.CategorySourceUrl),
             It.Is<object?>(d => d == requestData),
             It.IsAny<CancellationToken>()))
             .Throws(exception);
@@ -117,6 +117,6 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
         await ExecuteServiceAsync(name, 1000);
 
         LoggerMock.VerifyInfo(ImportCategoriesResourceManager.GetString("CategoriesWereNotLoaded"),
-            _categoryShopModelMock.Object.SourceName, _categoryShopModelMock.Object.SourceUrl);
+            _categoryCatalogModelMock.Object.SourceName, _categoryCatalogModelMock.Object.SourceUrl);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Import.Catalog.Category.Service.Test;
 
-public interface ICategoryShopModel
+public interface ICategoryCatalogModel
 {
     string CategorySourceUrl { get; }
     string SourceName { get; }

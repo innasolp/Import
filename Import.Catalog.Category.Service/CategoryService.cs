@@ -20,6 +20,7 @@ public abstract class CategoryService<TCategory>(
     where TCategory : ITreeItem
 {
     private const int ConcurrencyDegree = 8;
+    private readonly object _visitedIdsLock = new();
 
     protected sealed record ImportCategory(
         TCategory Category,
@@ -54,6 +55,7 @@ public abstract class CategoryService<TCategory>(
     {
         var nextStageParentCategories = new List<TCategory>();
         var parentCategories = new List<TCategory>();
+        var visitedIds = new HashSet<int>();
         bool isFirstStage = true;
 
         try
@@ -83,9 +85,12 @@ public abstract class CategoryService<TCategory>(
                     parentCategories.AddRange(loadedCategories.Where(c => c.ParentId is null));
 
                     foreach (var category in loadedCategories)
+                        visitedIds.Add(category.Id);
+
+                    foreach (var category in loadedCategories)
                     {
                         Logger.LogInformation(
-                            ImportCategoryLogMessages.CategoryNameIdForShopWasLoaded,
+                            ImportCategoryLogMessages.CategoryNameIdForCatalogWasLoaded,
                             category.Name,
                             category.Id,
                             _sourceName);
@@ -104,7 +109,11 @@ public abstract class CategoryService<TCategory>(
                         stage,
                         nextStageParentCategories,
                         categoryLoadData,
-                        stoppingToken).ConfigureAwait(false);
+                        stoppingToken,
+                        visitedIds).ConfigureAwait(false);
+
+                    foreach (var category in loadedCategories)
+                        visitedIds.Add(category.Id);
 
                     await Task.WhenAll(loadedCategories.Select(c => HandleCategoryAsync(c, stoppingToken)))
                         .ConfigureAwait(false);
@@ -127,9 +136,14 @@ public abstract class CategoryService<TCategory>(
         ITreeItemLoader<TCategory> stage,
         IEnumerable<TCategory> parentCategories,
         object? categoryLoadData,
-        CancellationToken stoppingToken)
+        CancellationToken stoppingToken,
+        HashSet<int> visitedIds)
     {
         var currentCategories = new ConcurrentBag<TCategory>();
+
+        // Seed with parent IDs to avoid loading a leaf whose ID matches the requested parent
+        foreach (var parentCategory in parentCategories)
+            visitedIds.Add(parentCategory.Id);
 
         await Parallel.ForEachAsync(
             parentCategories,
@@ -148,7 +162,13 @@ public abstract class CategoryService<TCategory>(
                 if (success)
                 {
                     foreach (var category in loadedCategories)
-                        currentCategories.Add(category);
+                    {
+                        lock (_visitedIdsLock)
+                        {
+                            if (visitedIds.Add(category.Id))
+                                currentCategories.Add(category);
+                        }
+                    }
                 }
             }).ConfigureAwait(false);
 
@@ -162,10 +182,17 @@ public abstract class CategoryService<TCategory>(
                     stage,
                     loadedNextParentCategories,
                     categoryLoadData,
-                    stoppingToken).ConfigureAwait(false);
+                    stoppingToken,
+                    visitedIds).ConfigureAwait(false);
 
                 foreach (var category in loadedCategories)
-                    currentCategories.Add(category);
+                {
+                    lock (_visitedIdsLock)
+                    {
+                        if (visitedIds.Add(category.Id))
+                            currentCategories.Add(category);
+                    }
+                }
             }
         }
 
@@ -195,7 +222,6 @@ public abstract class CategoryService<TCategory>(
             await using (stream.ConfigureAwait(false))
             {
                 var loadedCategories = await stage.LoadAsync(parentCategory, stream, cancellationToken).ConfigureAwait(false);
-                // Материализуем коллекцию до закрытия потока
                 return (true, loadedCategories as IReadOnlyList<TCategory> ?? [.. loadedCategories]);
             }
         }
@@ -215,15 +241,16 @@ public abstract class CategoryService<TCategory>(
         await _handleSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await _itemHandler.HandleItem(
+            var resultStatus = await _itemHandler.HandleItem(
                 new ImportCategory(category, _categorySourceUrl, _sourceName, Host),
                 cancellationToken).ConfigureAwait(false);
 
             Logger.LogInformation(
-                ImportCategoryLogMessages.CategoryNameIdForShopWasHandled,
+                ImportCategoryLogMessages.CategoryNameIdForCatalogWasHandled,
                 category.Name,
                 category.Id,
-                _sourceName);
+                _sourceName,
+                resultStatus);
         }
         catch (OperationCanceledException)
         {
@@ -231,7 +258,8 @@ public abstract class CategoryService<TCategory>(
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, ImportCategoryLogMessages.ItemHandlingError);
+            Logger.LogError(ex, ImportCategoryLogMessages.CategoryHandlingError, category.Name, category.Id, ex.Message);
+            throw;
         }
         finally
         {

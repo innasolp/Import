@@ -8,10 +8,10 @@ namespace Import.Catalog.Category.Service.Test;
 public class CategoryTimerServiceTest(ILogger<CategoryTimerServiceTest> logger,
     string name,
     ILoaderService loader,
-    ICategoryShopModel shop,
+    ICategoryCatalogModel catalog,
     IEnumerable<ITreeItemLoader<TestCategory>> categoryLoadStages,
     int timerSecondsInterval,
     ICategoryItemHandler<TestCategory> itemHandler)
-    : CategoryService<TestCategory>(logger, name, loader, shop.CategorySourceUrl, shop.SourceName, shop.SourceUrl, categoryLoadStages, itemHandler)//, timerSecondsInterval)
+    : CategoryService<TestCategory>(logger, name, loader, catalog.CategorySourceUrl, catalog.SourceName, catalog.SourceUrl, categoryLoadStages, itemHandler)//, timerSecondsInterval)
 {
 }

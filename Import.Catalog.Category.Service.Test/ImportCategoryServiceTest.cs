@@ -10,7 +10,7 @@ namespace Import.Catalog.Category.Service.Test;
 
 public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTimerServiceTest, ILogger<CategoryTimerServiceTest>>
 {
-    private readonly Mock<ICategoryShopModel> _categoryShopModelMock = new();
+    private readonly Mock<ICategoryCatalogModel> _categoryCatalogModelMock = new();
 
     private readonly int _secondsInterval = 1;
 
@@ -23,7 +23,8 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
 
     public ImportCategoryServiceTest(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        _categoryShopModelMock.Setup(s => s.CategorySourceUrl).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.CategorySourceUrl).Returns(Guid.NewGuid().ToString());
+        _categoryLoadersMock = [_categoryLoaderMock];
     }
 
     protected override CategoryTimerServiceTest CreateService(string name)
@@ -31,7 +32,7 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
         return new CategoryTimerServiceTest(LoggerMock.Object,
              name,
              LoaderMock.Object,
-             _categoryShopModelMock.Object,
+             _categoryCatalogModelMock.Object,
              _categoryLoadersMock.Select(m => m.Object),
              _secondsInterval,
              _categoryItemHandlerMock.Object
@@ -52,19 +53,19 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
 
         var requestData = new { id = 2 };
         var category = Helper.CreateCategoryWithChildren();
-        LoaderMock.SetupLoadItem(_categoryShopModelMock.Object.CategorySourceUrl, requestData, category);
+        LoaderMock.SetupLoadItem(_categoryCatalogModelMock.Object.CategorySourceUrl, requestData, category);
 
         var categoryStream = await TestExtensions.LoadItemAsync(category, CancellationToken.None);
 
         LoaderMock.SetupGetRequestData(requestData);
         LoaderMock.Setup(w =>
-           w.Load(_categoryShopModelMock.Object.CategorySourceUrl,
+           w.Load(_categoryCatalogModelMock.Object.CategorySourceUrl,
            It.Is<object?>(data => data == requestData),
            It.IsAny<CancellationToken>()))
            .ReturnsAsync(categoryStream);
 
         _categoryLoaderMock.Setup(s => s.LoadAsync(null, It.Is<Stream>(s => s == categoryStream), It.IsAny<CancellationToken>())).
-            ReturnsAsync([category]);
+           ReturnsAsync([category]);
 
         await ShouldLogServiceStartedWhenLoaderExecutesSuccessfullyAsync(1000);
     }
@@ -76,7 +77,7 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
 
         var requestData = new { id = 2 };
         var category = Helper.CreateCategoryWithChildren();
-        LoaderMock.SetupLoadItem(_categoryShopModelMock.Object.CategorySourceUrl, requestData, category);
+        LoaderMock.SetupLoadItem(_categoryCatalogModelMock.Object.CategorySourceUrl, requestData, category);
 
         var categoryStream = await TestExtensions.LoadItemAsync(category, CancellationToken.None);
 
