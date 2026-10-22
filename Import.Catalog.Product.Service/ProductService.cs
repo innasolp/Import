@@ -166,6 +166,8 @@ public abstract class ProductService<TCategory, TProductItem>(
                  IsEndOfCategory(categoryResult, categoryState.AllProductCount) == true);
 
             categoryState.IncrementPage();
+
+            await OnPageProcessedAsync(categoryResult, stoppingToken).ConfigureAwait(false);
         }
 
         Logger.LogInformation(
@@ -442,6 +444,11 @@ public abstract class ProductService<TCategory, TProductItem>(
             PathFormatType.CategoryWithItemId => string.Format(productPathFormat, productItem.Id, PreparePath(productItem.ItemPath)),
             _ => string.Format(productPathFormat, productItem.ItemPath),
         };
+    }
+
+    protected virtual Task OnPageProcessedAsync(TCategory? category, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 
     protected abstract string PreparePath(string path);

@@ -143,19 +143,17 @@ public abstract class ProductsStatefulService<TCategory, TProductItem>(
         int page,
         CancellationToken stoppingToken)
     {
-        var result = await base.TryProcessCategoryPageAsync(
+        return await base.TryProcessCategoryPageAsync(
             categoryPagePath,
             categoryItemId,
             categoryPath,
             page,
             stoppingToken).ConfigureAwait(false);
+    }
 
-        if (result.success)
-        {
-            await _serviceStateWorker.CompleteCategoryPageAsync(stoppingToken).ConfigureAwait(false);
-        }
-
-        return result;
+    protected override Task OnPageProcessedAsync(TCategory? category, CancellationToken cancellationToken)
+    {
+        return _serviceStateWorker.CompleteCategoryPageAsync(cancellationToken);
     }
 
     protected override async Task<(bool success, TCategory? result)> TryGetCategoryFromPathAsync(
