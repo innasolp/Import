@@ -63,6 +63,12 @@ public abstract class Service(ILogger logger) : IService, IAsyncDisposable
         await _startSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (Volatile.Read(ref _disposed) == 1)
+            {
+                _startSemaphoreSlim.Release();
+                throw new ObjectDisposedException(nameof(Service));
+            }
+
             CancellationToken token;
             lock (_ctsLock)
             {
