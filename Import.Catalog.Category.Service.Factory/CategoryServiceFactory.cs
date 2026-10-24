@@ -30,9 +30,17 @@ public abstract class CategoryServiceFactory<TTreeItem>(ILogger logger,
         var treeItemLoaders = new List<ITreeItemLoader<TTreeItem>>(loadStagesSettings.Length);
         foreach (var stageSettings in loadStagesSettings)
         {
-            var treeItemFactory = _treeItemLoaderFactories.FirstOrDefault(f => f.GetType().Name
-                    .Contains(stageSettings.TypeName, StringComparison.InvariantCultureIgnoreCase))
-                    ?? throw new InvalidDataException($"No tree item loader factory for type {stageSettings.TypeName} for service {name}.");
+            if (string.IsNullOrEmpty(stageSettings.TypeName))
+                throw new InvalidDataException($"No tree item loader factory for type {stageSettings.TypeName} for service {name}.");
+
+            var matchingTreeItemFactories = _treeItemLoaderFactories
+                .Where(f => f.GetType().Name.Contains(stageSettings.TypeName, StringComparison.InvariantCultureIgnoreCase))
+                .Take(2)
+                .ToArray();
+            if (matchingTreeItemFactories.Length != 1)
+                throw new InvalidDataException($"Expected exactly one tree item loader factory for type {stageSettings.TypeName} for service {name}.");
+
+            var treeItemFactory = matchingTreeItemFactories[0];
             treeItemLoaders.Add(treeItemFactory.CreateTreeItemLoader(stageSettings.OptionsJson));
         }
 
