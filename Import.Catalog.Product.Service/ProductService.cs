@@ -39,7 +39,7 @@ public abstract class ProductService<TCategory, TProductItem>(
 
     protected ConcurrentQueue<IProductCatalogCategory> Categories { get; } = new(catalogCategories);
 
-    private readonly ConcurrentQueue<IProductCatalogCategory> _failedCategories = new();
+    private readonly ConcurrentQueue<(IProductCatalogCategory Category, CategoryProcessState State)> _failedCategories = new();
 
     protected readonly string ProductPathFormat = productPathFormat;
     protected readonly string CategoryPathFormat = categoryPathFormat; // Исправлена кириллическая 'С'
@@ -73,9 +73,9 @@ public abstract class ProductService<TCategory, TProductItem>(
         {
             stoppingToken.ThrowIfCancellationRequested();
 
-            while (_failedCategories.TryDequeue(out var failedCategory))
+            while (_failedCategories.TryDequeue(out var failedEntry))
             {
-                Categories.Enqueue(failedCategory);
+                _ = ProcessCategoryAsync(failedEntry.Category, failedEntry.State, stoppingToken);
             }
 
             var concurrentCategories = new List<IProductCatalogCategory>(ConcurrentCategoryTaskCount);
@@ -200,7 +200,7 @@ public abstract class ProductService<TCategory, TProductItem>(
                     category.Path,
                     categoryState.Page,
                     MaxUnsuccessRequestCount);
-                _failedCategories.Enqueue(category);
+                _failedCategories.Enqueue((category, categoryState));
                 return AttemptResult.AttemptsReachedTheMaximum;
             }
 
