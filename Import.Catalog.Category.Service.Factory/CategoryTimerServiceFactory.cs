@@ -32,9 +32,11 @@ where TTreeItem : TreeItem.TreeItem, new()
       IImportSettings importSettings,
        object? categoryLoadData = null)
     {
-        importSettings.TryGet<int>("DefaultInterval", out var defaultInterval);
+        int? interval = importSettings.TryGet<int>("DefaultInterval", out var configuredInterval) && configuredInterval > 0
+            ? configuredInterval
+            : null;
 
-        return new CategoryTimerService<TTreeItem>(logger, name, loader, categorySourceUrl, name, url
-               , categoryLoadStages, categoryItemHandler, defaultInterval, categoryLoadData);
+        return new CategoryTimerService<TTreeItem>(logger, name, loader, categorySourceUrl, sourceName, url
+               , categoryLoadStages, categoryItemHandler, interval, categoryLoadData);
     }
 }

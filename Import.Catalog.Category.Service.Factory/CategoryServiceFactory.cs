@@ -17,8 +17,6 @@ public abstract class CategoryServiceFactory<TTreeItem>(ILogger logger,
 {
     private readonly IEnumerable<ITreeItemLoaderFactory<TTreeItem>> _treeItemLoaderFactories = treeItemLoaderFactories;
 
-    public Type ServiceImplementationType => typeof(CategoryServiceImpl<TTreeItem>);
-
     public IService Create(string name, IImportSource importSource, IImportSettings importSettings)
     {
         if (!importSettings.TryGetString("CategorySourceUrl", out var categorySourceUrl))

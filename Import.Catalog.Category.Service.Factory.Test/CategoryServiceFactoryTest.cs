@@ -96,6 +96,186 @@ public class CategoryServiceFactoryTest
         Assert.Equal(exceptionMessage, exception.Message);
     }
 
+    [Fact]
+    public void TestCreateCategoryServiceThrowsExceptionWhenCategorySourceUrlNotFound()
+    {
+        var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>
+        {
+            new TreeItemJsonFromHtmlLoaderFactory<TestCategory>(),
+            new JsonTreeItemLoaderFactory<TestCategory>(),
+        };
+
+        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        {
+            new TestLoaderService2Factory(),
+        };
+
+        var categoryItemHandlers = new List<ICategoryItemHandler<TestCategory>>
+        {
+            new TestCategoryItemHandler2<TestCategory>()
+        };
+
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
+            new Mock<ILogger>().Object,
+            loaderServiceFactories,
+            treeItemLoadFactories,
+            categoryItemHandlers,
+            new Mock<IImportServiceLogFactory>().Object
+        );
+
+        var importSourceMock = new Mock<IImportSource>();
+        importSourceMock.Setup(x => x.Name).Returns("TestSource");
+        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
+
+        var importSettingsMock = new Mock<IImportSettings>();
+
+        var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock.Object));
+        Assert.Contains("categorySourceUrl", exception.Message);
+    }
+
+    [Fact]
+    public void TestCreateCategoryServiceThrowsExceptionWhenLoadStagesNotFound()
+    {
+        var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>
+        {
+            new TreeItemJsonFromHtmlLoaderFactory<TestCategory>(),
+            new JsonTreeItemLoaderFactory<TestCategory>(),
+        };
+
+        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        {
+            new TestLoaderService2Factory(),
+        };
+
+        var categoryItemHandlers = new List<ICategoryItemHandler<TestCategory>>
+        {
+            new TestCategoryItemHandler2<TestCategory>()
+        };
+
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
+            new Mock<ILogger>().Object,
+            loaderServiceFactories,
+            treeItemLoadFactories,
+            categoryItemHandlers,
+            new Mock<IImportServiceLogFactory>().Object
+        );
+
+        var importSourceMock = new Mock<IImportSource>();
+        importSourceMock.Setup(x => x.Name).Returns("TestSource");
+        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
+
+        var importSettingsMock = new Mock<IImportSettings>();
+        string categorySourceUrl = "http://TestSource";
+        importSettingsMock.Setup(x => x.TryGetString(It.Is<string>(s => s == "CategorySourceUrl"), out categorySourceUrl))
+            .Returns(true);
+        importSettingsMock.Setup(x => x.TryGetService<LoadStageSettings[]>(It.Is<string>(s => s == "LoadStages"), out It.Ref<LoadStageSettings[]>.IsAny))
+            .Returns(false);
+
+        var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock.Object));
+        Assert.Contains("loadStagesSettings", exception.Message);
+    }
+
+    [Fact]
+    public void TestCreateCategoryServiceThrowsInvalidDataExceptionWhenLoaderFactoryNotFound()
+    {
+        var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>
+        {
+            new TreeItemJsonFromHtmlLoaderFactory<TestCategory>(),
+            new JsonTreeItemLoaderFactory<TestCategory>(),
+        };
+
+        var loaderServiceFactories = new List<ILoaderServiceFactory>();
+
+        var categoryItemHandlers = new List<ICategoryItemHandler<TestCategory>>
+        {
+            new TestCategoryItemHandler2<TestCategory>()
+        };
+
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
+            new Mock<ILogger>().Object,
+            loaderServiceFactories,
+            treeItemLoadFactories,
+            categoryItemHandlers,
+            new Mock<IImportServiceLogFactory>().Object
+        );
+
+        var importSourceMock = new Mock<IImportSource>();
+        importSourceMock.Setup(x => x.Name).Returns("TestSource");
+        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
+
+        var importSettingsMock = CreateImportSettingsMock();
+
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        Assert.Contains("Loader", exception.Message);
+    }
+
+    [Fact]
+    public void TestCreateCategoryServiceThrowsInvalidDataExceptionWhenCategoryItemHandlerNotFound()
+    {
+        var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>
+        {
+            new TreeItemJsonFromHtmlLoaderFactory<TestCategory>(),
+            new JsonTreeItemLoaderFactory<TestCategory>(),
+        };
+
+        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        {
+            new TestLoaderService2Factory(),
+        };
+
+        var categoryItemHandlers = new List<ICategoryItemHandler<TestCategory>>();
+
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
+            new Mock<ILogger>().Object,
+            loaderServiceFactories,
+            treeItemLoadFactories,
+            categoryItemHandlers,
+            new Mock<IImportServiceLogFactory>().Object
+        );
+
+        var importSourceMock = new Mock<IImportSource>();
+        importSourceMock.Setup(x => x.Name).Returns("TestSource");
+        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
+
+        var importSettingsMock = CreateImportSettingsMock();
+
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        Assert.Contains("CategoryItemHandler", exception.Message);
+    }
+
+    [Fact]
+    public void TestCreateCategoryServiceThrowsInvalidDataExceptionWhenTreeItemLoaderFactoryNotFound()
+    {
+        var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>();
+
+        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        {
+            new TestLoaderService2Factory(),
+        };
+
+        var categoryItemHandlers = new List<ICategoryItemHandler<TestCategory>>
+        {
+            new TestCategoryItemHandler2<TestCategory>()
+        };
+
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
+            new Mock<ILogger>().Object,
+            loaderServiceFactories,
+            treeItemLoadFactories,
+            categoryItemHandlers,
+            new Mock<IImportServiceLogFactory>().Object
+        );
+
+        var importSourceMock = new Mock<IImportSource>();
+        importSourceMock.Setup(x => x.Name).Returns("TestSource");
+        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
+
+        var importSettingsMock = CreateImportSettingsMock();
+
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        Assert.Contains("TreeItemJsonFromHtmlLoader", exception.Message);
+    }
+
     private static IImportSettings CreateImportSettingsMock()
     {
         var importSettingsMock = new Mock<IImportSettings>();

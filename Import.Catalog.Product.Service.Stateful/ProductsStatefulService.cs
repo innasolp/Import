@@ -128,8 +128,6 @@ public abstract class ProductsStatefulService<TCategory, TProductItem>(
         var categoryState = _serviceStateWorker.CategoryProcessState;
         await ProcessCategoryAsync(category, categoryState, stoppingToken).ConfigureAwait(false);
 
-        // Очищаем стейт только при успешном завершении;
-        // при исчерпании попыток стейт сохраняется для возобновления
         if (categoryState.AttemptsCount < MaxUnsuccessRequestCount)
         {
             await _serviceStateWorker.ResetAsync(stoppingToken).ConfigureAwait(false);

@@ -142,7 +142,7 @@
     <value>All products in category path {CategoryPath} were not loaded.</value>
   </data>
   <data name="CategoryProductsForUrlWereProcessedSuccesfullInfo" xml:space="preserve">
-    <value>Category Path {CategoryPath} were processed successfull : {ProductCount} products were loaded</value>
+    <value>Category Path {CategoryPath} were processed successfully : {ProductCount} products were loaded</value>
   </data>
   <data name="SerializationFailed" xml:space="preserve">
     <value>Item {Item} from path {ItemPath} was not deserialized.</value>

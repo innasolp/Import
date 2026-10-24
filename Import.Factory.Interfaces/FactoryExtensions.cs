@@ -11,7 +11,7 @@ public static class FactoryExtensions
         || string.IsNullOrEmpty(serviceSettings.ImplementationTypeName))
             throw new InvalidDataException($"No settings for type {typeof(T).Name}  for service {sourceName}.");
         return items.FirstOrDefault
-          (i => i.GetServiceType().Name.Contains(serviceSettings.ImplementationTypeName, StringComparison.InvariantCultureIgnoreCase) ||
+          (i => i.GetServiceType().Name.Equals(serviceSettings.ImplementationTypeName, StringComparison.InvariantCultureIgnoreCase) ||
            i.GetType().Name.Equals(serviceSettings.ImplementationTypeName, StringComparison.InvariantCultureIgnoreCase))
           ?? throw new InvalidDataException($"No service of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
     }
@@ -22,7 +22,7 @@ public static class FactoryExtensions
         || string.IsNullOrEmpty(serviceSettings.ImplementationTypeName))
             throw new InvalidDataException($"No settings for type {typeof(T).Name}  for service {sourceName}.");
         return items.FirstOrDefault
-          (i => i.GetType().Name.Contains(serviceSettings.ImplementationTypeName, StringComparison.InvariantCultureIgnoreCase))
+          (i => i.GetType().Name.Equals(serviceSettings.ImplementationTypeName, StringComparison.InvariantCultureIgnoreCase))
           ?? throw new InvalidDataException($"No service of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
     }
 }

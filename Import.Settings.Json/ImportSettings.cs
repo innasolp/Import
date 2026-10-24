@@ -81,7 +81,7 @@ public class ImportSettings : IImportSettings
 
         if (_properties.TryGetValue(key, out var jsonNode))
         {
-            var jsonString = jsonNode.ToString();
+            var jsonString = jsonNode.GetRawText();
 
             if (Helper.TryDeserialize<T>(jsonString, out value))
                 return true;
