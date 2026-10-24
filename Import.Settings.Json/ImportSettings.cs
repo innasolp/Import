@@ -127,7 +127,7 @@ public class ImportSettings : IImportSettings
         return false;
     }
 
-    public bool TryGetString(string key, out string value)
+    public bool TryGetString(string key, out string? value)
     {
         value = default;
         if (_properties.TryGetValue(key, out var jsonNode))
