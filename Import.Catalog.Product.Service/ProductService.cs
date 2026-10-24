@@ -73,9 +73,24 @@ public abstract class ProductService<TCategory, TProductItem>(
         {
             stoppingToken.ThrowIfCancellationRequested();
 
-            while (_failedCategories.TryDequeue(out var failedEntry))
+            // Process failed categories in bounded batches, awaiting each batch
+            // so re-enqueued retries are picked up and not silently lost.
+            while (true)
             {
-                _ = ProcessCategoryAsync(failedEntry.Category, failedEntry.State, stoppingToken);
+                stoppingToken.ThrowIfCancellationRequested();
+
+                var failedTasks = new List<Task>(ConcurrentCategoryTaskCount);
+
+                while (failedTasks.Count < ConcurrentCategoryTaskCount &&
+                       _failedCategories.TryDequeue(out var failedEntry))
+                {
+                    failedTasks.Add(ProcessCategoryAsync(failedEntry.Category, failedEntry.State, stoppingToken));
+                }
+
+                if (failedTasks.Count == 0)
+                    break;
+
+                await Task.WhenAll(failedTasks).ConfigureAwait(false);
             }
 
             var concurrentCategories = new List<IProductCatalogCategory>(ConcurrentCategoryTaskCount);
