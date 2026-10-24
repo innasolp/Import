@@ -3,9 +3,7 @@ using Import.Interfaces;
 
 namespace Import.Factory.Interfaces;
 
-public interface IImportServiceFactory
+public interface IImportServiceFactory : IFactory
 {
-    Type ServiceImplementationType { get; }
-
     IService Create(string name, IImportSource importSource, IImportSettings importSettings);
 }

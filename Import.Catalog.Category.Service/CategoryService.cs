@@ -7,16 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service;
 
-public abstract class CategoryService<TCategory>(
-    ILogger logger,
-    string name,
-    ILoaderService loader,
-    string categorySourceUrl,
-    string sourceName,
-    string url,
-    IEnumerable<ITreeItemLoader<TCategory>> categoryLoadStages,
-    ICategoryItemHandler<TCategory> itemHandler,
-    object? categoryLoadData = null) : ImportService(logger, loader, url)
+public abstract class CategoryService<TCategory> : ImportService
     where TCategory : ITreeItem
 {
     private const int ConcurrencyDegree = 8;
@@ -28,14 +19,44 @@ public abstract class CategoryService<TCategory>(
         string SourceName,
         string SourceUrl) : IImportCategory<TCategory>;
 
-    public override string Name { get; } = name;
+    public override string Name { get; }
 
-    private readonly string _categorySourceUrl = categorySourceUrl;
-    private readonly string _sourceName = sourceName;
-    private readonly ICategoryItemHandler<TCategory> _itemHandler = itemHandler;
-    private readonly object? _categoryLoadData = categoryLoadData;
-    private readonly IEnumerable<ITreeItemLoader<TCategory>> _categoryLoadStages = categoryLoadStages;
+    private readonly string _categorySourceUrl;
+    private readonly string _sourceName;
+    private readonly ICategoryItemHandler<TCategory> _itemHandler;
+    private readonly object? _categoryLoadData;
+    private readonly IEnumerable<ITreeItemLoader<TCategory>> _categoryLoadStages;
     private readonly SemaphoreSlim _handleSemaphore = new(ConcurrencyDegree, ConcurrencyDegree);
+
+    public CategoryService(
+        ILogger logger,
+        string name,
+        ILoaderService loader,
+        string categorySourceUrl,
+        string sourceName,
+        string url,
+        IEnumerable<ITreeItemLoader<TCategory>> categoryLoadStages,
+        ICategoryItemHandler<TCategory> itemHandler,
+        object? categoryLoadData = null) : base(logger, loader, url)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+        Name = name;
+
+        ArgumentException.ThrowIfNullOrEmpty(categorySourceUrl, nameof(categorySourceUrl));
+        _categorySourceUrl = categorySourceUrl;
+
+        ArgumentException.ThrowIfNullOrEmpty(sourceName, nameof(sourceName));
+        _sourceName = sourceName;
+
+        ArgumentNullException.ThrowIfNull(itemHandler, nameof(itemHandler));
+        _itemHandler = itemHandler;
+
+        _categoryLoadData = categoryLoadData;
+
+        if (!categoryLoadStages.Any())
+            throw new ArgumentException("Collection cannot be empty.", nameof(categoryLoadStages));
+        _categoryLoadStages = categoryLoadStages;
+    }
 
     protected object? GetLoadData()
     {
@@ -186,13 +207,7 @@ public abstract class CategoryService<TCategory>(
                     visitedIds).ConfigureAwait(false);
 
                 foreach (var category in loadedCategories)
-                {
-                    lock (_visitedIdsLock)
-                    {
-                        if (visitedIds.Add(category.Id))
-                            currentCategories.Add(category);
-                    }
-                }
+                    currentCategories.Add(category);
             }
         }
 

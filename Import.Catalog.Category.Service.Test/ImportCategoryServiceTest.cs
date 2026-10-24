@@ -24,6 +24,9 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
     public ImportCategoryServiceTest(ITestOutputHelper outputHelper) : base(outputHelper)
     {
         _categoryCatalogModelMock.Setup(s => s.CategorySourceUrl).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.SourceName).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.SourceUrl).Returns(Guid.NewGuid().ToString());
+        _categoryCatalogModelMock.Setup(s => s.Name).Returns(Guid.NewGuid().ToString());
         _categoryLoadersMock = [_categoryLoaderMock];
     }
 

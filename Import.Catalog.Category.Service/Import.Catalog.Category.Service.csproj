@@ -9,19 +9,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-    <ItemGroup>
-  <Compile Update="ImportCategoryLogMessages.Designer.cs">
-    <DesignTime>True</DesignTime>
-    <AutoGen>True</AutoGen>
-    <DependentUpon>ImportCategoryLogMessages.resx</DependentUpon>
-  </Compile>
-</ItemGroup>
-
-<ItemGroup>
-  <EmbeddedResource Update="ImportCategoryLogMessages.resx" VisualStudioMode="true">
-    <Generator>ResXFileCodeGenerator</Generator>
-    <LastGenOutput>ImportCategoryLogMessages.Designer.cs</LastGenOutput>
-    <LogicalName>Import.Catalog.Category.Service.ImportCategoryLogMessages.resources</LogicalName>
-  </EmbeddedResource>
-</ItemGroup>
+  <ItemGroup>
+    <Compile Update="ImportCategoryLogMessages.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ImportCategoryLogMessages.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="ImportCategoryLogMessages.resx" VisualStudioMode="true">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ImportCategoryLogMessages.Designer.cs</LastGenOutput>
+      <LogicalName>Import.Catalog.Category.Service.ImportCategoryLogMessages.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

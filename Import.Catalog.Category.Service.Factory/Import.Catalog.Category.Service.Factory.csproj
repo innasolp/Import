@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Import.Catalog.Category.Service\Import.Catalog.Category.Service.csproj" />
+    <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.Settings.Interfaces\Import.Settings.Interfaces.csproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>
