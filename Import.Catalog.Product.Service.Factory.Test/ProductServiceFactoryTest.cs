@@ -50,6 +50,7 @@ public class ProductServiceFactoryTest
         var service = serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock);
 
         Assert.NotNull(service);
+        var productService = Assert.IsType<TestProductService<TestCategoryProducts, TestProductItem>>(service);
     }
 
     [Fact]
@@ -385,11 +386,8 @@ public class ProductServiceFactoryTest
         importSettingsMock.Setup(x => x.TryGetServiceSettings(It.Is<string>(s => s == "CategorySerializer"), out categorySerializerSettings))
             .Returns(true);
 
-        var catalogCategories = new List<IProductCatalogCategory>
-        {
-            new TestProductCatalogCategory { Category = "Test Category", ItemId = 1, Path = "/test-category" }
-        };
-        importSettingsMock.Setup(x => x.TryGet(It.Is<string>(s => s == "CatalogCategories"), out catalogCategories))
+        IEnumerable<TestProductCatalogCategory>? capturedCategories = null;
+        importSettingsMock.Setup(x => x.TryGet<IEnumerable<TestProductCatalogCategory>>(It.Is<string>(s => s == "CatalogCategories"), out capturedCategories))
             .Returns(true);
 
         string productPathFormat = "products/{0}";
