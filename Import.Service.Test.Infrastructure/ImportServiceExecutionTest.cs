@@ -1,11 +1,10 @@
 ﻿using Import.Interfaces;
 using Import.Interfaces.Exceptions;
-using Import.Service.Test.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit.Abstractions;
 
-namespace Import.Service.Test;
+namespace Import.Service.Test.Infrastructure;
 
 public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputHelper outputHelper)
     : ImportServiceTest<TService, TLogger>(outputHelper)

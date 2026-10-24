@@ -1,5 +1,4 @@
 using Import.Catalog.Category.Interfaces;
-using Import.Service.Test;
 using Import.Service.Test.Infrastructure;
 using Import.TreeItem;
 using Microsoft.Extensions.Logging;

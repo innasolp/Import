@@ -23,7 +23,7 @@
   <Project Path="Import.Html.Factory/Import.Html.Factory.csproj" />
   <Project Path="Import.Html/Import.Html.csproj" />
   <Project Path="Import.Interfaces/Import.Interfaces.csproj" />
-  <Project Path="Import.Service.Test/Import.Service.Test.csproj" />
+  <Project Path="Import.Service.Test.Infrastructure/Import.Service.Test.Infrastructure.csproj" />
   <Project Path="Import.Service/Import.Service.csproj" />  
    <Folder Name="/State/"> 
       <Project Path="Import.KeyHash/Import.KeyHash.csproj" />  
