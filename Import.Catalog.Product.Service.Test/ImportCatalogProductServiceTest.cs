@@ -1,6 +1,6 @@
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service.Test.Infrastructure;
-using Import.Service.Test;
+using Import.Service.Test.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit.Abstractions;

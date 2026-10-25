@@ -88,7 +88,7 @@ namespace Import.Catalog.Product.Service {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Category Path {CategoryPath} were processed successfull : {ProductCount} products were loaded.
+        ///   Looks up a localized string similar to Category Path {CategoryPath} were processed successfully : {ProductCount} products were loaded.
         /// </summary>
         internal static string CategoryProductsForUrlWereProcessedSuccesfullInfo {
             get {

@@ -156,9 +156,8 @@ public class AggregateService(
 
     protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            cancellationToken.ThrowIfCancellationRequested();
 
             var workItemsChunk = _workItems.Values
                 .Where(w => !w.Completed)

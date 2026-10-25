@@ -65,7 +65,6 @@ public abstract class Service(ILogger logger) : IService, IAsyncDisposable
         {
             if (Volatile.Read(ref _disposed) == 1)
             {
-                _startSemaphoreSlim.Release();
                 throw new ObjectDisposedException(nameof(Service));
             }
 

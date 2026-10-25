@@ -13,7 +13,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Import.Service.Test\Import.Service.Test.csproj" />
+    <ProjectReference Include="..\Import.Service.Test.Infrastructure\Import.Service.Test.Infrastructure.csproj" />
     <ProjectReference Include="..\Import.Catalog.Category.Service\Import.Catalog.Category.Service.csproj" />
   </ItemGroup>
     

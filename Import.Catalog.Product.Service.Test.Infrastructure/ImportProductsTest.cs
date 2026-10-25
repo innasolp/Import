@@ -1,5 +1,5 @@
 ﻿using Import.Catalog.Product.Interfaces;
-using Import.Service.Test;
+using Import.Service.Test.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Resources;

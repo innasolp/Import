@@ -4,7 +4,7 @@ using Moq;
 using System.Resources;
 using Xunit.Abstractions;
 
-namespace Import.Service.Test;
+namespace Import.Service.Test.Infrastructure;
 
 public abstract class ImportServiceTest<TService, TLogger>(ITestOutputHelper outputHelper)
     where TService:ImportService

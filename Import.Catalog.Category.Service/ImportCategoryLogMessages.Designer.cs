@@ -8,11 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Import.Catalog.Category.Service
-{
+namespace Import.Catalog.Category.Service {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,147 +22,121 @@ namespace Import.Catalog.Category.Service
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ImportCategoryLogMessages
-    {
-
+    internal class ImportCategoryLogMessages {
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ImportCategoryLogMessages()
-        {
+        internal ImportCategoryLogMessages() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager
-        {
-            get
-            {
-                if (object.ReferenceEquals(resourceMan, null))
-                {
+        internal static global::System.Resources.ResourceManager ResourceManager {
+            get {
+                if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Import.Catalog.Category.Service.ImportCategoryLogMessages", typeof(ImportCategoryLogMessages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture
-        {
-            get
-            {
+        internal static global::System.Globalization.CultureInfo Culture {
+            get {
                 return resourceCulture;
             }
-            set
-            {
+            set {
                 resourceCulture = value;
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Categories for catalog {0} {1} was not loaded. See error log..
         /// </summary>
-        internal static string CategoriesWereNotLoaded
-        {
-            get
-            {
+        internal static string CategoriesWereNotLoaded {
+            get {
                 return ResourceManager.GetString("CategoriesWereNotLoaded", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Category {0}-{1} handling failed: {2}.
         /// </summary>
-        internal static string CategoryHandlingError
-        {
-            get
-            {
+        internal static string CategoryHandlingError {
+            get {
                 return ResourceManager.GetString("CategoryHandlingError", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Category {0}-{1} for catalog {2} was handled with status {3}..
         /// </summary>
-        internal static string CategoryNameIdForCatalogWasHandled
-        {
-            get
-            {
+        internal static string CategoryNameIdForCatalogWasHandled {
+            get {
                 return ResourceManager.GetString("CategoryNameIdForCatalogWasHandled", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Category {0}-{1} for catalog {2} was loaded..
         /// </summary>
-        internal static string CategoryNameIdForCatalogWasLoaded
-        {
-            get
-            {
+        internal static string CategoryNameIdForCatalogWasLoaded {
+            get {
                 return ResourceManager.GetString("CategoryNameIdForCatalogWasLoaded", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Category from url {0} was not loaded. See error log..
         /// </summary>
-        internal static string CategoryWasNotLoaded
-        {
-            get
-            {
+        internal static string CategoryWasNotLoaded {
+            get {
                 return ResourceManager.GetString("CategoryWasNotLoaded", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Children for category {0} were not loaded. See error log..
         /// </summary>
-        internal static string ChildrenForCategoryWereNotLoaded
-        {
-            get
-            {
+        internal static string ChildrenForCategoryWereNotLoaded {
+            get {
                 return ResourceManager.GetString("ChildrenForCategoryWereNotLoaded", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Item handling error..
         /// </summary>
-        internal static string ItemHandlingError
-        {
-            get
-            {
+        internal static string ItemHandlingError {
+            get {
                 return ResourceManager.GetString("ItemHandlingError", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Error on parsing {0}. {1}..
         /// </summary>
-        internal static string ParseFromUrlFailed
-        {
-            get
-            {
+        internal static string ParseFromUrlFailed {
+            get {
                 return ResourceManager.GetString("ParseFromUrlFailed", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Error on parsing html {0}. {1}..
         /// </summary>
-        internal static string ParseHtmlFromUrlFailed
-        {
-            get
-            {
+        internal static string ParseHtmlFromUrlFailed {
+            get {
                 return ResourceManager.GetString("ParseHtmlFromUrlFailed", resourceCulture);
             }
         }

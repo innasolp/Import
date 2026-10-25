@@ -4,9 +4,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Factory.Logging;
 
-internal class ImportServiceLogFactoryImpl(Func<ILogger, string, IImportSource, IImportSettings, ILogger> loggerInterception) : IImportServiceLogFactory
+internal class ImportServiceLogFactoryImpl(Func<ILogger, string, IImportSource, IImportSettings, ILogger> loggerInterception)
+   : IImportServiceLogFactory
 {
-    private readonly Func<ILogger, string, IImportSource, IImportSettings, ILogger> _loggerInterception = loggerInterception;    
+    private readonly Func<ILogger, string, IImportSource, IImportSettings, ILogger> _loggerInterception = loggerInterception;
+
+    public ILogger GetLogger(ILogger logger, string name, IImportSource importSource, IImportSettings importSettings)
+    {
+        var interceptedLogger = _loggerInterception(logger, name, importSource, importSettings);
+        return new LogEmptyInterceptorImpl(interceptedLogger);
+    }
 
     ILogger<T> IImportServiceLogFactory.GetLogger<T>(ILogger<T> logger, string name, IImportSource importSource, IImportSettings importSettings)
     {

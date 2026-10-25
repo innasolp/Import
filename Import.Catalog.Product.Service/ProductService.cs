@@ -39,6 +39,8 @@ public abstract class ProductService<TCategory, TProductItem>(
 
     protected ConcurrentQueue<IProductCatalogCategory> Categories { get; } = new(catalogCategories);
 
+    private readonly ConcurrentQueue<(IProductCatalogCategory Category, CategoryProcessState State)> _failedCategories = new();
+
     protected readonly string ProductPathFormat = productPathFormat;
     protected readonly string CategoryPathFormat = categoryPathFormat; // Исправлена кириллическая 'С'
     protected readonly string SourceName = sourceName;
@@ -70,6 +72,26 @@ public abstract class ProductService<TCategory, TProductItem>(
         while (true)
         {
             stoppingToken.ThrowIfCancellationRequested();
+
+            // Process failed categories in bounded batches, awaiting each batch
+            // so re-enqueued retries are picked up and not silently lost.
+            while (true)
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+
+                var failedTasks = new List<Task>(ConcurrentCategoryTaskCount);
+
+                while (failedTasks.Count < ConcurrentCategoryTaskCount &&
+                       _failedCategories.TryDequeue(out var failedEntry))
+                {
+                    failedTasks.Add(ProcessCategoryAsync(failedEntry.Category, failedEntry.State, stoppingToken));
+                }
+
+                if (failedTasks.Count == 0)
+                    break;
+
+                await Task.WhenAll(failedTasks).ConfigureAwait(false);
+            }
 
             var concurrentCategories = new List<IProductCatalogCategory>(ConcurrentCategoryTaskCount);
 
@@ -193,6 +215,7 @@ public abstract class ProductService<TCategory, TProductItem>(
                     category.Path,
                     categoryState.Page,
                     MaxUnsuccessRequestCount);
+                _failedCategories.Enqueue((category, categoryState));
                 return AttemptResult.AttemptsReachedTheMaximum;
             }
 

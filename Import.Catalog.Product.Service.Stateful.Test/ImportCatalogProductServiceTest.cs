@@ -1,7 +1,6 @@
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service.Test.Infrastructure;
 using Import.KeyHash;
-using Import.Service.Test;
 using Import.Service.Test.Infrastructure;
 using Import.ServiceState;
 using Microsoft.Extensions.Logging;

@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Import.TreeItem.Html;
 
-public class TreeItemJsonFromHtmlLoader<TTreeItem>(IHtmlSearcher htmlSearcher, HtmlTreeItemLoadOptions treeItemLoadOptions)
+public sealed class TreeItemJsonFromHtmlLoader<TTreeItem>(IHtmlSearcher htmlSearcher, HtmlTreeItemLoadOptions treeItemLoadOptions)
     : ITreeItemLoader<TTreeItem>
     where TTreeItem : TreeItem, new()
 

@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Import.TreeItem.Json;
 
-public class JsonTreeItemLoader<TTreeItem>(JsonTreeItemLoadOptions jsonTreeItemLoadOptions) : ITreeItemLoader<TTreeItem>
+public sealed class JsonTreeItemLoader<TTreeItem>(JsonTreeItemLoadOptions jsonTreeItemLoadOptions) : ITreeItemLoader<TTreeItem>
     where TTreeItem : TreeItem, new()
 {
     public bool IsTreeItem { get; } = jsonTreeItemLoadOptions.IsTree;

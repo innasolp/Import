@@ -11,4 +11,6 @@ public interface IServiceSettings
     string? ServiceProviderPath { get; set; }
 
     string? Value { get; set; }
+
+    static abstract bool IsEmpty(IServiceSettings serviceSettings);
 }
