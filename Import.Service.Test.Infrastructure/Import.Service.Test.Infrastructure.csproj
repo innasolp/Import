@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	  <Configurations>Debug;Release;debug libs</Configurations>	  
+	<IsPackable>false</IsPackable>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -18,10 +19,5 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Import.Service\Import.Service.csproj" />
 	</ItemGroup>
-
-
-	<!--<ItemGroup>
-		<Using Include="Xunit" />
-	</ItemGroup>-->
 
 </Project>

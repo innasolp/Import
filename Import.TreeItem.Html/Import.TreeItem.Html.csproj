@@ -5,12 +5,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <Version>1.0.0</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Import tree item html parser</Title>
+    <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>innasolp</Authors>
+    <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
   </PropertyGroup>	
-
-	<ItemGroup>
+<ItemGroup>
 	  <ProjectReference Include="..\Import.Html.Factory\Import.Html.Factory.csproj" />
 	  <ProjectReference Include="..\Import.Html\Import.Html.csproj" />
 	  <ProjectReference Include="..\Import.TreeItem\Import.TreeItem.csproj" />
 	</ItemGroup>  
-
 </Project>

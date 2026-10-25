@@ -8,6 +8,14 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Import service state abstractions</Title>
+    <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>innasolp</Authors>
+    <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
   </PropertyGroup>  
 
 </Project>
