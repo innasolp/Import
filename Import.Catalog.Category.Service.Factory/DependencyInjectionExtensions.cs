@@ -70,7 +70,7 @@ public static class DependencyInjectionExtensions
             var loaderServiceFactories = sd.GetServices<ILoaderServiceFactory>();
             var treeItemLoaderFactories = sd.GetServices<ITreeItemLoaderFactory<Category>>();
             var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<Category>>();
-            return new CategoryTimerServiceFactoryImpl<Category>(logger,
+            return new CategoryTimerServiceFactoryImpl(logger,
             loaderServiceFactories,
             treeItemLoaderFactories,
             categoryItemHandlerFactories,
