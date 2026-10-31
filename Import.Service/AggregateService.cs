@@ -206,12 +206,14 @@ public class AggregateService : Service, IAggregateImportService
         try
         {
             if (_executionTask != null)
+            {
                 await _executionTask.Invoke(workItem.ImportService, cancellationToken).ConfigureAwait(false);
 
-            if (!workItem.Completed)
-            {
-                workItem.Success ??= true;
-                workItem.Completed = true;
+                if (!workItem.Completed)
+                {
+                    workItem.Success ??= true;
+                    workItem.Completed = true;
+                }
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

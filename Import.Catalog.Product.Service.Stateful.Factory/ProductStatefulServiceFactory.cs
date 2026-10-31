@@ -56,7 +56,11 @@ public abstract class ProductStatefulServiceFactory<TProductStatefulService,
             || serviceStateOptions == null)
             throw new Exception($"Can't find {nameof(ServiceState)}.");
 
-        var serviceStateRepositoryFactory = serviceStateRepositoryFactoryList.GetItemBySettings(importSettingsProvider, importSettings, serviceStateOptions.Provider, name);
+        if (string.IsNullOrEmpty(serviceStateOptions.Provider))
+            throw new InvalidDataException($"Can't find {nameof(ServiceStateSettings.Provider)} in {nameof(ServiceState)}.");
+
+        var serviceStateRepositoryFactory = serviceStateRepositoryFactoryList.GetItemBySettings(importSettingsProvider, importSettings, serviceStateOptions.Provider, name)
+            ?? throw new InvalidDataException($"Can't find {serviceStateOptions.Provider}.");
 
         var serviceStateRepository = string.IsNullOrEmpty(serviceStateOptions.ConnectionString)
             ? serviceStateRepositoryFactory.Create()
