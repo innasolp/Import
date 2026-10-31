@@ -174,20 +174,20 @@ public class AggregateService : Service, IAggregateImportService
 
     protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        var runningTasks = new List<Task>();
+        var runningTasks = new Dictionary<Task, WorkItem>();
 
         while (!cancellationToken.IsCancellationRequested)
         {
             var slots = Math.Max(0, WorkitemsChunkSize - runningTasks.Count);
 
             var pendingItems = _workItems.Values
-                .Where(w => !w.Completed)
+                .Where(w => !w.Completed && !runningTasks.ContainsValue(w))
                 .Take(slots)
                 .ToList();
 
             foreach (var workItem in pendingItems)
             {
-                runningTasks.Add(ProcessWorkItem(workItem, cancellationToken));
+                runningTasks.Add(ProcessWorkItem(workItem, cancellationToken), workItem);
             }
 
             if (runningTasks.Count == 0)
@@ -196,9 +196,12 @@ public class AggregateService : Service, IAggregateImportService
                 continue;
             }
 
-            var completedTask = await Task.WhenAny(runningTasks).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(runningTasks.Keys).ConfigureAwait(false);
             runningTasks.Remove(completedTask);
         }
+
+        if (runningTasks.Count > 0)
+            await Task.WhenAll(runningTasks.Keys).ConfigureAwait(false);
     }
 
     private async Task ProcessWorkItem(WorkItem workItem, CancellationToken cancellationToken)
