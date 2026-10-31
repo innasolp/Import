@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Stateful;
 
-public abstract class ProductsStatefulService<TCategory, TProductItem>(
+public abstract class ProductStatefulService<TCategory, TProductItem>(
     ILogger logger,
     ILoaderService loader,
     string url,

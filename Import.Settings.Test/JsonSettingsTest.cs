@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
+using Import.Settings.Interfaces;
 using Import.Settings.Json;
 
 namespace Import.Settings.Test;
@@ -24,11 +25,12 @@ public class JsonSettingsTest
         var jsonObject = JsonObject.Create(sectionElement);
         Assert.NotNull(jsonObject);
         var importSettings = new ImportSettings(jsonObject);
+        IImportSettingsProvider importSettingsProvider = new ImportSettingsProvider();
 
         Assert.True(importSettings.ServiceSettings.ContainsKey("ImportService"));
         Assert.True(importSettings.ServiceSettings.ContainsKey("Loader"));
-        Assert.True(importSettings.TryGetService<object[]>("LoadStages", out var collection));
+        Assert.True(importSettingsProvider.TryGetService<object[]>(importSettings, "LoadStages", out var collection));
         Assert.Equal(2, collection!.Length);
-        Assert.False(importSettings.TryGetService<object>(Guid.NewGuid().ToString(), out var _));
+        Assert.False(importSettingsProvider.TryGetService<object>(importSettings, Guid.NewGuid().ToString(), out var _));
     }
 }

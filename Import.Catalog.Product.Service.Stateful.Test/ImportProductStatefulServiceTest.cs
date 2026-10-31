@@ -23,7 +23,7 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
         SetupKeyHasher();
 
         ImportProductsStatefulResourceManager = new ResourceManager("Import.Catalog.Product.Service.Stateful.ImportProductStatefulLogMessages",
-                               typeof(ProductsStatefulService<TestCategory, TestProductItem>).Assembly);
+                               typeof(ProductStatefulService<TestCategory, TestProductItem>).Assembly);
     }
 
     private void SetupKeyHasher()
