@@ -37,16 +37,25 @@ public class WorkItem(IService importService)
     internal AsyncEventHandler<ConnectedAsyncEventArgs>? ConnectedHandler { get; set; }
 }
 
-public class AggregateService(
-    ILogger logger,
-    string serviceName,
-    Func<IService, CancellationToken, Task> executionTask)
-    : Service(logger), IAggregateImportService
+public class AggregateService : Service, IAggregateImportService
 {
     private const int WorkitemsChunkSize = 10;
 
     private readonly ConcurrentDictionary<IService, WorkItem> _workItems = new(ReferenceEqualityComparer.Instance);
-    private readonly Func<IService, CancellationToken, Task> _executionTask = executionTask;
+    private readonly Func<IService, CancellationToken, Task>? _executionTask;
+    private readonly string serviceName;
+
+    public AggregateService(
+        ILogger logger,
+        string serviceName,
+        IEnumerable<IService> services,
+        Func<IService, CancellationToken, Task>? executionTask = null) : base(logger)
+    {
+        this.serviceName = serviceName;
+        _executionTask = executionTask;
+
+        foreach (var item in services) TryAddService(item);
+    }
 
     public override string Name => serviceName;
 
@@ -54,6 +63,13 @@ public class AggregateService(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        TryAddService(service);
+
+        return Task.CompletedTask;
+    }
+
+    private bool TryAddService(IService service)
+    {
         var workItem = new WorkItem(service);
         AsyncEventHandler<ConnectedAsyncEventArgs> handler = (sender, args) =>
             ServiceItemConnectedAsync(workItem, sender, args);
@@ -65,9 +81,11 @@ public class AggregateService(
         if (!_workItems.TryAdd(service, workItem))
         {
             service.ConnectedAsync -= handler;
+            Logger.LogWarning("The '{ServiceName}' was already added.", workItem.ImportService.Name);
+            return false;
         }
 
-        return Task.CompletedTask;
+        return true;
     }
 
     private Task ServiceItemConnectedAsync(WorkItem workItem, object sender, ConnectedAsyncEventArgs eventArgs)
@@ -179,7 +197,8 @@ public class AggregateService(
     {
         try
         {
-            await _executionTask(workItem.ImportService, cancellationToken).ConfigureAwait(false);
+            if (_executionTask != null)
+                await _executionTask.Invoke(workItem.ImportService, cancellationToken).ConfigureAwait(false);
 
             if (!workItem.Completed)
             {

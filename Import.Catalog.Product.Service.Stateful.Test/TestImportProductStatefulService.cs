@@ -15,7 +15,7 @@ public class TestImportProductStatefulService<TCategory, TProductItem>(ILogger l
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository,
     int pageProductCount = 1000)
-    : ProductsStatefulService<TCategory, TProductItem>(logger,
+    : ProductStatefulService<TCategory, TProductItem>(logger,
         loader,
         catalogModel.Url,
         catalogModel.Categories,

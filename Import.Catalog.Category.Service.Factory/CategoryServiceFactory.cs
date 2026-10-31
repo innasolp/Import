@@ -1,3 +1,4 @@
+using Import.Catalog.Category.Factory.Interfaces;
 using Import.Catalog.Category.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -7,24 +8,33 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-public abstract class CategoryServiceFactory<TTreeItem>(ILogger logger,
+public abstract class CategoryServiceFactory<TCategoryService, TTreeItem>(ILogger<TCategoryService> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
     IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
-    IEnumerable<ICategoryItemHandler<TTreeItem>> categoryItemHandlers,
+    IEnumerable<ICategoryItemHandlerFactory<TTreeItem>> categoryItemHandlerFactories,
     IImportServiceLogFactory? logFactory = null)
-    : IImportServiceFactory
+    : IServiceFactory
     where TTreeItem : TreeItem.TreeItem, new()
+    where TCategoryService : CategoryService<TTreeItem>
 {
+    private const string CategorySourceUrl = "CategorySourceUrl";
+    private const string CategoryLoadData = "CategoryLoadData";
+    private const string LoadStages = "LoadStages";
+    private const string Loader = "Loader";
+    private const string CategoryItemHandler = "CategoryItemHandler";
     private readonly IEnumerable<ITreeItemLoaderFactory<TTreeItem>> _treeItemLoaderFactories = treeItemLoaderFactories;
 
-    public IService Create(string name, IImportSource importSource, IImportSettings importSettings)
+    public IService Create(string name,
+    IImportSource importSource,
+    IImportSettingsProvider importSettingsProvider,
+      IImportSettings importSettings)
     {
-        if (!importSettings.TryGetString("CategorySourceUrl", out var categorySourceUrl))
+        if (!importSettingsProvider.TryGetString(importSettings, CategorySourceUrl, out var categorySourceUrl))
             throw new Exception($"Can't find {nameof(categorySourceUrl)}.");
 
-        importSettings.TryGetJson("CategoryLoadData", out var categoryLoadData);
+        importSettingsProvider.TryGetJson(importSettings, CategoryLoadData, out var categoryLoadData);
 
-        if (!importSettings.TryGetService<LoadStageSettings[]>("LoadStages", out var loadStagesSettings))
+        if (!importSettingsProvider.TryGetService<LoadStageSettings[]>(importSettings, LoadStages, out var loadStagesSettings))
             throw new Exception($"Can't find {nameof(loadStagesSettings)}.");
 
         var treeItemLoaders = new List<ITreeItemLoader<TTreeItem>>(loadStagesSettings.Length);
@@ -46,17 +56,19 @@ public abstract class CategoryServiceFactory<TTreeItem>(ILogger logger,
 
         var serviceLogger = logFactory?.GetLogger(logger, name, importSource, importSettings) ?? logger;
 
-        var loaderFactory = loaderServiceFactories.GetFactoryBySettings(importSettings, "Loader", name);
+        var loaderFactory = loaderServiceFactories.GetFactoryBySettings(importSettingsProvider, importSettings, Loader, name);
         var loader = loaderFactory.Create(name, importSettings);
 
-        var categoryItemHandler = categoryItemHandlers.GetItemBySettings(importSettings, "CategoryItemHandler", name);
+        var categoryItemHandlerFactory = categoryItemHandlerFactories.GetFactoryBySettings(importSettingsProvider, importSettings, CategoryItemHandler, name);
+        var categoryItemHandler = categoryItemHandlerFactory.Create(importSettingsProvider, importSettings);
 
         return Create(serviceLogger, name, loader, categorySourceUrl, importSource.Name, importSource.Url
-               , treeItemLoaders, categoryItemHandler, importSettings, categoryLoadData);
+               , treeItemLoaders, categoryItemHandler, importSettingsProvider, importSettings, categoryLoadData);
     }
 
     public abstract Type GetServiceType();
-    protected abstract CategoryService<TTreeItem> Create(ILogger logger,
+
+    protected abstract TCategoryService Create(ILogger<TCategoryService> logger,
             string name,
             ILoaderService loader,
             string categorySourceUrl,
@@ -64,6 +76,7 @@ public abstract class CategoryServiceFactory<TTreeItem>(ILogger logger,
             string url,
             IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
             ICategoryItemHandler<TTreeItem> categoryItemHandler,
+            IImportSettingsProvider importSettingsProvider,
             IImportSettings importSettings,
             object? categoryLoadData = null);
 }

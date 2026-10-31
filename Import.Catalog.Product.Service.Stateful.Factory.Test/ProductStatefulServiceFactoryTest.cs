@@ -1,3 +1,4 @@
+using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service;
 using Import.Factory.Interfaces;
@@ -20,9 +21,9 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlers = new List<IProductItemHandler>
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
         {
-            new TestProductItemHandler(),
+            new TestProductItemHandlerFactory(),
         };
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
@@ -45,10 +46,10 @@ public class ProductStatefulServiceFactoryTest
             new TestServiceStateRepositoryFactory(),
         };
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -60,9 +61,8 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Name).Returns("TestSource");
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
-        var importSettingsMock = CreateImportSettingsMock();
-
-        var service = serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock);
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
+        var service = serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings);
 
         Assert.NotNull(service);
     }
@@ -75,9 +75,9 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlers = new List<IProductItemHandler>
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
         {
-            new TestProductItemHandler(),
+            new TestProductItemHandlerFactory(),
         };
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
@@ -100,10 +100,10 @@ public class ProductStatefulServiceFactoryTest
             new TestServiceStateRepositoryFactory(),
         };
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -116,128 +116,12 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
         var importSettingsMock = new Mock<IImportSettings>();
-        importSettingsMock.Setup(x => x.TryGetService<ProductServiceOptions>(It.Is<string>(s => s == "ProductServiceOptions"), out It.Ref<ProductServiceOptions>.IsAny))
+        var importSettingsProviderMock = new Mock<IImportSettingsProvider>();
+        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions>(importSettingsMock.Object, It.Is<string>(s => s == "ProductServiceOptions"), out It.Ref<ProductServiceOptions>.IsAny))
             .Returns(false);
 
-        var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock.Object));
+        var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProviderMock.Object, importSettingsMock.Object));
         Assert.Contains("productServiceOptions", exception.Message);
-    }
-
-    [Fact]
-    public void TestCreateProductStatefulServiceThrowsExceptionWhenProductPathFormatTypeNotSet()
-    {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
-        {
-            new TestProductLoaderServiceFactory(),
-        };
-
-        var productItemHandlers = new List<IProductItemHandler>
-        {
-            new TestProductItemHandler(),
-        };
-
-        var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
-        {
-            new TestCategoryPaging(),
-        };
-
-        var categorySerializerList = new List<IItemSerializer<TestCategoryProducts>>
-        {
-            new TestItemSerializer(),
-        };
-
-        var keyHasherList = new List<IKeyHasher>
-        {
-            new TestKeyHasher(),
-        };
-
-        var serviceStateRepositoryFactoryList = new List<IServiceStateRepositoryFactory>
-        {
-            new TestServiceStateRepositoryFactory(),
-        };
-
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
-            loaderServiceFactories,
-            productItemHandlers,
-            categoryPagingList,
-            categorySerializerList,
-            keyHasherList,
-            serviceStateRepositoryFactoryList,
-            new Mock<IImportServiceLogFactory>().Object
-        );
-
-        var importSourceMock = new Mock<IImportSource>();
-        importSourceMock.Setup(x => x.Name).Returns("TestSource");
-        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
-
-        var importSettingsMock = new Mock<IImportSettings>();
-        var productServiceOptions = new ProductServiceOptions(); // ProductPathFormatType is default
-        importSettingsMock.Setup(x => x.TryGetService<ProductServiceOptions>(It.Is<string>(s => s == "ProductServiceOptions"), out productServiceOptions))
-            .Returns(true);
-
-        var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock.Object));
-        Assert.Contains("ProductPathFormatType", exception.Message);
-    }
-
-    [Fact]
-    public void TestCreateProductStatefulServiceThrowsExceptionWhenCategoryPathFormatTypeNotSet()
-    {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
-        {
-            new TestProductLoaderServiceFactory(),
-        };
-
-        var productItemHandlers = new List<IProductItemHandler>
-        {
-            new TestProductItemHandler(),
-        };
-
-        var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
-        {
-            new TestCategoryPaging(),
-        };
-
-        var categorySerializerList = new List<IItemSerializer<TestCategoryProducts>>
-        {
-            new TestItemSerializer(),
-        };
-
-        var keyHasherList = new List<IKeyHasher>
-        {
-            new TestKeyHasher(),
-        };
-
-        var serviceStateRepositoryFactoryList = new List<IServiceStateRepositoryFactory>
-        {
-            new TestServiceStateRepositoryFactory(),
-        };
-
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
-            loaderServiceFactories,
-            productItemHandlers,
-            categoryPagingList,
-            categorySerializerList,
-            keyHasherList,
-            serviceStateRepositoryFactoryList,
-            new Mock<IImportServiceLogFactory>().Object
-        );
-
-        var importSourceMock = new Mock<IImportSource>();
-        importSourceMock.Setup(x => x.Name).Returns("TestSource");
-        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
-
-        var importSettingsMock = new Mock<IImportSettings>();
-        var productServiceOptions = new ProductServiceOptions
-        {
-            ProductPathFormatType = PathFormatType.ItemId
-        };
-        importSettingsMock.Setup(x => x.TryGetService<ProductServiceOptions>(It.Is<string>(s => s == "ProductServiceOptions"), out productServiceOptions))
-            .Returns(true);
-
-        var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock.Object));
-        Assert.Contains("CategoryPathFormatType", exception.Message);
     }
 
     [Fact]
@@ -245,9 +129,9 @@ public class ProductStatefulServiceFactoryTest
     {
         var loaderServiceFactories = new List<ILoaderServiceFactory>();
 
-        var productItemHandlers = new List<IProductItemHandler>
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
         {
-            new TestProductItemHandler(),
+            new TestProductItemHandlerFactory(),
         };
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
@@ -270,10 +154,10 @@ public class ProductStatefulServiceFactoryTest
             new TestServiceStateRepositoryFactory(),
         };
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -285,9 +169,9 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Name).Returns("TestSource");
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
-        var importSettingsMock = CreateImportSettingsMock();
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
-        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
         Assert.Contains("Loader", exception.Message);
     }
 
@@ -299,7 +183,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlers = new List<IProductItemHandler>();
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>();
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
         {
@@ -321,10 +205,10 @@ public class ProductStatefulServiceFactoryTest
             new TestServiceStateRepositoryFactory(),
         };
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -336,9 +220,9 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Name).Returns("TestSource");
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
-        var importSettingsMock = CreateImportSettingsMock();
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
-        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
         Assert.Contains("ProductItemHandler", exception.Message);
     }
 
@@ -350,9 +234,9 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlers = new List<IProductItemHandler>
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
         {
-            new TestProductItemHandler(),
+            new TestProductItemHandlerFactory(),
         };
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>();
@@ -372,10 +256,10 @@ public class ProductStatefulServiceFactoryTest
             new TestServiceStateRepositoryFactory(),
         };
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -387,9 +271,9 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Name).Returns("TestSource");
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
-        var importSettingsMock = CreateImportSettingsMock();
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
-        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
         Assert.Contains("CategoryPaging", exception.Message);
     }
 
@@ -401,9 +285,9 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlers = new List<IProductItemHandler>
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
         {
-            new TestProductItemHandler(),
+            new TestProductItemHandlerFactory(),
         };
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
@@ -423,10 +307,10 @@ public class ProductStatefulServiceFactoryTest
             new TestServiceStateRepositoryFactory(),
         };
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -438,9 +322,9 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Name).Returns("TestSource");
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
-        var importSettingsMock = CreateImportSettingsMock();
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
-        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
         Assert.Contains("TestItemSerializer", exception.Message);
     }
 
@@ -452,9 +336,9 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlers = new List<IProductItemHandler>
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
         {
-            new TestProductItemHandler(),
+            new TestProductItemHandlerFactory(),
         };
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
@@ -474,10 +358,10 @@ public class ProductStatefulServiceFactoryTest
             new TestServiceStateRepositoryFactory(),
         };
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -489,9 +373,9 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Name).Returns("TestSource");
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
-        var importSettingsMock = CreateImportSettingsMock();
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
-        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
         Assert.Contains("TestKeyHasher", exception.Message);
     }
 
@@ -503,9 +387,9 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlers = new List<IProductItemHandler>
+        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
         {
-            new TestProductItemHandler(),
+            new TestProductItemHandlerFactory(),
         };
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
@@ -525,10 +409,10 @@ public class ProductStatefulServiceFactoryTest
 
         var serviceStateRepositoryFactoryList = new List<IServiceStateRepositoryFactory>();
 
-        var serviceFactory = new TestProductStatefulServiceFactory<TestCategoryProducts, TestProductItem, TestProductCatalogCategory>(
-            new Mock<ILogger>().Object,
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
             loaderServiceFactories,
-            productItemHandlers,
+            productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
             keyHasherList,
@@ -540,18 +424,19 @@ public class ProductStatefulServiceFactoryTest
         importSourceMock.Setup(x => x.Name).Returns("TestSource");
         importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
 
-        var importSettingsMock = CreateImportSettingsMock();
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
-        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsMock));
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
         Assert.Contains("TestServiceStateRepositoryFactory", exception.Message);
     }
 
-    private static IImportSettings CreateImportSettingsMock()
+    private static (IImportSettings, IImportSettingsProvider) CreateImportSettingsMock()
     {
         var importSettingsMock = new Mock<IImportSettings>();
+        var importSettingsProviderMock = new Mock<IImportSettingsProvider>();
 
         string productSourceUrl = "http://TestSource";
-        importSettingsMock.Setup(x => x.TryGetString(It.Is<string>(s => s == "ProductSourceUrl"), out productSourceUrl))
+        importSettingsProviderMock.Setup(x => x.TryGetString(importSettingsMock.Object, It.Is<string>(s => s == "ProductSourceUrl"), out productSourceUrl))
             .Returns(true);
 
         var productServiceOptions = new ProductServiceOptions
@@ -559,66 +444,70 @@ public class ProductStatefulServiceFactoryTest
             ProductPathFormatType = PathFormatType.ItemId,
             CategoryPathFormatType = PathFormatType.Path
         };
-        importSettingsMock.Setup(x => x.TryGetService<ProductServiceOptions>(It.Is<string>(s => s == "ProductServiceOptions"), out productServiceOptions))
+        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions>(importSettingsMock.Object, It.Is<string>(s => s == "ProductServiceOptions"), out productServiceOptions))
             .Returns(true);
 
         IServiceSettings loaderServiceSettings = new ServiceSettings
         {
             ImplementationTypeName = "TestProductLoaderService"
         };
-        importSettingsMock.Setup(x => x.TryGetServiceSettings(It.Is<string>(s => s == "Loader"), out loaderServiceSettings))
+        importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "Loader"), out loaderServiceSettings))
             .Returns(true);
 
         IServiceSettings productItemHandlerSettings = new ServiceSettings
         {
             ImplementationTypeName = "TestProductItemHandler"
         };
-        importSettingsMock.Setup(x => x.TryGetServiceSettings(It.Is<string>(s => s == "ProductItemHandler"), out productItemHandlerSettings))
+        importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "ProductItemHandler"), out productItemHandlerSettings))
             .Returns(true);
 
         IServiceSettings categoryPagingSettings = new ServiceSettings
         {
             ImplementationTypeName = "TestCategoryPaging"
         };
-        importSettingsMock.Setup(x => x.TryGetServiceSettings(It.Is<string>(s => s == "CategoryPaging"), out categoryPagingSettings))
+        importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "CategoryPaging"), out categoryPagingSettings))
             .Returns(true);
 
         IServiceSettings categorySerializerSettings = new ServiceSettings
         {
             ImplementationTypeName = "TestItemSerializer"
         };
-        importSettingsMock.Setup(x => x.TryGetServiceSettings(It.Is<string>(s => s == "CategorySerializer"), out categorySerializerSettings))
+        importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "CategorySerializer"), out categorySerializerSettings))
             .Returns(true);
 
         IServiceSettings keyHasherSettings = new ServiceSettings
         {
             ImplementationTypeName = "TestKeyHasher"
         };
-        importSettingsMock.Setup(x => x.TryGetServiceSettings(It.Is<string>(s => s == "KeyHasher"), out keyHasherSettings))
+        importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "KeyHasher"), out keyHasherSettings))
             .Returns(true);
 
         IServiceSettings stateRepositoryFactorySettings = new ServiceSettings
         {
             ImplementationTypeName = "TestServiceStateRepositoryFactory"
         };
-        importSettingsMock.Setup(x => x.TryGetServiceSettings(It.Is<string>(s => s == "StateRepositoryFactory"), out stateRepositoryFactorySettings))
+        importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "TestServiceStateRepositoryFactory"), out stateRepositoryFactorySettings))
             .Returns(true);
 
-        var catalogCategories = new List<IProductCatalogCategory>
+        var serviceStateSettings = new ServiceStateSettings
         {
-            new TestProductCatalogCategory { Category = "Test Category", ItemId = 1, Path = "/test-category" }
+            Provider = "TestServiceStateRepositoryFactory"
         };
-        importSettingsMock.Setup(x => x.TryGet(It.Is<string>(s => s == "CatalogCategories"), out catalogCategories))
+        importSettingsProviderMock.Setup(x => x.TryGetService<ServiceStateSettings>(importSettingsMock.Object, It.Is<string>(s => s == "ServiceState"), out serviceStateSettings))
+            .Returns(true);
+
+        IEnumerable<TestProductCatalogCategory>? capturedCategories = new TestProductCatalogCategory[1];
+        importSettingsProviderMock.Setup(x => x.TryGet<IEnumerable<TestProductCatalogCategory>>(importSettingsMock.Object, It.Is<string>(s => s == "CatalogCategories"), out capturedCategories))
             .Returns(true);
 
         string productPathFormat = "products/{0}";
-        importSettingsMock.Setup(x => x.TryGetString(It.Is<string>(s => s == "ProductPathFormat"), out productPathFormat))
+        importSettingsProviderMock.Setup(x => x.TryGetString(importSettingsMock.Object, It.Is<string>(s => s == "ProductPathFormat"), out productPathFormat))
             .Returns(true);
 
         string categoryPathFormat = "categories/{0}";
-        importSettingsMock.Setup(x => x.TryGetString(It.Is<string>(s => s == "CategoryPathFormat"), out categoryPathFormat))
+        importSettingsProviderMock.Setup(x => x.TryGetString(importSettingsMock.Object, It.Is<string>(s => s == "CategoryPathFormat"), out categoryPathFormat))
             .Returns(true);
 
-        return importSettingsMock.Object;
+        return (importSettingsMock.Object, importSettingsProviderMock.Object);
     }
 }

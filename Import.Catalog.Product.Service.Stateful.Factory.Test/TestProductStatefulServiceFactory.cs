@@ -1,7 +1,5 @@
-using System.Collections;
+using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
-using Import.Catalog.Product.Service;
-using Import.Catalog.Product.Service.Stateful;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
 using Import.KeyHash;
@@ -39,20 +37,27 @@ internal class TestProductItemHandler : IProductItemHandler
         => Task.FromResult(ResultStatus.Success);
 }
 
-internal class TestProductCatalogCategory : IProductCatalogCategory
+internal class TestProductItemHandlerFactory : IProductItemHandlerFactory
+{
+    public Type GetServiceType() => typeof(TestProductItemHandler);
+    public IProductItemHandler Create(IImportSettingsProvider importSettingsProvider, IImportSettings settings)
+        => new TestProductItemHandler();
+}
+
+public class TestProductCatalogCategory : IProductCatalogCategory
 {
     public string Category { get; set; } = string.Empty;
     public int ItemId { get; set; }
     public string Path { get; set; } = string.Empty;
 }
 
-internal class TestCategoryProducts : ICategoryProducts
+public class TestCategoryProducts : ICategoryProducts
 {
     public ICategoryProductItem[] CategoryProductItems { get; set; } = [];
     public int? TotalCount { get; set; }
 }
 
-internal class TestProductItem : IProductItem
+public class TestProductItem : IProductItem
 {
     public string Name { get; set; } = string.Empty;
     public string ItemId { get; set; } = string.Empty;
@@ -97,8 +102,8 @@ internal class TestServiceStateRepositoryFactory : IServiceStateRepositoryFactor
 }
 
 
-internal class TestProductStatefulService<TCategory, TProductItem>(
-    ILogger logger,
+public class TestProductStatefulService(
+    ILogger<TestProductStatefulService> logger,
     string name,
     ILoaderService loader,
     string url,
@@ -107,58 +112,64 @@ internal class TestProductStatefulService<TCategory, TProductItem>(
     string productPathFormat,
     string categoryPathFormat,
     string sourceName,
-    ICategoryPaging<TCategory> categoryPaging,
-    IItemSerializer<TCategory> categorySerializer,
+    ICategoryPaging<TestCategoryProducts> categoryPaging,
+    IItemSerializer<TestCategoryProducts> categorySerializer,
     ProductServiceOptions productServiceOptions,
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository)
-    : ProductsStatefulService<TCategory, TProductItem>(
+    : ProductStatefulService<TestCategoryProducts, TestProductItem>(
         logger, loader, url, catalogCategories, productItemHandler, productPathFormat, categoryPathFormat, sourceName,
         categoryPaging, categorySerializer, productServiceOptions, keyHasher, serviceStateRepository)
-    where TCategory : class, ICategoryProducts, new()
-    where TProductItem : class, IProductItem, new()
 {
     public override string Name { get; } = name;
     protected override string PreparePath(string path) => path;
 }
 
-public class TestProductStatefulServiceFactory<TCategory, TProductItem, TProductCatalogCategory>(
-    ILogger logger,
+public class TestProductStatefulServiceFactory(
+    ILogger<TestProductStatefulService> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-    IEnumerable<IProductItemHandler> productItemHandlers,
-    IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
-    IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
+    IEnumerable<IProductItemHandlerFactory> productItemHandlerFactories,
+    IEnumerable<ICategoryPaging<TestCategoryProducts>> categoryPagingList,
+    IEnumerable<IItemSerializer<TestCategoryProducts>> categorySerializerList,
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
-    : ProductStatefulServiceFactory<TCategory, TProductItem, TProductCatalogCategory>(
-        logger, loaderServiceFactories, productItemHandlers, categoryPagingList, categorySerializerList,
+    : ProductStatefulServiceFactory<TestProductStatefulService, TestCategoryProducts, TestProductItem, TestProductCatalogCategory, ProductServiceOptions>(
+        logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList,
         keyHasherList, serviceStateRepositoryFactoryList, logFactory)
-    where TCategory : class, ICategoryProducts, new()
-    where TProductItem : class, IProductItem, new()
-    where TProductCatalogCategory : class, IProductCatalogCategory, new()
 {
-    public override Type GetServiceType() => typeof(TestProductStatefulService<TCategory, TProductItem>);
+    public override Type GetServiceType() => typeof(TestProductStatefulService);
 
-    protected override ProductsStatefulService<TCategory, TProductItem> Create(
-        ILogger logger,
-        string name,
-        ILoaderService loader,
-        IEnumerable<IProductCatalogCategory> catalogCategories,
-        IProductItemHandler productItemHandler,
-        string productPathFormat,
-        string categoryPathFormat,
+    protected override TestProductStatefulService Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
+     ILogger<TestProductStatefulService> logger,
+     string name,
+     ILoaderService loader,
+      IEnumerable<IProductCatalogCategory> catalogCategories,
+       IProductItemHandler productItemHandler,
+       string productPathFormat,
+       string categoryPathFormat,
         string sourceName,
-        string url,
-        ICategoryPaging<TCategory> categoryPaging,
-        IItemSerializer<TCategory> categorySerializer,
-        ProductServiceOptions productServiceOptions,
-        IKeyHasher keyHasher,
-        IServiceStateRepository serviceStateRepository)
+         string url,
+          ICategoryPaging<TestCategoryProducts> categoryPaging,
+          IItemSerializer<TestCategoryProducts> categorySerializer,
+           ProductServiceOptions productServiceOptions,
+            IKeyHasher keyHasher,
+            IServiceStateRepository serviceStateRepository)
     {
-        return new TestProductStatefulService<TCategory, TProductItem>(
-            logger, name, loader, url, catalogCategories, productItemHandler,
-            productPathFormat, categoryPathFormat, sourceName,
-            categoryPaging, categorySerializer, productServiceOptions, keyHasher, serviceStateRepository);
+        return new TestProductStatefulService(
+            logger,
+            name,
+            loader,
+            url,
+            catalogCategories,
+            productItemHandler,
+            productPathFormat,
+            categoryPathFormat,
+            sourceName,
+            categoryPaging,
+            categorySerializer,
+            productServiceOptions,
+            keyHasher,
+            serviceStateRepository);
     }
 }

@@ -1,11 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Import.Catalog.Product.Service.Stateful\Import.Catalog.Product.Service.Stateful.csproj" />
-    <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
-    <ProjectReference Include="..\Import.Interfaces\Import.Interfaces.csproj" />
     <ProjectReference Include="..\Import.KeyHash\Import.KeyHash.csproj" />
     <ProjectReference Include="..\Import.ServiceState\Import.ServiceState.csproj" />
-    <ProjectReference Include="..\Import.Settings.Interfaces\Import.Settings.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.Catalog.Product.Service.Factory\Import.Catalog.Product.Service.Factory.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>

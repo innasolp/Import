@@ -1,4 +1,6 @@
+using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
+using Import.Catalog.Product.Service.Factory;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
 using Import.KeyHash;
@@ -8,67 +10,68 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Stateful.Factory;
 
-public abstract class ProductStatefulServiceFactory<TCategory, TProductItem, TProductCatalogCategory>(
-    ILogger logger,
+public abstract class ProductStatefulServiceFactory<TProductStatefulService,
+ TCategory,
+ TProductItem,
+ TProductCatalogCategory,
+ TProductServiceOptions>(
+    ILogger<TProductStatefulService> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-    IEnumerable<IProductItemHandler> productItemHandlers,
+    IEnumerable<IProductItemHandlerFactory> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
-    : IImportServiceFactory
+    : ProductServiceFactory<TProductStatefulService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>
+    (logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList, logFactory)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
     where TProductCatalogCategory : class, IProductCatalogCategory, new()
+    where TProductServiceOptions : ProductServiceOptions
+    where TProductStatefulService : ProductStatefulService<TCategory, TProductItem>
 {
-    public Type ServiceImplementationType => typeof(ProductStatefulServiceImpl<TCategory, TProductItem>);
+    public const string KeyHasher = "KeyHasher";
 
-    public IService Create(string name, IImportSource importSource, IImportSettings importSettings)
+    public const string ServiceState = "ServiceState";
+
+    protected override TProductStatefulService Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
+    ILogger<TProductStatefulService> logger,
+    string name,
+    ILoaderService loader,
+    IEnumerable<IProductCatalogCategory> catalogCategories,
+    IProductItemHandler productItemHandler,
+    string productPathFormat,
+    string categoryPathFormat,
+    string sourceName,
+    string url,
+     ICategoryPaging<TCategory> categoryPaging,
+     IItemSerializer<TCategory> categorySerializer,
+      TProductServiceOptions productServiceOptions)
     {
-        if (!importSettings.TryGetService<ProductServiceOptions>("ProductServiceOptions", out var productServiceOptions))
-            throw new Exception($"Can't find {nameof(productServiceOptions)}.");
+        var keyHasher = keyHasherList.GetItemBySettings(importSettingsProvider, importSettings, KeyHasher, name)
+        ?? throw new Exception($"Can't find {nameof(KeyHasher)}.");
 
-        if (productServiceOptions.ProductPathFormatType == default)
-            throw new Exception($"Can't find {nameof(productServiceOptions.ProductPathFormatType)}.");
+        if (!importSettingsProvider.TryGetService<ServiceStateSettings>(importSettings, ServiceState, out var serviceStateOptions)
+            || serviceStateOptions == null)
+            throw new Exception($"Can't find {nameof(ServiceState)}.");
 
-        if (productServiceOptions.CategoryPathFormatType == default)
-            throw new Exception($"Can't find {nameof(productServiceOptions.CategoryPathFormatType)}.");
+        var serviceStateRepositoryFactory = serviceStateRepositoryFactoryList.GetItemBySettings(importSettingsProvider, importSettings, serviceStateOptions.Provider, name);
 
-        var serviceLogger = logFactory?.GetLogger(logger, name, importSource, importSettings) ?? logger;
-
-        var loaderFactory = loaderServiceFactories.GetFactoryBySettings(importSettings, "Loader", name);
-        var loader = loaderFactory.Create(name, importSettings);
-
-        var productItemHandler = productItemHandlers.GetItemBySettings(importSettings, "ProductItemHandler", name);
-
-        var categoryPaging = categoryPagingList.GetItemBySettings(importSettings, "CategoryPaging", name);
-        var categorySerializer = categorySerializerList.GetItemBySettings(importSettings, "CategorySerializer", name);
-        var keyHasher = keyHasherList.GetItemBySettings(importSettings, "KeyHasher", name);
-        var serviceStateRepositoryFactory = serviceStateRepositoryFactoryList.GetItemBySettings(importSettings, "StateRepositoryFactory", name);
-
-        importSettings.TryGet<IEnumerable<TProductCatalogCategory>>("CatalogCategories", out var catalogCategories);
-
-        if (!importSettings.TryGetString("ProductPathFormat", out var productPathFormat) || string.IsNullOrEmpty(productPathFormat))
-            throw new Exception("Can't find ProductPathFormat.");
-        if (!importSettings.TryGetString("CategoryPathFormat", out var categoryPathFormat) || string.IsNullOrEmpty(categoryPathFormat))
-            throw new Exception("Can't find CategoryPathFormat.");
-
-        importSettings.TryGetString("StateRepositoryConnectionString", out var stateConnectionString);
-        var serviceStateRepository = string.IsNullOrEmpty(stateConnectionString)
+        var serviceStateRepository = string.IsNullOrEmpty(serviceStateOptions.ConnectionString)
             ? serviceStateRepositoryFactory.Create()
-            : serviceStateRepositoryFactory.Create(stateConnectionString);
+            : serviceStateRepositoryFactory.Create(serviceStateOptions.ConnectionString);
 
-        return Create(
-            serviceLogger,
+        return Create(importSettingsProvider, importSettings,
+            logger,
             name,
             loader,
             catalogCategories ?? [],
             productItemHandler,
-            productPathFormat ?? string.Empty,
-            categoryPathFormat ?? string.Empty,
-            importSource.Name,
-            importSource.Url,
+            productPathFormat,
+            categoryPathFormat,
+            sourceName,
+            url,
             categoryPaging,
             categorySerializer,
             productServiceOptions,
@@ -76,21 +79,19 @@ public abstract class ProductStatefulServiceFactory<TCategory, TProductItem, TPr
             serviceStateRepository);
     }
 
-    public abstract Type GetServiceType();
-
-    protected abstract ProductsStatefulService<TCategory, TProductItem> Create(
-        ILogger logger,
-        string name,
-        ILoaderService loader,
-        IEnumerable<IProductCatalogCategory> catalogCategories,
-        IProductItemHandler productItemHandler,
-        string productPathFormat,
-        string categoryPathFormat,
-        string sourceName,
-        string url,
-        ICategoryPaging<TCategory> categoryPaging,
-        IItemSerializer<TCategory> categorySerializer,
-        ProductServiceOptions productServiceOptions,
-        IKeyHasher keyHasher,
-        IServiceStateRepository serviceStateRepository);
+    protected abstract TProductStatefulService Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
+    ILogger<TProductStatefulService> logger,
+    string name,
+    ILoaderService loader,
+    IEnumerable<IProductCatalogCategory> catalogCategories,
+    IProductItemHandler productItemHandler,
+    string productPathFormat,
+    string categoryPathFormat,
+    string sourceName,
+    string url,
+     ICategoryPaging<TCategory> categoryPaging,
+     IItemSerializer<TCategory> categorySerializer,
+      TProductServiceOptions productServiceOptions,
+      IKeyHasher keyHasher,
+      IServiceStateRepository serviceStateRepository);
 }
