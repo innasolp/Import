@@ -18,7 +18,7 @@ IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
 {
     public override Type GetServiceType()
     {
-        return typeof(CategoryServiceImpl);
+        return typeof(CategoryServiceImpl<TTreeItem>);
     }
 
     protected override CategoryServiceImpl<TTreeItem> Create(ILogger<CategoryServiceImpl<TTreeItem>> logger,

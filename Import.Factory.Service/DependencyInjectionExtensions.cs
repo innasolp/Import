@@ -22,7 +22,10 @@ public static class DependencyInjectionExtensions
         {
             var logger = sd.GetRequiredService<ILogger<AggregateService>>();
             var loggerFactory = sd.GetService<IImportServiceLogFactory>();
-            return new AggregateServiceFactory(logger, loggerFactory);
+            var importServiceFactory = sd.GetService<IImportServiceFactory>();
+            return importServiceFactory != null 
+               ? new AggregateServiceFactory(logger, importServiceFactory, loggerFactory)
+               : new AggregateServiceFactory(logger, loggerFactory);
         });
     }
 }

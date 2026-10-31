@@ -54,7 +54,7 @@ internal class ProductServiceFactoryImpl<TCategory, TProductItem, TProductCatalo
            productItemHandler,
            productPathFormat,
            categoryPathFormat,
-           name,
+           sourceName,
            categoryPaging,
            categorySerializer,
            productServiceOptions);

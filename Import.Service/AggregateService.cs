@@ -174,22 +174,30 @@ public class AggregateService : Service, IAggregateImportService
 
     protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
     {
+        var runningTasks = new List<Task>();
+
         while (!cancellationToken.IsCancellationRequested)
         {
+            var slots = Math.Max(0, WorkitemsChunkSize - runningTasks.Count);
 
-            var workItemsChunk = _workItems.Values
+            var pendingItems = _workItems.Values
                 .Where(w => !w.Completed)
-                .Take(WorkitemsChunkSize)
+                .Take(slots)
                 .ToList();
 
-            if (workItemsChunk.Count == 0)
+            foreach (var workItem in pendingItems)
+            {
+                runningTasks.Add(ProcessWorkItem(workItem, cancellationToken));
+            }
+
+            if (runningTasks.Count == 0)
             {
                 await Task.Delay(50, cancellationToken).ConfigureAwait(false);
                 continue;
             }
 
-            var workItemsChunkTasks = workItemsChunk.Select(w => ProcessWorkItem(w, cancellationToken));
-            await Task.WhenAll(workItemsChunkTasks).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(runningTasks).ConfigureAwait(false);
+            runningTasks.Remove(completedTask);
         }
     }
 
