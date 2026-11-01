@@ -1,10 +1,24 @@
-# ==========================================
+﻿# ==========================================
 # НАСТРОЙКИ (Укажите ваши пути)
 # ==========================================
 $SolutionPath = "./Import.slnx"
 $SourcePackagesDir = "./packages"
 $TargetPackagesDir = "../ShopImport/packages"
-$NugetCacheDir = "$env:USERPROFILE\.nuget\packages"
+# Resolve NuGet global packages directory: honor NUGET_PACKAGES > dotnet nuget locals > USERPROFILE default
+if ($null -ne $env:NUGET_PACKAGES -and (Test-Path $env:NUGET_PACKAGES)) {
+    $NugetCacheDir = $env:NUGET_PACKAGES
+} else {
+    try {
+        $result = dotnet nuget locals global-packages -l 2>$null
+        if ($LASTEXITCODE -eq 0 -and $result.Count -gt 0) {
+            $NugetCacheDir = ($result | Where-Object { $_.Trim() -ne '' } | Select-Object -Last 1).Trim()
+        } else {
+            $NugetCacheDir = "$env:USERPROFILE\.nuget\packages"
+        }
+    } catch {
+        $NugetCacheDir = "$env:USERPROFILE\.nuget\packages"
+    }
+}
 
 # Имя вашей библиотеки/пакетов, которые нужно удалить из кэша NuGet
 # (Поддерживает подстановочные знаки, например, "MyCompany.*")
@@ -39,7 +53,7 @@ if (-not (Test-Path $SourcePackagesDir)) {
     # Копируем все .nupkg и .snupkg файлы
     Get-ChildItem -Path $SourcePackagesDir -Filter *.nupkg -Recurse | ForEach-Object {
         $destFile = Join-Path $TargetPackagesDir $_.Name
-        Copy-Item -Path $_.FullName -Destination $destFile -Force
+        Copy-Item -Path $_.FullName -Destination $destFile -Force -ErrorAction Stop
         Write-Host "  [Скопирован] $_.Name" -ForegroundColor Gray
     }
     Write-Host "✔ Копирование пакетов завершено.`n" -ForegroundColor Green
