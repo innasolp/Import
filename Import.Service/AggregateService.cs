@@ -37,16 +37,25 @@ public class WorkItem(IService importService)
     internal AsyncEventHandler<ConnectedAsyncEventArgs>? ConnectedHandler { get; set; }
 }
 
-public class AggregateService(
-    ILogger logger,
-    string serviceName,
-    Func<IService, CancellationToken, Task> executionTask)
-    : Service(logger), IAggregateImportService
+public class AggregateService : Service, IAggregateImportService
 {
     private const int WorkitemsChunkSize = 10;
 
     private readonly ConcurrentDictionary<IService, WorkItem> _workItems = new(ReferenceEqualityComparer.Instance);
-    private readonly Func<IService, CancellationToken, Task> _executionTask = executionTask;
+    private readonly Func<IService, CancellationToken, Task>? _executionTask;
+    private readonly string serviceName;
+
+    public AggregateService(
+        ILogger logger,
+        string serviceName,
+        IEnumerable<IService> services,
+        Func<IService, CancellationToken, Task>? executionTask = null) : base(logger)
+    {
+        this.serviceName = serviceName;
+        _executionTask = executionTask;
+
+        foreach (var item in services) TryAddService(item);
+    }
 
     public override string Name => serviceName;
 
@@ -54,6 +63,13 @@ public class AggregateService(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        TryAddService(service);
+
+        return Task.CompletedTask;
+    }
+
+    private bool TryAddService(IService service)
+    {
         var workItem = new WorkItem(service);
         AsyncEventHandler<ConnectedAsyncEventArgs> handler = (sender, args) =>
             ServiceItemConnectedAsync(workItem, sender, args);
@@ -65,9 +81,11 @@ public class AggregateService(
         if (!_workItems.TryAdd(service, workItem))
         {
             service.ConnectedAsync -= handler;
+            Logger.LogWarning("The '{ServiceName}' was already added.", workItem.ImportService.Name);
+            return false;
         }
 
-        return Task.CompletedTask;
+        return true;
     }
 
     private Task ServiceItemConnectedAsync(WorkItem workItem, object sender, ConnectedAsyncEventArgs eventArgs)
@@ -156,35 +174,54 @@ public class AggregateService(
 
     protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
     {
+        var runningTasks = new Dictionary<WorkItem, Task>();
+
         while (!cancellationToken.IsCancellationRequested)
         {
+            var slots = Math.Max(0, WorkitemsChunkSize - runningTasks.Count);
 
-            var workItemsChunk = _workItems.Values
-                .Where(w => !w.Completed)
-                .Take(WorkitemsChunkSize)
+            var pendingItems = _workItems.Values
+                .Where(w => !w.Completed && !runningTasks.ContainsKey(w))
+                .Take(slots)
                 .ToList();
 
-            if (workItemsChunk.Count == 0)
+            foreach (var workItem in pendingItems)
+            {
+                runningTasks.Add(workItem, ProcessWorkItem(workItem, cancellationToken));
+            }
+
+            if (runningTasks.Count == 0)
             {
                 await Task.Delay(50, cancellationToken).ConfigureAwait(false);
                 continue;
             }
 
-            var workItemsChunkTasks = workItemsChunk.Select(w => ProcessWorkItem(w, cancellationToken));
-            await Task.WhenAll(workItemsChunkTasks).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(runningTasks.Values).ConfigureAwait(false);
+            var completedWorkItem = runningTasks.FirstOrDefault(p => ReferenceEquals(p.Value, completedTask)).Key;
+            runningTasks.Remove(completedWorkItem);
         }
+
+        if (runningTasks.Count > 0)
+            await Task.WhenAll(runningTasks.Values).ConfigureAwait(false);
     }
 
     private async Task ProcessWorkItem(WorkItem workItem, CancellationToken cancellationToken)
     {
         try
         {
-            await _executionTask(workItem.ImportService, cancellationToken).ConfigureAwait(false);
-
-            if (!workItem.Completed)
+            if (_executionTask != null)
             {
-                workItem.Success ??= true;
-                workItem.Completed = true;
+                await _executionTask.Invoke(workItem.ImportService, cancellationToken).ConfigureAwait(false);
+
+                if (!workItem.Completed)
+                {
+                    workItem.Success ??= true;
+                    workItem.Completed = true;
+                }
+            }
+            else
+            {
+                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

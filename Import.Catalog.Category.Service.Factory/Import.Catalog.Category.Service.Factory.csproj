@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Import.Catalog.Category.Service\Import.Catalog.Category.Service.csproj" />
-    <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
-    <ProjectReference Include="..\Import.Settings.Interfaces\Import.Settings.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.Catalog.Category.Factory.Interfaces\Import.Catalog.Category.Factory.Interfaces.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>

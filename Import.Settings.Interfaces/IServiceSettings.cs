@@ -12,5 +12,5 @@ public interface IServiceSettings
 
     string? Value { get; set; }
 
-    static abstract bool IsEmpty(IServiceSettings serviceSettings);
+    static virtual bool IsEmpty(IServiceSettings serviceSettings) => false;
 }

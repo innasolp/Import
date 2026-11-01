@@ -6,6 +6,7 @@
     <Project Path="Import.Catalog.Category.Service.Test/Import.Catalog.Category.Service.Test.csproj" />  
     <Project Path="Import.Catalog.Category.Service.Factory/Import.Catalog.Category.Service.Factory.csproj" />
     <Project Path="Import.Catalog.Category.Service.Factory.Test/Import.Catalog.Category.Service.Factory.Test.csproj" />  
+    <Project Path="Import.Catalog.Category.Factory.Interfaces/Import.Catalog.Category.Factory.Interfaces.csproj" />  
   </Folder>
   <Folder Name="/Factory/">
     <Project Path="Import.Factory.Interfaces/Import.Factory.Interfaces.csproj" />
@@ -13,6 +14,7 @@
     <Project Path="Import.Settings.Interfaces/Import.Settings.Interfaces.csproj" /> 
     <Project Path="Import.Settings.Json/Import.Settings.Json.csproj" /> 
     <Project Path="Import.Settings.Test/Import.Settings.Test.csproj" />
+    <Project Path="Import.Factory.Service/Import.Factory.Service.csproj" />   
   </Folder>
   <Folder Name="/TreeItem/">
     <Project Path="Import.TreeItem.Html/Import.TreeItem.Html.csproj" />
@@ -24,8 +26,8 @@
   <Project Path="Import.Html/Import.Html.csproj" />
   <Project Path="Import.Interfaces/Import.Interfaces.csproj" />
   <Project Path="Import.Service.Test.Infrastructure/Import.Service.Test.Infrastructure.csproj" />
-  <Project Path="Import.Service/Import.Service.csproj" />  
-   <Folder Name="/State/"> 
+  <Project Path="Import.Service/Import.Service.csproj" />
+  <Folder Name="/State/"> 
       <Project Path="Import.KeyHash/Import.KeyHash.csproj" />  
       <Project Path="Import.KeyHash.XxHash64/Import.KeyHash.XxHash64.csproj" /> 
       <Project Path="Import.ServiceState.Redis/Import.ServiceState.Redis.csproj" />
@@ -34,6 +36,7 @@
    </Folder>
    <Folder Name="/Catalog/Product/"> 
    <Project Path="Import.Catalog.Product.Interfaces/Import.Catalog.Product.Interfaces.csproj" />
+    <Project Path="Import.Catalog.Product.Factory.Interfaces/Import.Catalog.Product.Factory.Interfaces.csproj" />
     <Project Path="Import.Catalog.Product.Service/Import.Catalog.Product.Service.csproj" />
     <Project Path="Import.Catalog.Product.Service.Stateful/Import.Catalog.Product.Service.Stateful.csproj" />  
     <Project Path="Import.Catalog.Product.Service.Test/Import.Catalog.Product.Service.Test.csproj" />

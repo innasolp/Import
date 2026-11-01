@@ -11,7 +11,7 @@ internal class ProductServiceImpl<TCategory, TProductItem> : ProductService<TCat
     public override string Name { get; }
 
     internal ProductServiceImpl(
-        ILogger logger,
+        ILogger<ProductServiceImpl<TCategory, TProductItem>> logger,
         string name,
         ILoaderService loader,
         string url,

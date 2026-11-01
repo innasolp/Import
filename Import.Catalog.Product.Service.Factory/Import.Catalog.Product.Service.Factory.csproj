@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Import.Catalog.Product.Factory.Interfaces\Import.Catalog.Product.Factory.Interfaces.csproj" />
     <ProjectReference Include="..\Import.Catalog.Product.Service\Import.Catalog.Product.Service.csproj" />
     <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
     <ProjectReference Include="..\Import.Interfaces\Import.Interfaces.csproj" />

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Import.Factory.Interfaces\Import.Factory.Interfaces.csproj" />
+    <ProjectReference Include="..\Import.Catalog.Product.Interfaces\Import.Catalog.Product.Interfaces.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Import catalog product factory interfaces</Title>
+    <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>innasolp</Authors>
+    <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
+  </PropertyGroup>
+
+</Project>
