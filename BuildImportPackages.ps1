@@ -1,9 +1,9 @@
 ﻿# ==========================================
 # НАСТРОЙКИ (Укажите ваши пути)
 # ==========================================
-$SolutionPath = "./Import.slnx"
-$SourcePackagesDir = "./packages"
-$TargetPackagesDir = "../ShopImport/packages"
+$SolutionPath = Join-Path $PSScriptRoot "./Import.slnx"
+$SourcePackagesDir = Join-Path $PSScriptRoot "./packages"
+$TargetPackagesDir = Join-Path $PSScriptRoot "../ShopImport/packages"
 # Resolve NuGet global packages directory: honor NUGET_PACKAGES > dotnet nuget locals > USERPROFILE default
 if ($null -ne $env:NUGET_PACKAGES -and (Test-Path $env:NUGET_PACKAGES)) {
     $NugetCacheDir = $env:NUGET_PACKAGES
@@ -11,7 +11,12 @@ if ($null -ne $env:NUGET_PACKAGES -and (Test-Path $env:NUGET_PACKAGES)) {
     try {
         $result = dotnet nuget locals global-packages -l 2>$null
         if ($LASTEXITCODE -eq 0 -and $result.Count -gt 0) {
-            $NugetCacheDir = ($result | Where-Object { $_.Trim() -ne '' } | Select-Object -Last 1).Trim()
+            $line = ($result | Where-Object { $_.Trim() -ne '' } | Select-Object -Last 1).Trim()
+            if ($line -match 'global-packages:\s*(.+)') {
+                $NugetCacheDir = $matches[1].Trim()
+            } else {
+                $NugetCacheDir = $line
+            }
         } else {
             $NugetCacheDir = "$env:USERPROFILE\.nuget\packages"
         }

@@ -174,20 +174,20 @@ public class AggregateService : Service, IAggregateImportService
 
     protected virtual async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        var runningTasks = new Dictionary<Task, WorkItem>();
+        var runningTasks = new Dictionary<WorkItem, Task>();
 
         while (!cancellationToken.IsCancellationRequested)
         {
             var slots = Math.Max(0, WorkitemsChunkSize - runningTasks.Count);
 
             var pendingItems = _workItems.Values
-                .Where(w => !w.Completed && !runningTasks.ContainsValue(w))
+                .Where(w => !w.Completed && !runningTasks.ContainsKey(w))
                 .Take(slots)
                 .ToList();
 
             foreach (var workItem in pendingItems)
             {
-                runningTasks.Add(ProcessWorkItem(workItem, cancellationToken), workItem);
+                runningTasks.Add(workItem, ProcessWorkItem(workItem, cancellationToken));
             }
 
             if (runningTasks.Count == 0)
@@ -196,12 +196,13 @@ public class AggregateService : Service, IAggregateImportService
                 continue;
             }
 
-            var completedTask = await Task.WhenAny(runningTasks.Keys).ConfigureAwait(false);
-            runningTasks.Remove(completedTask);
+            var completedTask = await Task.WhenAny(runningTasks.Values).ConfigureAwait(false);
+            var completedWorkItem = runningTasks.FirstOrDefault(p => ReferenceEquals(p.Value, completedTask)).Key;
+            runningTasks.Remove(completedWorkItem);
         }
 
         if (runningTasks.Count > 0)
-            await Task.WhenAll(runningTasks.Keys).ConfigureAwait(false);
+            await Task.WhenAll(runningTasks.Values).ConfigureAwait(false);
     }
 
     private async Task ProcessWorkItem(WorkItem workItem, CancellationToken cancellationToken)
@@ -217,6 +218,10 @@ public class AggregateService : Service, IAggregateImportService
                     workItem.Success ??= true;
                     workItem.Completed = true;
                 }
+            }
+            else
+            {
+                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
