@@ -8,14 +8,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-public abstract class CategoryServiceFactory<TCategoryService, TTreeItem>(ILogger<TCategoryService> logger,
+public abstract class CategoryServiceFactory<TCategoryService, TTreeItem, TCategory>(ILogger<TCategoryService> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
     IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
-    IEnumerable<ICategoryItemHandlerFactory<TTreeItem>> categoryItemHandlerFactories,
+    IEnumerable<ICategoryItemHandlerFactory<TCategory>> categoryItemHandlerFactories,
     IImportServiceLogFactory? logFactory = null)
     : IServiceFactory
     where TTreeItem : TreeItem.TreeItem, new()
-    where TCategoryService : CategoryService<TTreeItem>
+    where TCategory : ICategory, new()
+    where TCategoryService : CategoryService<TTreeItem, TCategory>
 {
     private const string CategorySourceUrl = "CategorySourceUrl";
     private const string CategoryLoadData = "CategoryLoadData";
@@ -43,21 +44,17 @@ public abstract class CategoryServiceFactory<TCategoryService, TTreeItem>(ILogge
             if (string.IsNullOrEmpty(stageSettings.TypeName))
                 throw new InvalidDataException($"No tree item loader factory for type {stageSettings.TypeName} for service {name}.");
 
-            var matchingTreeItemFactories = _treeItemLoaderFactories
-                .Where(f => f.GetType().Name.Contains(stageSettings.TypeName, StringComparison.InvariantCultureIgnoreCase))
-                .Take(2)
-                .ToArray();
-            if (matchingTreeItemFactories.Length != 1)
-                throw new InvalidDataException($"Expected exactly one tree item loader factory for type {stageSettings.TypeName} for service {name}.");
+            var treeItemFactory = _treeItemLoaderFactories.GetFactoryByImplementationName(stageSettings.TypeName, name);
+            if (treeItemFactory == default)
+                throw new InvalidDataException($"Tree item loader factory for type {stageSettings.TypeName} for service {name} not found.");
 
-            var treeItemFactory = matchingTreeItemFactories[0];
             treeItemLoaders.Add(treeItemFactory.CreateTreeItemLoader(stageSettings.OptionsJson));
         }
 
         var serviceLogger = logFactory?.GetLogger(logger, name, importSource, importSettings) ?? logger;
 
         var loaderFactory = loaderServiceFactories.GetFactoryBySettings(importSettingsProvider, importSettings, Loader, name);
-        var loader = loaderFactory.Create(name, importSettings);
+        var loader = loaderFactory.Create(name, importSettingsProvider, importSettings);
 
         var categoryItemHandlerFactory = categoryItemHandlerFactories.GetFactoryBySettings(importSettingsProvider, importSettings, CategoryItemHandler, name);
         var categoryItemHandler = categoryItemHandlerFactory.Create(importSettingsProvider, importSettings);
@@ -75,7 +72,7 @@ public abstract class CategoryServiceFactory<TCategoryService, TTreeItem>(ILogge
             string sourceName,
             string url,
             IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-            ICategoryItemHandler<TTreeItem> categoryItemHandler,
+            ICategoryItemHandler<TCategory> categoryItemHandler,
             IImportSettingsProvider importSettingsProvider,
             IImportSettings importSettings,
             object? categoryLoadData = null);

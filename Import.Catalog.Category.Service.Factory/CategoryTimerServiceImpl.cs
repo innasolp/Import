@@ -5,18 +5,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-internal class CategoryTimerServiceImpl<TTreeItem>(ILogger<CategoryTimerServiceImpl<TTreeItem>> logger,
+internal class CategoryTimerServiceImpl<TTreeItem, TCategory>(ILogger<CategoryTimerServiceImpl<TTreeItem, TCategory>> logger,
 string name,
 ILoaderService loader,
 string categorySourceUrl,
 string sourceName,
 string url,
 IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-ICategoryItemHandler<TTreeItem> itemHandler,
+ICategoryItemHandler<TCategory> itemHandler,
 int? timerSecondsInterval = null,
 object? categoryLoadData = null)
-: CategoryTimerService<TTreeItem>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, timerSecondsInterval, categoryLoadData)
+: CategoryTimerService<TTreeItem, TCategory>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, timerSecondsInterval, categoryLoadData)
 where TTreeItem : TreeItem.TreeItem, new()
+where TCategory : ICategory, new()
 {
 
 }
@@ -27,11 +28,11 @@ ILoaderService loader,
 string categorySourceUrl,
 string sourceName,
 string url,
-IEnumerable<ITreeItemLoader<Category>> categoryLoadStages,
-ICategoryItemHandler<Category> itemHandler,
+IEnumerable<ITreeItemLoader<CategoryTreeItem>> categoryLoadStages,
+ICategoryItemHandler<Interfaces.Category> itemHandler,
 int? timerSecondsInterval = null,
 object? categoryLoadData = null)
-: CategoryTimerServiceImpl<Category>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, timerSecondsInterval, categoryLoadData)
+: CategoryTimerServiceImpl<CategoryTreeItem, Interfaces.Category>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, timerSecondsInterval, categoryLoadData)
 {
 
 }

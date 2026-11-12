@@ -143,4 +143,21 @@ public class ImportSettingsProvider : IImportSettingsProvider
 
         return false;
     }
+
+
+    public static bool TryGet<T>(ImportSettings importSettings, out T? value, out Exception? exception)
+    {
+        var json = JsonSerializer.Serialize(importSettings.Properties);
+        if (Helper.TryDeserialize(json, out value, out exception))
+            return true;
+        value = default;
+        return false;
+    }
+
+    bool IImportSettingsProvider.TryGet<T>(IImportSettings importSettings, out T? value, out Exception? exception) where T : default
+    {
+        if (importSettings is ImportSettings jsonImportSettings)
+            return TryGet(jsonImportSettings, out value, out exception);
+        throw new ArgumentException($"Expected {nameof(ImportSettings)} but got {importSettings.GetType().FullName}");
+    }
 }

@@ -14,4 +14,6 @@ public interface IImportSettingsProvider
     where T : class;
 
     bool TryGetServiceSettings(IImportSettings importSettings, string key, out IServiceSettings? serviceSettings);
+
+    bool TryGet<T>(IImportSettings importSettings, out T? value, out Exception? exception);
 }

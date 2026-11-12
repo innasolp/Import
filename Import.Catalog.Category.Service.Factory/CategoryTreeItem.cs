@@ -3,15 +3,15 @@ using Import.TreeItem;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-internal class Category : TreeItem.TreeItem
+public class CategoryTreeItem : TreeItem.TreeItem
 {
-    private readonly List<Category> _children = [];
+    private readonly List<CategoryTreeItem> _children = [];
 
     protected override IList Children => _children;
 
-    private Category? _parent;
+    private CategoryTreeItem? _parent;
 
-    protected override TreeItem.TreeItem? ItemParent { get => _parent; set => _parent = value as Category; }
+    protected override TreeItem.TreeItem? ItemParent { get => _parent; set => _parent = value as CategoryTreeItem; }
 
     public string? Description { get; private set; }
 

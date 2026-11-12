@@ -4,6 +4,7 @@ using Import.TreeItem;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit.Abstractions;
+using Cat = global::Import.Catalog.Category.Interfaces.Category;
 
 namespace Import.Catalog.Category.Service.Test;
 
@@ -17,7 +18,7 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
 
     private readonly Mock<ITreeItemLoader<TestCategory>> _categoryLoaderMock = new();
 
-    private readonly Mock<ICategoryItemHandler<TestCategory>> _categoryItemHandlerMock = new();
+    private readonly Mock<ICategoryItemHandler<Cat>> _categoryItemHandlerMock = new();
 
 
     public ImportCategoryServiceTest(ITestOutputHelper outputHelper) : base(outputHelper)

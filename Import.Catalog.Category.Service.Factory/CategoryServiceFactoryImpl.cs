@@ -8,42 +8,44 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-internal class CategoryServiceFactoryImpl<TTreeItem>(ILogger<CategoryServiceImpl<TTreeItem>> logger,
+internal class CategoryServiceFactoryImpl<TTreeItem, TCategory>(ILogger<CategoryServiceImpl<TTreeItem, TCategory>> logger,
 IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
 IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
- IEnumerable<ICategoryItemHandlerFactory<TTreeItem>> categoryItemHandlerFactories,
+ IEnumerable<ICategoryItemHandlerFactory<TCategory>> categoryItemHandlerFactories,
   IImportServiceLogFactory? logFactory = null)
-  : CategoryServiceFactory<CategoryServiceImpl<TTreeItem>, TTreeItem>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
+  : CategoryServiceFactory<CategoryServiceImpl<TTreeItem, TCategory>, TTreeItem, TCategory>(logger,
+    loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
    where TTreeItem : TreeItem.TreeItem, new()
+   where TCategory : ICategory, new()
 {
     public override Type GetServiceType()
     {
-        return typeof(CategoryServiceImpl<TTreeItem>);
+        return typeof(CategoryServiceImpl<TTreeItem, TCategory>);
     }
 
-    protected override CategoryServiceImpl<TTreeItem> Create(ILogger<CategoryServiceImpl<TTreeItem>> logger,
+    protected override CategoryServiceImpl<TTreeItem, TCategory> Create(ILogger<CategoryServiceImpl<TTreeItem, TCategory>> logger,
      string name,
        ILoaderService loader,
         string categorySourceUrl,
         string sourceName,
         string url,
         IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-         ICategoryItemHandler<TTreeItem> categoryItemHandler,
+         ICategoryItemHandler<TCategory> categoryItemHandler,
          IImportSettingsProvider importSettingsProvider,
          IImportSettings importSettings,
           object? categoryLoadData = null)
     {
-        return new CategoryServiceImpl<TTreeItem>(logger, name, loader, categorySourceUrl, sourceName, url
+        return new CategoryServiceImpl<TTreeItem, TCategory>(logger, name, loader, categorySourceUrl, sourceName, url
                 , categoryLoadStages, categoryItemHandler, categoryLoadData);
     }
 }
 
 internal class CategoryServiceFactoryImpl(ILogger<CategoryServiceImpl> logger,
 IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-IEnumerable<ITreeItemLoaderFactory<Category>> treeItemLoaderFactories,
- IEnumerable<ICategoryItemHandlerFactory<Category>> categoryItemHandlerFactories,
+IEnumerable<ITreeItemLoaderFactory<CategoryTreeItem>> treeItemLoaderFactories,
+ IEnumerable<ICategoryItemHandlerFactory<Interfaces.Category>> categoryItemHandlerFactories,
   IImportServiceLogFactory? logFactory = null)
-  : CategoryServiceFactory<CategoryServiceImpl, Category>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
+  : CategoryServiceFactory<CategoryServiceImpl, CategoryTreeItem, Interfaces.Category>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
 {
     public override Type GetServiceType()
     {
@@ -56,8 +58,8 @@ IEnumerable<ITreeItemLoaderFactory<Category>> treeItemLoaderFactories,
        string categorySourceUrl,
         string sourceName,
         string url,
-        IEnumerable<ITreeItemLoader<Category>> categoryLoadStages,
-        ICategoryItemHandler<Category> categoryItemHandler,
+        IEnumerable<ITreeItemLoader<CategoryTreeItem>> categoryLoadStages,
+        ICategoryItemHandler<Interfaces.Category> categoryItemHandler,
         IImportSettingsProvider importSettingsProvider,
         IImportSettings importSettings,
         object? categoryLoadData = null)

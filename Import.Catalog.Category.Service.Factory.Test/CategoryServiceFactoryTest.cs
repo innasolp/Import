@@ -9,6 +9,7 @@ using Import.TreeItem.Html;
 using Import.TreeItem.Json;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Cat = global::Import.Catalog.Category.Interfaces.Category;
 
 namespace Import.Catalog.Category.Service.Factory.Test;
 
@@ -29,14 +30,14 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<TestCategory>>
+        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
         {
-            new TestCategoryItemHandler1Factory<TestCategory>(),
-            new TestCategoryItemHandler2Factory<TestCategory>(),
+            new TestCategoryItemHandler1Factory<Cat>(),
+            new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
-            new Mock<ILogger<TestCategoryService<TestCategory>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -64,7 +65,8 @@ public class CategoryServiceFactoryTest
 
         var loaderServiceMock = new Mock<ILoaderServiceFactory>();
         var exceptionMessage = "TestLoaderService2Factory invalid";
-        loaderServiceMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<IImportSettings>()))
+        loaderServiceMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<IImportSettingsProvider>(),
+         It.IsAny<IImportSettings>()))
             .Throws(new InvalidOperationException(exceptionMessage));
         loaderServiceMock.Setup(x => x.GetServiceType()).Returns(typeof(TestLoaderService2));
 
@@ -74,14 +76,14 @@ public class CategoryServiceFactoryTest
             loaderServiceMock.Object,
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<TestCategory>>
+        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
         {
-            new TestCategoryItemHandler1Factory<TestCategory>(),
-            new TestCategoryItemHandler2Factory<TestCategory>(),
+            new TestCategoryItemHandler1Factory<Cat>(),
+            new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
-            new Mock<ILogger<TestCategoryService<TestCategory>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -100,7 +102,7 @@ public class CategoryServiceFactoryTest
     }
 
     [Fact]
-    public void TestCreateCategoryServiceThrowsExceptionWhenCategorySourceUrlNotFound()
+    public async Task TestCreateCategoryServiceThrowsExceptionWhenCategorySourceUrlNotFound()
     {
         var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>
         {
@@ -113,13 +115,13 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<TestCategory>>
+        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
         {
-            new TestCategoryItemHandler2Factory<TestCategory>(),
+            new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
-            new Mock<ILogger<TestCategoryService<TestCategory>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -132,14 +134,14 @@ public class CategoryServiceFactoryTest
         var importSettingsMock = new Mock<IImportSettings>();
         var importSettingsProviderMock = new Mock<IImportSettingsProvider>();
 
-        var exception = Assert.Throws<Exception>(()
+        var exception = await Assert.ThrowsAsync<Exception>(async ()
             => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProviderMock.Object, importSettingsMock.Object));
 
         Assert.Contains("categorySourceUrl", exception.Message);
     }
 
     [Fact]
-    public void TestCreateCategoryServiceThrowsExceptionWhenLoadStagesNotFound()
+    public async Task TestCreateCategoryServiceThrowsExceptionWhenLoadStagesNotFound()
     {
         var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>
         {
@@ -152,13 +154,13 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<TestCategory>>
+        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
         {
-            new TestCategoryItemHandler2Factory<TestCategory>(),
+            new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
-            new Mock<ILogger<TestCategoryService<TestCategory>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -176,7 +178,7 @@ public class CategoryServiceFactoryTest
         importSettingsProviderMock.Setup(x => x.TryGetService<LoadStageSettings[]>(importSettingsMock.Object, It.Is<string>(s => s == "LoadStages"), out It.Ref<LoadStageSettings[]>.IsAny))
             .Returns(false);
 
-        var exception = Assert.Throws<Exception>(()
+        var exception = await Assert.ThrowsAsync<Exception>(async ()
             => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProviderMock.Object, importSettingsMock.Object));
 
         Assert.Contains("loadStagesSettings", exception.Message);
@@ -193,13 +195,13 @@ public class CategoryServiceFactoryTest
 
         var loaderServiceFactories = new List<ILoaderServiceFactory>();
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<TestCategory>>
+        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
         {
-            new TestCategoryItemHandler2Factory<TestCategory>(),
+            new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
-            new Mock<ILogger<TestCategoryService<TestCategory>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -231,10 +233,10 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<TestCategory>>();
+        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>();
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
-            new Mock<ILogger<TestCategoryService<TestCategory>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -262,13 +264,13 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<TestCategory>>
+        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
         {
-            new TestCategoryItemHandler2Factory<TestCategory>(),
+            new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory>(
-            new Mock<ILogger<TestCategoryService<TestCategory>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,

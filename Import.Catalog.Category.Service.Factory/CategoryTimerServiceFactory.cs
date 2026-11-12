@@ -8,20 +8,21 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-public abstract class CategoryTimerServiceFactory<TCategoryTimerService, TTreeItem>(ILogger<TCategoryTimerService> logger,
+public abstract class CategoryTimerServiceFactory<TCategoryTimerService, TTreeItem, TCategory>(ILogger<TCategoryTimerService> logger,
  IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
   IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
-   IEnumerable<ICategoryItemHandlerFactory<TTreeItem>> categoryItemHandlerFactories,
+   IEnumerable<ICategoryItemHandlerFactory<TCategory>> categoryItemHandlerFactories,
    IImportServiceLogFactory? logFactory = null)
-    : CategoryServiceFactory<TCategoryTimerService, TTreeItem>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
+    : CategoryServiceFactory<TCategoryTimerService, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
 where TTreeItem : TreeItem.TreeItem, new()
-where TCategoryTimerService : CategoryTimerService<TTreeItem>
+where TCategoryTimerService : CategoryTimerService<TTreeItem, TCategory>
+where TCategory : ICategory, new()
 {
     private const string DefaultInterval = "DefaultInterval";
 
     public override Type GetServiceType()
     {
-        return typeof(CategoryTimerService<TTreeItem>);
+        return typeof(CategoryTimerServiceImpl<TTreeItem, TCategory>);
     }
 
     protected override TCategoryTimerService Create(ILogger<TCategoryTimerService> logger,
@@ -31,7 +32,7 @@ where TCategoryTimerService : CategoryTimerService<TTreeItem>
     string sourceName,
      string url,
       IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-      ICategoryItemHandler<TTreeItem> categoryItemHandler,
+      ICategoryItemHandler<TCategory> categoryItemHandler,
       IImportSettingsProvider importSettingsProvider,
       IImportSettings importSettings,
        object? categoryLoadData = null)
@@ -51,7 +52,7 @@ where TCategoryTimerService : CategoryTimerService<TTreeItem>
     string sourceName,
      string url,
       IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-      ICategoryItemHandler<TTreeItem> categoryItemHandler,
+      ICategoryItemHandler<TCategory> categoryItemHandler,
       IImportSettingsProvider importSettingsProvider,
       IImportSettings importSettings,
        object? categoryLoadData = null,

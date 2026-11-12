@@ -7,8 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service;
 
-public abstract class CategoryService<TCategory> : ImportService
-    where TCategory : ITreeItem
+public abstract class CategoryService<TTreeCategory, TCategory> : ImportService
+    where TTreeCategory : ITreeItem
+    where TCategory : ICategory, new()
 {
     private const int ConcurrencyDegree = 8;
     private readonly object _visitedIdsLock = new();
@@ -25,7 +26,7 @@ public abstract class CategoryService<TCategory> : ImportService
     private readonly string _sourceName;
     private readonly ICategoryItemHandler<TCategory> _itemHandler;
     private readonly object? _categoryLoadData;
-    private readonly IEnumerable<ITreeItemLoader<TCategory>> _categoryLoadStages;
+    private readonly IEnumerable<ITreeItemLoader<TTreeCategory>> _categoryLoadStages;
     private readonly SemaphoreSlim _handleSemaphore = new(ConcurrencyDegree, ConcurrencyDegree);
 
     public CategoryService(
@@ -35,7 +36,7 @@ public abstract class CategoryService<TCategory> : ImportService
         string categorySourceUrl,
         string sourceName,
         string url,
-        IEnumerable<ITreeItemLoader<TCategory>> categoryLoadStages,
+        IEnumerable<ITreeItemLoader<TTreeCategory>> categoryLoadStages,
         ICategoryItemHandler<TCategory> itemHandler,
         object? categoryLoadData = null) : base(logger, loader, url)
     {
@@ -74,8 +75,8 @@ public abstract class CategoryService<TCategory> : ImportService
 
     protected async Task LoadCategoriesAsync(object? categoryLoadData, CancellationToken stoppingToken)
     {
-        var nextStageParentCategories = new List<TCategory>();
-        var parentCategories = new List<TCategory>();
+        var nextStageParentCategories = new List<TTreeCategory>();
+        var parentCategories = new List<TTreeCategory>();
         var visitedIds = new HashSet<int>();
         bool isFirstStage = true;
 
@@ -152,15 +153,15 @@ public abstract class CategoryService<TCategory> : ImportService
         }
     }
 
-    private async Task<IReadOnlyList<TCategory>> LoadCategoryChildrenAsync(
+    private async Task<IReadOnlyList<TTreeCategory>> LoadCategoryChildrenAsync(
         string urlFormat,
-        ITreeItemLoader<TCategory> stage,
-        IEnumerable<TCategory> parentCategories,
+        ITreeItemLoader<TTreeCategory> stage,
+        IEnumerable<TTreeCategory> parentCategories,
         object? categoryLoadData,
         CancellationToken stoppingToken,
         HashSet<int> visitedIds)
     {
-        var currentCategories = new ConcurrentBag<TCategory>();
+        var currentCategories = new ConcurrentBag<TTreeCategory>();
 
         // Seed with parent IDs to avoid loading a leaf whose ID matches the requested parent
         foreach (var parentCategory in parentCategories)
@@ -214,11 +215,11 @@ public abstract class CategoryService<TCategory> : ImportService
         return [.. currentCategories];
     }
 
-    private async Task<(bool success, IReadOnlyList<TCategory> result)> LoadCategoryChildrenAsync(
+    private async Task<(bool success, IReadOnlyList<TTreeCategory> result)> LoadCategoryChildrenAsync(
         string url,
         object? categoryLoadData,
-        ITreeItemLoader<TCategory> stage,
-        TCategory? parentCategory,
+        ITreeItemLoader<TTreeCategory> stage,
+        TTreeCategory? parentCategory,
         bool required = true,
         CancellationToken cancellationToken = default)
     {
@@ -237,7 +238,7 @@ public abstract class CategoryService<TCategory> : ImportService
             await using (stream.ConfigureAwait(false))
             {
                 var loadedCategories = await stage.LoadAsync(parentCategory, stream, cancellationToken).ConfigureAwait(false);
-                return (true, loadedCategories as IReadOnlyList<TCategory> ?? [.. loadedCategories]);
+                return (true, loadedCategories as IReadOnlyList<TTreeCategory> ?? [.. loadedCategories]);
             }
         }
         catch (OperationCanceledException)
@@ -251,13 +252,13 @@ public abstract class CategoryService<TCategory> : ImportService
         }
     }
 
-    private async Task HandleCategoryAsync(TCategory category, CancellationToken cancellationToken)
+    private async Task HandleCategoryAsync(TTreeCategory category, CancellationToken cancellationToken)
     {
         await _handleSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var resultStatus = await _itemHandler.HandleItem(
-                new ImportCategory(category, _categorySourceUrl, _sourceName, Host),
+                new ImportCategory(ToCategory(category), _categorySourceUrl, _sourceName, Host),
                 cancellationToken).ConfigureAwait(false);
 
             Logger.LogInformation(
@@ -280,6 +281,19 @@ public abstract class CategoryService<TCategory> : ImportService
         {
             _handleSemaphore.Release();
         }
+    }
+
+    protected virtual TCategory ToCategory(TTreeCategory source)
+    {
+        return new TCategory
+        {
+            ItemId = source.Id,
+            ParentItemId = source.ItemParent?.Id,
+            Name = source.Name,
+            ParentName = source.ItemParent?.Name,
+            Url = source.Url,
+            ParentItemUrl = source.ItemParent?.Url
+        };
     }
 
     protected override void Dispose()
