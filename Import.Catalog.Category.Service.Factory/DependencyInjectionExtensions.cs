@@ -1,4 +1,5 @@
 using Import.Catalog.Category.Factory.Interfaces;
+using Import.Catalog.Category.Interfaces;
 using Import.Factory.Interfaces;
 using Import.TreeItem;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,24 +9,6 @@ namespace Import.Catalog.Category.Service.Factory;
 
 public static class DependencyInjectionExtensions
 {
-    public static IServiceCollection AddCategoryService<TTreeItem>(this IServiceCollection services)
-    where TTreeItem : TreeItem.TreeItem, new()
-    {
-        return services.AddScoped<IServiceFactory>(sd =>
-        {
-            var logger = sd.GetRequiredService<ILogger<CategoryServiceImpl<TTreeItem>>>();
-            var loggerFactory = sd.GetService<IImportServiceLogFactory>();
-            var loaderServiceFactories = sd.GetServices<ILoaderServiceFactory>();
-            var treeItemLoaderFactories = sd.GetServices<ITreeItemLoaderFactory<TTreeItem>>();
-            var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<TTreeItem>>();
-            return new CategoryServiceFactoryImpl<TTreeItem>(logger,
-            loaderServiceFactories,
-            treeItemLoaderFactories,
-            categoryItemHandlerFactories,
-            loggerFactory);
-        });
-    }
-
     public static IServiceCollection AddCategoryService(this IServiceCollection services)
     {
         return services.AddScoped<IServiceFactory>(sd =>
@@ -33,8 +16,8 @@ public static class DependencyInjectionExtensions
             var logger = sd.GetRequiredService<ILogger<CategoryServiceImpl>>();
             var loggerFactory = sd.GetService<IImportServiceLogFactory>();
             var loaderServiceFactories = sd.GetServices<ILoaderServiceFactory>();
-            var treeItemLoaderFactories = sd.GetServices<ITreeItemLoaderFactory<Category>>();
-            var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<Category>>();
+            var treeItemLoaderFactories = sd.GetServices<ITreeItemLoaderFactory<CategoryTreeItem>>();
+            var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<Interfaces.Category>>();
             return new CategoryServiceFactoryImpl(logger,
             loaderServiceFactories,
             treeItemLoaderFactories,
@@ -43,17 +26,18 @@ public static class DependencyInjectionExtensions
         });
     }
 
-    public static IServiceCollection AddCategoryTimerService<TTreeItem>(this IServiceCollection services)
+    public static IServiceCollection AddCategoryTimerService<TTreeItem, TCategory>(this IServiceCollection services)
     where TTreeItem : TreeItem.TreeItem, new()
+    where TCategory : ICategory, new()
     {
         return services.AddScoped<IServiceFactory>(sd =>
         {
-            var logger = sd.GetRequiredService<ILogger<CategoryTimerServiceImpl<TTreeItem>>>();
+            var logger = sd.GetRequiredService<ILogger<CategoryTimerServiceImpl<TTreeItem, TCategory>>>();
             var loggerFactory = sd.GetService<IImportServiceLogFactory>();
             var loaderServiceFactories = sd.GetServices<ILoaderServiceFactory>();
             var treeItemLoaderFactories = sd.GetServices<ITreeItemLoaderFactory<TTreeItem>>();
-            var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<TTreeItem>>();
-            return new CategoryTimerServiceFactoryImpl<TTreeItem>(logger,
+            var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<TCategory>>();
+            return new CategoryTimerServiceFactoryImpl<TTreeItem, TCategory>(logger,
             loaderServiceFactories,
             treeItemLoaderFactories,
             categoryItemHandlerFactories,
@@ -68,8 +52,8 @@ public static class DependencyInjectionExtensions
             var logger = sd.GetRequiredService<ILogger<CategoryTimerServiceImpl>>();
             var loggerFactory = sd.GetService<IImportServiceLogFactory>();
             var loaderServiceFactories = sd.GetServices<ILoaderServiceFactory>();
-            var treeItemLoaderFactories = sd.GetServices<ITreeItemLoaderFactory<Category>>();
-            var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<Category>>();
+            var treeItemLoaderFactories = sd.GetServices<ITreeItemLoaderFactory<CategoryTreeItem>>();
+            var categoryItemHandlerFactories = sd.GetServices<ICategoryItemHandlerFactory<Interfaces.Category>>();
             return new CategoryTimerServiceFactoryImpl(logger,
             loaderServiceFactories,
             treeItemLoaderFactories,

@@ -62,7 +62,7 @@ public abstract class ProductServiceFactory<TProductService, TCategory, TProduct
 
         var loaderFactory = loaderServiceFactories.GetFactoryBySettings(importSettingsProvider, importSettings, Loader, name)
             ?? throw new Exception($"Can't find {nameof(Loader)}.");
-        var loader = loaderFactory.Create(name, importSettings);
+        var loader = loaderFactory.Create(name, importSettingsProvider, importSettings);
 
         var productItemHandlerFactory = productItemHandlerFactories.GetFactoryBySettings(importSettingsProvider, importSettings, ProductItemHandler, name)
             ?? throw new Exception($"Can't find {nameof(ProductItemHandler)}.");

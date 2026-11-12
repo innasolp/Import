@@ -3,6 +3,7 @@ using Import.Interfaces;
 namespace Import.Catalog.Category.Interfaces;
 
 public interface IImportCategory<TCategory>
+    where TCategory : ICategory
 {
     TCategory Category { get; }
 
@@ -14,5 +15,6 @@ public interface IImportCategory<TCategory>
 }
 
 public interface ICategoryItemHandler<TCategory> : IItemHandler<IImportCategory<TCategory>, ResultStatus>
+    where TCategory : ICategory
 {
 }

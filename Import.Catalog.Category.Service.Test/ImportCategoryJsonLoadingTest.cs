@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Resources;
 using Xunit.Abstractions;
+using Cat = global::Import.Catalog.Category.Interfaces.Category;
 
 namespace Import.Catalog.Category.Service.Test;
 
@@ -15,7 +16,7 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
 
     private readonly int _secondsInterval = 30;
 
-    private readonly Mock<ICategoryItemHandler<TestCategory>> _categoryItemHandlerMock = new();
+    private readonly Mock<ICategoryItemHandler<Cat>> _categoryItemHandlerMock = new();
 
     private readonly Mock<ITreeItemLoader<TestCategory>> _categoryLoaderMock = new();
 
@@ -28,7 +29,7 @@ public class ImportCategoryJsonLoadingTest : ImportServiceTest<CategoryTimerServ
         _categoryLoadersMock = [_categoryLoaderMock];
 
         ImportCategoriesResourceManager = new ResourceManager("Import.Catalog.Category.Service.ImportCategoryLogMessages",
-                               typeof(CategoryService<>).Assembly);
+                               typeof(CategoryService<TestCategory, Cat>).Assembly);
 
         LoaderMock.SetupLoadCookies();
         _categoryCatalogModelMock.Setup(s => s.CategorySourceUrl).Returns(Guid.NewGuid().ToString());

@@ -20,6 +20,22 @@ internal static class Helper
         }
     }
 
+    public static bool TryDeserialize<T>(this string json, out T? result, out Exception? exception)
+    {
+        exception = default;
+        try
+        {
+            result = JsonSerializer.Deserialize<T>(json);
+            return result != null;
+        }
+        catch (Exception e)
+        {
+            exception = e;
+            result = default;
+            return false;
+        }
+    }
+
     public static bool TryParse<T>(this string str, [MaybeNullWhen(false)] out T value)
         where T : IParsable<T>
     {

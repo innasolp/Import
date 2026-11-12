@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 
 namespace Import.TreeItem.Json;
 
-public sealed class JsonTreeItemLoaderFactory<TTreeItem> : ITreeItemLoaderFactory<TTreeItem>
+public class JsonTreeItemLoaderFactory<TTreeItem> : ITreeItemLoaderFactory<TTreeItem>
     where TTreeItem : TreeItem, new()
 {
     ITreeItemLoader<TTreeItem> ITreeItemLoaderFactory<TTreeItem>.CreateTreeItemLoader(ITreeItemLoadOptions treeItemLoadOptions)

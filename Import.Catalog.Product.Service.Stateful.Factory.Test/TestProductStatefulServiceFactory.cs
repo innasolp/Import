@@ -27,7 +27,8 @@ internal class TestProductLoaderService : ILoaderService
 internal class TestProductLoaderServiceFactory : ILoaderServiceFactory
 {
     public Type GetServiceType() => typeof(TestProductLoaderService);
-    public ILoaderService Create(string name, IImportSettings importSettings) => new TestProductLoaderService();
+    public ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider,
+      IImportSettings importSettings) => new TestProductLoaderService();
 }
 
 internal class TestProductItemHandler : IProductItemHandler

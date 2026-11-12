@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 
 namespace Import.TreeItem.Html;
 
-public sealed class TreeItemJsonFromHtmlLoaderFactory<TTreeItem> : ITreeItemLoaderFactory<TTreeItem>
+public class TreeItemJsonFromHtmlLoaderFactory<TTreeItem> : ITreeItemLoaderFactory<TTreeItem>
     where TTreeItem : TreeItem, new()
 {
     ITreeItemLoader<TTreeItem> ITreeItemLoaderFactory<TTreeItem>.CreateTreeItemLoader(ITreeItemLoadOptions treeItemLoadOptions)

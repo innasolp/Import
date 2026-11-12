@@ -13,5 +13,8 @@
     <PackageVersion>$(Version)</PackageVersion>
     <Authors>innasolp</Authors>
     <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
   </PropertyGroup>
 </Project>

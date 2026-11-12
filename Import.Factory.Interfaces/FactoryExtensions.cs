@@ -20,15 +20,14 @@ public static class FactoryExtensions
         || $"{expected}FactoryImpl".Equals(actual, StringComparison.InvariantCultureIgnoreCase);
     }
 
-    public static T GetFactoryByServiceSettings<T>(this IEnumerable<T> items, IServiceSettings serviceSettings, string sourceName)
+    private static T? GetFactoryByServiceSettings<T>(this IEnumerable<T> items, IServiceSettings serviceSettings, string sourceName)
      where T : IFactory
     {
         var expectedName = NormalizeTypeName(serviceSettings.ImplementationTypeName);
 
         return items.FirstOrDefault
           (i => i.GetServiceType().EqualsServiceTypeName(expectedName) ||
-           i.GetType().EqualsServiceTypeName(expectedName))
-          ?? throw new InvalidDataException($"No service of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
+           i.GetType().EqualsServiceTypeName(expectedName));
     }
 
     public static T GetFactoryBySettings<T>(this IEnumerable<T> items, IImportSettingsProvider importSettingsProvider,
@@ -37,9 +36,10 @@ public static class FactoryExtensions
     {
         if (!importSettingsProvider.TryGetServiceSettings(importSettings, key, out var serviceSettings)
         || string.IsNullOrEmpty(serviceSettings.ImplementationTypeName))
-            throw new InvalidDataException($"No settings for type {typeof(T).Name}  for service {sourceName}.");
+            throw new InvalidDataException($"No settings {key} for type {typeof(T).Name}  for service {sourceName}.");
 
-        return items.GetFactoryByServiceSettings<T>(serviceSettings, sourceName);
+        return items.GetFactoryByServiceSettings(serviceSettings, sourceName)
+          ?? throw new InvalidDataException($"No service {key} of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
     }
 
     public static T GetItemBySettings<T>(this IEnumerable<T> items, IImportSettingsProvider importSettingsProvider,
@@ -47,12 +47,29 @@ public static class FactoryExtensions
     {
         if (!importSettingsProvider.TryGetServiceSettings(importSettings, key, out var serviceSettings)
         || string.IsNullOrEmpty(serviceSettings.ImplementationTypeName))
-            throw new InvalidDataException($"No settings for type {typeof(T).Name}  for service {sourceName}.");
+            throw new InvalidDataException($"No settings {key} for type {typeof(T).Name}  for service {sourceName}.");
 
         var expectedName = NormalizeTypeName(serviceSettings.ImplementationTypeName);
 
         return items.FirstOrDefault
           (i => NormalizeTypeName(i.GetType().Name).Equals(expectedName, StringComparison.InvariantCultureIgnoreCase))
-          ?? throw new InvalidDataException($"No service of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
+          ?? throw new InvalidDataException($"No service {key} of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
+    }
+
+    public static T GetFactoryByImplementationName<T>(this IEnumerable<T> factories, string implementationTypeName, string sourceName)
+    {
+        var expectedName = NormalizeTypeName(implementationTypeName);
+
+        var matches = factories
+          .Where(i => i.GetType().EqualsServiceTypeName(expectedName))
+          .Take(2)
+          .ToArray();
+
+        return matches.Length switch
+        {
+            1 => matches[0],
+            0 => throw new InvalidDataException($"No service of type {implementationTypeName} for service {sourceName}."),
+            _ => throw new InvalidDataException($"Expected exactly one service of type {implementationTypeName} for service {sourceName}."),
+        };
     }
 }

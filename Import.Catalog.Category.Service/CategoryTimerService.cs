@@ -5,8 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service;
 
-public class CategoryTimerService<TCategory> : CategoryService<TCategory>
-   where TCategory : ITreeItem
+public class CategoryTimerService<TTreeCategory, TCategory> : CategoryService<TTreeCategory, TCategory>
+   where TTreeCategory : ITreeItem
+   where TCategory : ICategory, new()
 {
     private readonly int _defaultInterval = 3600;
 
@@ -18,7 +19,7 @@ public class CategoryTimerService<TCategory> : CategoryService<TCategory>
                                 string categorySourceUrl,
                                 string sourceName,
                                 string url,
-                                IEnumerable<ITreeItemLoader<TCategory>> categoryLoadStages,
+                                IEnumerable<ITreeItemLoader<TTreeCategory>> categoryLoadStages,
                                 ICategoryItemHandler<TCategory> itemHandler,
                                 int? timerSecondsInterval = null,
      object? categoryLoadData = null) : base(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)

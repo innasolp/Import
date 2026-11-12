@@ -40,43 +40,49 @@ internal class TestLoaderService2 : ILoaderService
 internal class TestLoaderService1Factory : ILoaderServiceFactory
 {
     public Type GetServiceType() => typeof(TestLoaderService1);
-    public ILoaderService Create(string name, IImportSettings importSettings) => new TestLoaderService1();
+    public ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
+     => new TestLoaderService1();
 }
 
 internal class TestLoaderService2Factory : ILoaderServiceFactory
 {
     public Type GetServiceType() => typeof(TestLoaderService2);
-    public ILoaderService Create(string name, IImportSettings importSettings) => new TestLoaderService2();
+    public ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider,
+      IImportSettings importSettings) => new TestLoaderService2();
 }
 
-internal class TestCategoryItemHandler1<TTreeItem> : ICategoryItemHandler<TTreeItem>
+internal class TestCategoryItemHandler1<TCategory> : ICategoryItemHandler<TCategory>
+    where TCategory : ICategory
 {
-    public event AsyncEventHandler<ItemProcessEventArgs<IImportCategory<TTreeItem>, ResultStatus>>? ItemProcessed;
+    public event AsyncEventHandler<ItemProcessEventArgs<IImportCategory<TCategory>, ResultStatus>>? ItemProcessed;
 
-    public Task<ResultStatus> HandleItem(IImportCategory<TTreeItem> item, CancellationToken cancellationToken = default)
+    public Task<ResultStatus> HandleItem(IImportCategory<TCategory> item, CancellationToken cancellationToken = default)
         => Task.FromResult(ResultStatus.Success);
 }
 
-internal class TestCategoryItemHandler2<TTreeItem> : ICategoryItemHandler<TTreeItem>
+internal class TestCategoryItemHandler2<TCategory> : ICategoryItemHandler<TCategory>
+    where TCategory : ICategory
 {
-    public event AsyncEventHandler<ItemProcessEventArgs<IImportCategory<TTreeItem>, ResultStatus>>? ItemProcessed;
+    public event AsyncEventHandler<ItemProcessEventArgs<IImportCategory<TCategory>, ResultStatus>>? ItemProcessed;
 
-    public Task<ResultStatus> HandleItem(IImportCategory<TTreeItem> item, CancellationToken cancellationToken = default)
+    public Task<ResultStatus> HandleItem(IImportCategory<TCategory> item, CancellationToken cancellationToken = default)
         => Task.FromResult(ResultStatus.Success);
 }
 
-internal class TestCategoryItemHandler1Factory<TTreeItem> : ICategoryItemHandlerFactory<TTreeItem>
+internal class TestCategoryItemHandler1Factory<TCategory> : ICategoryItemHandlerFactory<TCategory>
+    where TCategory : ICategory
 {
-    public Type GetServiceType() => typeof(TestCategoryItemHandler1<TTreeItem>);
-    public ICategoryItemHandler<TTreeItem> Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
-        => new TestCategoryItemHandler1<TTreeItem>();
+    public Type GetServiceType() => typeof(TestCategoryItemHandler1<TCategory>);
+    public ICategoryItemHandler<TCategory> Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
+        => new TestCategoryItemHandler1<TCategory>();
 }
 
-internal class TestCategoryItemHandler2Factory<TTreeItem> : ICategoryItemHandlerFactory<TTreeItem>
+internal class TestCategoryItemHandler2Factory<TCategory> : ICategoryItemHandlerFactory<TCategory>
+    where TCategory : ICategory
 {
-    public Type GetServiceType() => typeof(TestCategoryItemHandler2<TTreeItem>);
-    public ICategoryItemHandler<TTreeItem> Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
-        => new TestCategoryItemHandler2<TTreeItem>();
+    public Type GetServiceType() => typeof(TestCategoryItemHandler2<TCategory>);
+    public ICategoryItemHandler<TCategory> Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
+        => new TestCategoryItemHandler2<TCategory>();
 }
 
 public class TestCategory : TreeItem.TreeItem
@@ -97,7 +103,7 @@ public class TestCategory : TreeItem.TreeItem
     }
 }
 
-public class TestCategoryService<TTreeItem>(
+public class TestCategoryService<TTreeItem, TCategory>(
     ILogger logger,
     string name,
     ILoaderService loader,
@@ -105,39 +111,41 @@ public class TestCategoryService<TTreeItem>(
     string sourceName,
     string url,
     IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-    ICategoryItemHandler<TTreeItem> itemHandler,
+    ICategoryItemHandler<TCategory> itemHandler,
     object? categoryLoadData = null)
-    : CategoryService<TTreeItem>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
+    : CategoryService<TTreeItem, TCategory>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
     where TTreeItem : TreeItem.TreeItem, new()
+    where TCategory : ICategory, new()
 {
     public override string Name { get; } = name;
 }
 
-public class TestCategoryServiceFactory<TTreeItem>(
-    ILogger<TestCategoryService<TTreeItem>> logger,
+public class TestCategoryServiceFactory<TTreeItem, TCategory>(
+    ILogger<TestCategoryService<TTreeItem, TCategory>> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
     IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
-    IEnumerable<ICategoryItemHandlerFactory<TTreeItem>> categoryItemHandlerFactories,
+    IEnumerable<ICategoryItemHandlerFactory<TCategory>> categoryItemHandlerFactories,
     IImportServiceLogFactory? logFactory = null)
-    : CategoryServiceFactory<TestCategoryService<TTreeItem>, TTreeItem>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
+    : CategoryServiceFactory<TestCategoryService<TTreeItem, TCategory>, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
     where TTreeItem : TreeItem.TreeItem, new()
+    where TCategory : ICategory, new()
 {
-    public override Type GetServiceType() => typeof(TestCategoryService<TTreeItem>);
+    public override Type GetServiceType() => typeof(TestCategoryService<TTreeItem, TCategory>);
 
-    protected override TestCategoryService<TTreeItem> Create(
-        ILogger<TestCategoryService<TTreeItem>> logger,
+    protected override TestCategoryService<TTreeItem, TCategory> Create(
+        ILogger<TestCategoryService<TTreeItem, TCategory>> logger,
         string name,
         ILoaderService loader,
         string categorySourceUrl,
         string sourceName,
         string url,
         IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-        ICategoryItemHandler<TTreeItem> categoryItemHandler,
+        ICategoryItemHandler<TCategory> categoryItemHandler,
         IImportSettingsProvider importSettingsProvider,
         IImportSettings importSettings,
         object? categoryLoadData = null)
     {
-        return new TestCategoryService<TTreeItem>(
+        return new TestCategoryService<TTreeItem, TCategory>(
             logger,
             name,
             loader,

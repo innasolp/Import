@@ -5,16 +5,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-internal class CategoryServiceImpl<TTreeItem>(ILogger<CategoryServiceImpl<TTreeItem>> logger,
+internal class CategoryServiceImpl<TTreeItem, TCategory>(ILogger<CategoryServiceImpl<TTreeItem, TCategory>> logger,
 string name,
  ILoaderService loader,
   string categorySourceUrl,
   string sourceName,
    string url,
    IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-   ICategoryItemHandler<TTreeItem> itemHandler,
-   object? categoryLoadData = null) : CategoryService<TTreeItem>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
+   ICategoryItemHandler<TCategory> itemHandler,
+   object? categoryLoadData = null) : CategoryService<TTreeItem, TCategory>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
    where TTreeItem : TreeItem.TreeItem, new()
+   where TCategory : ICategory, new()
 {
 }
 
@@ -24,8 +25,9 @@ string name,
   string categorySourceUrl,
   string sourceName,
    string url,
-   IEnumerable<ITreeItemLoader<Category>> categoryLoadStages,
-   ICategoryItemHandler<Category> itemHandler,
-   object? categoryLoadData = null) : CategoryServiceImpl<Category>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
+   IEnumerable<ITreeItemLoader<CategoryTreeItem>> categoryLoadStages,
+   ICategoryItemHandler<Interfaces.Category> itemHandler,
+   object? categoryLoadData = null) :
+   CategoryServiceImpl<CategoryTreeItem, Interfaces.Category>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
 {
 }
