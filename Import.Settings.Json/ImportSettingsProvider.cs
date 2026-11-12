@@ -147,11 +147,21 @@ public class ImportSettingsProvider : IImportSettingsProvider
 
     public static bool TryGet<T>(ImportSettings importSettings, out T? value, out Exception? exception)
     {
-        var json = JsonSerializer.Serialize(importSettings.Properties);
-        if (Helper.TryDeserialize(json, out value, out exception))
-            return true;
         value = default;
-        return false;
+        exception = null;
+        try
+        {
+            var json = JsonSerializer.Serialize(importSettings.Properties);
+            if (Helper.TryDeserialize(json, out value, out exception))
+                return true;
+            return false;
+        }
+        catch (Exception ex)
+        {
+            value = default;
+            exception = ex;
+            return false;
+        }
     }
 
     bool IImportSettingsProvider.TryGet<T>(IImportSettings importSettings, out T? value, out Exception? exception) where T : default

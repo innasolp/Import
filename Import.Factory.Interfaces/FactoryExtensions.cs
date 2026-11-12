@@ -60,8 +60,16 @@ public static class FactoryExtensions
     {
         var expectedName = NormalizeTypeName(implementationTypeName);
 
-        return factories.FirstOrDefault
-          (i => i.GetType().EqualsServiceTypeName(expectedName))
-          ?? throw new InvalidDataException($"No service of type {implementationTypeName} for service {sourceName}.");
+        var matches = factories
+          .Where(i => i.GetType().EqualsServiceTypeName(expectedName))
+          .Take(2)
+          .ToArray();
+
+        return matches.Length switch
+        {
+            1 => matches[0],
+            0 => throw new InvalidDataException($"No service of type {implementationTypeName} for service {sourceName}."),
+            _ => throw new InvalidDataException($"Expected exactly one service of type {implementationTypeName} for service {sourceName}."),
+        };
     }
 }
