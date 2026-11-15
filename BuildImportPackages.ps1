@@ -18,10 +18,10 @@ if ($null -ne $env:NUGET_PACKAGES -and (Test-Path $env:NUGET_PACKAGES)) {
                 $NugetCacheDir = $line
             }
         } else {
-            $NugetCacheDir = "$env:USERPROFILE\.nuget\packages"
+            $NugetCacheDir = Join-Path $HOME '.nuget/packages'
         }
     } catch {
-        $NugetCacheDir = "$env:USERPROFILE\.nuget\packages"
+        $NugetCacheDir = Join-Path $HOME '.nuget/packages'
     }
 }
 
