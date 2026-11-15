@@ -1,0 +1,683 @@
+{
+  "menuId": "185",
+  "categories": [
+    {
+      "id": "15500",
+      "title": "Электроника",
+      "url": "\u002Fcategory\u002Felektronika-15500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Felectronics_15500.png",
+      "icon": "ic_m_electronics_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "1"
+        }
+      }
+    },
+    {
+      "id": "7500",
+      "title": "Одежда",
+      "url": "\u002Fcategory\u002Fodezhda-obuv-i-aksessuary-7500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fclothes_7500.png",
+      "icon": "ic_m_apparel_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "3"
+        }
+      }
+    },
+    {
+      "id": "17777",
+      "title": "Обувь",
+      "url": "\u002Fcategory\u002Fobuv-17777\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fshoes_17777.png",
+      "icon": "ic_m_shoes_fitting_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "5"
+        }
+      }
+    },
+    {
+      "id": "14500",
+      "title": "Дом и сад",
+      "url": "\u002Fcategory\u002Fdom-i-sad-14500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fhouse_and_garden_14500.png",
+      "icon": "ic_m_home_and_garden_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "7"
+        }
+      }
+    },
+    {
+      "id": "7000",
+      "title": "Детские товары",
+      "url": "\u002Fcategory\u002Fdetskie-tovary-7000\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Ffor_children_7000.png",
+      "icon": "ic_m_kids_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "9"
+        }
+      }
+    },
+    {
+      "id": "6500",
+      "title": "Красота и здоровье",
+      "url": "\u002Fcategory\u002Fkrasota-i-zdorove-6500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002FBeauty_and_care_6500.png",
+      "icon": "ic_m_beauty_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "11"
+        }
+      }
+    },
+    {
+      "id": "10500",
+      "title": "Бытовая техника",
+      "url": "\u002Fcategory\u002Fbytovaya-tehnika-10500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fhousehold_appliances_10500.png",
+      "icon": "ic_m_appliances_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "13"
+        }
+      }
+    },
+    {
+      "id": "11000",
+      "title": "Спорт и отдых",
+      "url": "\u002Fcategory\u002Fsport-i-otdyh-11000\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fsport_and_rest_11000.png",
+      "icon": "ic_m_sport_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "15"
+        }
+      }
+    },
+    {
+      "id": "9700",
+      "title": "Строительство и ремонт",
+      "url": "\u002Fcategory\u002Fstroitelstvo-i-remont-9700\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fconstruction_and_renovation_9700.png",
+      "icon": "ic_m_repairs_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "17"
+        }
+      }
+    },
+    {
+      "id": "9200",
+      "title": "Продукты питания",
+      "url": "\u002Fcategory\u002Fprodukty-pitaniya-9200\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Ffood_9200.png",
+      "icon": "ic_m_product_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "19"
+        }
+      }
+    },
+    {
+      "id": "6000",
+      "title": "Аптека",
+      "url": "\u002Fcategory\u002Fapteka-6000\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fpharmacy_6000.png",
+      "icon": "ic_m_pharmacy_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "21"
+        }
+      }
+    },
+    {
+      "id": "12300",
+      "title": "Товары для животных",
+      "url": "\u002Fcategory\u002Ftovary-dlya-zhivotnyh-12300\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fzoo_12300.png",
+      "icon": "ic_m_pet_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "23"
+        }
+      }
+    },
+    {
+      "id": "16500",
+      "title": "Книги",
+      "url": "\u002Fcategory\u002Fknigi-16500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fbooks_16500.png",
+      "icon": "ic_m_book_printed_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "25"
+        }
+      }
+    },
+    {
+      "id": "33332",
+      "title": "Туризм, рыбалка, охота",
+      "url": "\u002Fcategory\u002Fohota-rybalka-turizm-33332\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fhiking_fishing_hunting_33332.png",
+      "icon": "ic_m_tourism_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "27"
+        }
+      }
+    },
+    {
+      "id": "8500",
+      "title": "Автотовары",
+      "url": "\u002Fcategory\u002Favtotovary-8500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fauto_goods_8500.png",
+      "icon": "ic_m_auto_parts_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "29"
+        }
+      }
+    },
+    {
+      "id": "15000",
+      "title": "Мебель",
+      "url": "\u002Fcategory\u002Fmebel-15000\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Ffurniture_15000.png",
+      "icon": "ic_m_furniture_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "31"
+        }
+      }
+    },
+    {
+      "id": "13500",
+      "title": "Хобби и творчество",
+      "url": "\u002Fcategory\u002Fhobbi-i-tvorchestvo-13500\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002F%D0%BDobbies_and_creativity_13500.png",
+      "icon": "ic_m_hobby_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "33"
+        }
+      }
+    },
+    {
+      "id": "50001",
+      "title": "Ювелирные украшения",
+      "url": "\u002Fcategory\u002Fyuvelirnye-ukrasheniya-50001\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fjewelry_50001.png",
+      "icon": "ic_m_jewelry_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "35"
+        }
+      }
+    },
+    {
+      "id": "7697",
+      "title": "Аксессуары",
+      "url": "\u002Fcategory\u002Faksessuary-7697\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Faccessories_7697.png",
+      "icon": "ic_m_accessories_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "37"
+        }
+      }
+    },
+    {
+      "id": "13300",
+      "title": "Игры и консоли",
+      "url": "\u002Fcategory\u002Figry-i-soft-13300\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fgames_and_consoles_13300.png",
+      "icon": "ic_m_game_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "39"
+        }
+      }
+    },
+    {
+      "id": "18000",
+      "title": "Канцелярские товары",
+      "url": "\u002Fcategory\u002Fkantselyarskie-tovary-18000\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Foffice_supplies_18000.png",
+      "icon": "ic_m_stationery_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "41"
+        }
+      }
+    },
+    {
+      "id": "9000",
+      "title": "Товары для взрослых",
+      "url": "\u002Fcategory\u002Ftovary-dlya-vzroslyh-9000\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fadult_products_9000.png",
+      "icon": "ic_m_adult_content_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "43"
+        }
+      }
+    },
+    {
+      "id": "8000",
+      "title": "Антиквариат и коллекционирование",
+      "url": "\u002Fcategory\u002Fantikvariat-vintazh-iskusstvo-8000\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fantiques_8000.png",
+      "icon": "ic_m_antiques_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "45"
+        }
+      }
+    },
+    {
+      "id": "32056",
+      "title": "Цифровые товары",
+      "url": "\u002Fcategory\u002Ftsifrovye-tovary-32056\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fdigital_goods_32056.png",
+      "icon": "ic_m_digital_product_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "47"
+        }
+      }
+    },
+    {
+      "id": "37234",
+      "title": "Подарочные сертификаты OZON",
+      "url": "\u002Fcategory\u002Fpodarochnye-sertifikaty-37234\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fmultimedia-1-z\u002F7354360871.jpg",
+      "icon": "ic_m_gift_card_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "49"
+        }
+      }
+    },
+    {
+      "id": "14572",
+      "title": "Бытовая химия и гигиена",
+      "url": "\u002Fcategory\u002Fbytovaya-himiya-14572\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fchemicals_14572.png",
+      "icon": "ic_m_household_chemicals_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "51"
+        }
+      }
+    },
+    {
+      "id": "13100",
+      "title": "Музыка и видео",
+      "url": "\u002Fcategory\u002Fmuzyka-i-video-13100\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fmusic_and_video_13100.png",
+      "icon": "ic_m_music_and_video_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "53"
+        }
+      }
+    },
+    {
+      "id": "39803",
+      "title": "Автомобили",
+      "url": "\u002Fcategory\u002Favtomobili-39803\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002Fcars_39803.png",
+      "icon": "ic_m_auto_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "55"
+        }
+      }
+    },
+    {
+      "id": "35659",
+      "title": "Товары для курения и аксессуары",
+      "url": "\u002Fcategory\u002Felektronnye-sigarety-i-tovary-dlya-kureniya-35659\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fsearchteam-cdn\u002FSmoking_products_and_accessories_35659.png",
+      "icon": "ic_m_electronic_cigarette_filled",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "57"
+        }
+      }
+    }
+  ],
+  "marketing": [
+    {
+      "title": "Карта Ozon Банка",
+      "url": "\u002Fhighlight\u002Fvygoda-do-30-s-kartoy-ozon-banka-4385311\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fb8\u002Ftd9\u002Fozon_bank_logo.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "58"
+        }
+      }
+    },
+    {
+      "title": "Билеты, Отели, Туры",
+      "url": "\u002Ftravel\u002F?mwc_campaign=ozon_menu_main",
+      "deeplink": "ozon:\u002F\u002Ftravel\u002F?mwc_campaign=ozon_menu_m",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fdd\u002Ft79\u002Ftravel.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "59"
+        }
+      }
+    },
+    {
+      "title": "Доставка от 1 часа",
+      "url": "\u002Fhighlight\u002Fexpress\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F0e\u002Ftae\u002Fexpress.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "60"
+        }
+      }
+    },
+    {
+      "title": "Ozon Premium",
+      "url": "\u002Fhighlight\u002Fpremium\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002Fpremium\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F9b\u002Ft7a\u002Fpremium.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "61"
+        }
+      }
+    },
+    {
+      "title": "Зарубежные товары",
+      "url": "\u002Fhighlight\u002Fozon-global-155600\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fa5\u002Ftb8\u002Fic_category_..png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "62"
+        }
+      }
+    },
+    {
+      "title": "Подарочные сертификаты",
+      "url": "https:\u002F\u002Fwww.ozon.ru\u002Fcategory\u002Fpodarochnye-sertifikaty-37234\u002F",
+      "deeplink": "https:\u002F\u002Fwww.ozon.ru\u002Fcategory\u002Fpodarochnye-sertifikaty-37234\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fa0\u002Ft4c\u002Fgifts.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "63"
+        }
+      }
+    },
+    {
+      "title": "Ozon Забота",
+      "url": "https:\u002F\u002Fwww.ozon.ru\u002Fsp\u002Fcare\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fc0\u002Ft37\u002Fzabota.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "64"
+        }
+      }
+    },
+    {
+      "title": "Товары в Рассрочку",
+      "url": "\u002Fhighlight\u002F20023\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002F20023\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Ffc\u002Fte2\u002Frassrok.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "65"
+        }
+      }
+    },
+    {
+      "title": "Сделано в России",
+      "url": "\u002Fhighlight\u002Fsdelano-v-rossii-1097658\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002Fsdelano-v-rossii-1097658\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Ff0\u002Ft6a\u002Fcatalogue_made_in_russia_desk.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "66"
+        }
+      }
+    },
+    {
+      "title": "Сделано в Беларуси",
+      "url": "\u002Fhighlight\u002Fsdelano-v-belarusi-1541934\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Ff6\u002Ft3e\u002Fic_category_._2.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "67"
+        }
+      }
+    },
+    {
+      "title": "Товары из Казахстана",
+      "url": "\u002Fhighlight\u002Ftovary-iz-kazahstana-3939922\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002Ftovary-iz-kazahstana-3939922\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F8c\u002Ft03\u002F2c6ee16a-5785-4a97-a3fc-5312e4d04ab4.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "68"
+        }
+      }
+    },
+    {
+      "title": "Сделано в Кыргызстане",
+      "url": "\u002Fhighlight\u002Fsdelano-v-kyrgyzstane-4174120\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002Fsdelano-v-kyrgyzstane-4174120\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F45\u002Ft48\u002F150x150-kyrg.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "69"
+        }
+      }
+    },
+    {
+      "title": "Уценённые товары",
+      "url": "\u002Fhighlight\u002Futsenennye-tovary-831483\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002Futsenennye-tovary-831483\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F19\u002Ftde\u002Fsales.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "70"
+        }
+      }
+    },
+    {
+      "title": "Товары Ozon",
+      "url": "\u002Fhighlight\u002Fozon-retail-186820\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002Fozon-retail-186820\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F72\u002Ft27\u002Fozon_goods.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "71"
+        }
+      }
+    },
+    {
+      "title": "Магазины на Ozon",
+      "url": "\u002Fseller\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fcb\u002Ftaa\u002Fsis-deskv2_1.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "72"
+        }
+      }
+    },
+    {
+      "title": "Ozon Merch",
+      "url": "https:\u002F\u002Fwww.ozon.ru\u002Fhighlight\u002Fozon-merch-4528594\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F31\u002Ft1a\u002Fmerch.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "73"
+        }
+      }
+    },
+    {
+      "title": "Стать продавцом",
+      "url": "https:\u002F\u002Fseller.ozon.ru\u002F?utm_source=ozonru_web&utm_medium=link&utm_campaign=header_nachat_prodavat_na_ozon\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F99\u002Ft58\u002Fseller.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "74"
+        }
+      }
+    },
+    {
+      "title": "Стать перевозчиком",
+      "url": "https:\u002F\u002Fvozi.ozon.ru\u002F?perehod=catalog_ozon_web",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fb4\u002Ftfa\u002Fgroup_1336584763.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "75"
+        }
+      }
+    },
+    {
+      "title": "Склад для Ozon",
+      "url": "https:\u002F\u002Fsklad.ozon.ru\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Ff9\u002Fta5\u002Fsklad.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "76"
+        }
+      }
+    },
+    {
+      "title": "Открыть ПВЗ",
+      "url": "https:\u002F\u002Fpvz.ozon.ru\u002F?perehod=catalog_ves_ozon_web",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Fd3\u002Ftb4\u002Fic_category_pvz_1.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "77"
+        }
+      }
+    },
+    {
+      "title": "Ozon для бизнеса",
+      "url": "\u002Fbusiness\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F7a\u002Ft55\u002Ffor_buisness.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "78"
+        }
+      }
+    },
+    {
+      "title": "Ozon Клуб",
+      "url": "\u002Fclub\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002Ffa\u002Ft41\u002Fstyle3d.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "79"
+        }
+      }
+    },
+    {
+      "title": "Специальные предложения",
+      "url": "\u002Fhighlight\u002Fspetsproekty-na-ozon-3441747\u002F",
+      "deeplink": "ozon:\u002F\u002Fhighlight\u002Fspetsproekty-na-ozon-3441747\u002F",
+      "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F89\u002Ftf3\u002Fnavi_icon_custom_48x48.png",
+      "trackingInfo": {
+        "click": {
+          "actionType": "click",
+          "key": "80"
+        }
+      }
+    }
+  ],
+  "catalogButton": {
+    "button": {
+      "styleType": "ACTION_PRIMARY",
+      "size": "SIZE_500",
+      "title": "Каталог",
+      "common": {
+        "action": { "behavior": "BEHAVIOR_TYPE_CUSTOM" },
+        "trackingInfo": {
+          "click": {
+            "actionType": "click",
+            "key": "82"
+          }
+        }
+      }
+    },
+    "iconShow": "ic_m_catalog_tile_filled",
+    "iconClose": "ic_m_cross_filled"
+  },
+  "serviceButton": {
+    "text": "Весь Ozon",
+    "image": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F98\u002Ft2c\u002Fmenu.svg",
+    "imageHover": "https:\u002F\u002Fir.ozone.ru\u002Fs3\u002Fcms\u002F4b\u002Ft7b\u002Fmenuhover.svg",
+    "trackingInfo": {
+      "click": {
+        "actionType": "click",
+        "key": "81"
+      },
+      "view": {
+        "actionType": "view",
+        "key": "81"
+      }
+    }
+  },
+  "onlyRootNodes": true,
+  "titleForShowMoreButton": "Еще",
+  "titleForCloseMoreButton": "Свернуть"
+}

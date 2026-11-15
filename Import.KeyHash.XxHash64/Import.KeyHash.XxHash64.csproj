@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <Version>1.0.0</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Import key hash xxhash64 implementation</Title>
+    <PackageOutputPath>$(SolutionDir)\packages</PackageOutputPath>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>innasolp</Authors>
+    <RepositoryUrl>https://github.com/innasolp/Import</RepositoryUrl>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
+  </PropertyGroup>
+
+<ItemGroup>
+    <ProjectReference Include="..\Import.KeyHash\Import.KeyHash.csproj" />
+  </ItemGroup>
+	
+	
+	<ItemGroup>
+		<PackageReference Include="System.IO.Hashing" Version="9.0.13" />
+    
+	</ItemGroup>
+</Project>
