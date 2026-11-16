@@ -48,7 +48,7 @@ public abstract class ProductServiceFactory<TProductService, TCategory, TProduct
 
     public IService Create(string name, IImportSource importSource, IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
     {
-        var serviceLogger = logFactory?.GetLogger(logger, name, importSource, importSettings) ?? logger;
+        var serviceLogger = logFactory?.GetLogger(logger, name, importSource, importSettingsProvider, importSettings) ?? logger;
 
         if (!importSettingsProvider.TryGetService<TProductServiceOptions>(importSettings, ProductServiceOptions, out var productServiceOptions)
         || productServiceOptions == null)
