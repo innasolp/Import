@@ -51,7 +51,7 @@ public abstract class CategoryServiceFactory<TCategoryService, TTreeItem, TCateg
             treeItemLoaders.Add(treeItemFactory.CreateTreeItemLoader(stageSettings.OptionsJson));
         }
 
-        var serviceLogger = logFactory?.GetLogger(logger, name, importSource, importSettings) ?? logger;
+        var serviceLogger = logFactory?.GetLogger(logger, name, importSource, importSettingsProvider, importSettings) ?? logger;
 
         var loaderFactory = loaderServiceFactories.GetFactoryBySettings(importSettingsProvider, importSettings, Loader, name)
             ?? throw new InvalidDataException($"Loader factory not found for service {name}.");

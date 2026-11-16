@@ -27,7 +27,7 @@ internal class AggregateServiceFactory(ILogger<AggregateService> logger, IImport
       IEnumerable<IService> services,
       Func<IService, CancellationToken, Task>? executionTask = null)
     {
-        var serviceLogger = _logFactory?.GetLogger(_logger, name, importSource, importSettings) ?? _logger;
+        var serviceLogger = _logFactory?.GetLogger(_logger, name, importSource, importSettingsProvider, importSettings) ?? _logger;
         return new AggregateService(serviceLogger, name, services, executionTask);
     }
 

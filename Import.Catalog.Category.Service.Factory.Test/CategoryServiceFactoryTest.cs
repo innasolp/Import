@@ -137,7 +137,7 @@ public class CategoryServiceFactoryTest
         var exception = await Assert.ThrowsAsync<Exception>(async ()
             => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProviderMock.Object, importSettingsMock.Object));
 
-        Assert.Contains("categorySourceUrl", exception.Message);
+        Assert.Contains("CategorySourceUrl", exception.Message);
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class CategoryServiceFactoryTest
         var exception = await Assert.ThrowsAsync<Exception>(async ()
             => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProviderMock.Object, importSettingsMock.Object));
 
-        Assert.Contains("loadStagesSettings", exception.Message);
+        Assert.Contains("LoadStages", exception.Message);
     }
 
     [Fact]
