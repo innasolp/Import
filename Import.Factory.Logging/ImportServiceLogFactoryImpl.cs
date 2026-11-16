@@ -4,20 +4,24 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Factory.Logging;
 
-internal class ImportServiceLogFactoryImpl(Func<ILogger, string, IImportSource, IImportSettings, ILogger> loggerInterception)
+internal class ImportServiceLogFactoryImpl(Func<ILogger, string, IImportSource, IImportSettingsProvider, IImportSettings, ILogger> loggerInterception)
    : IImportServiceLogFactory
 {
-    private readonly Func<ILogger, string, IImportSource, IImportSettings, ILogger> _loggerInterception = loggerInterception;
+    private readonly Func<ILogger, string, IImportSource, IImportSettingsProvider, IImportSettings, ILogger> _loggerInterception = loggerInterception;
 
-    public ILogger GetLogger(ILogger logger, string name, IImportSource importSource, IImportSettings importSettings)
+    public ILogger GetLogger(ILogger logger, string name, IImportSource importSource,
+    IImportSettingsProvider importSettingsProvider,
+      IImportSettings importSettings)
     {
-        var interceptedLogger = _loggerInterception(logger, name, importSource, importSettings);
+        var interceptedLogger = _loggerInterception(logger, name, importSource, importSettingsProvider, importSettings);
         return new LogEmptyInterceptorImpl(interceptedLogger);
     }
 
-    ILogger<T> IImportServiceLogFactory.GetLogger<T>(ILogger<T> logger, string name, IImportSource importSource, IImportSettings importSettings)
+    ILogger<T> IImportServiceLogFactory.GetLogger<T>(ILogger<T> logger, string name, IImportSource importSource,
+    IImportSettingsProvider importSettingsProvider,
+     IImportSettings importSettings)
     {
-        var interceptedLogger = _loggerInterception(logger, name, importSource, importSettings);
+        var interceptedLogger = _loggerInterception(logger, name, importSource, importSettingsProvider, importSettings);
         return new LogEmptyInterceptorImpl<T>(interceptedLogger);
     }
 }
