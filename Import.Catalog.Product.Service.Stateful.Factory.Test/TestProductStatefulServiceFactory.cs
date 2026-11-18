@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -38,7 +37,7 @@ internal class TestProductItemHandler : IProductItemHandler
         => Task.FromResult(ResultStatus.Success);
 }
 
-internal class TestProductItemHandlerFactory : IProductItemHandlerFactory
+internal class TestProductItemHandlerFactory : IFactory<IProductItemHandler>
 {
     public Type GetServiceType() => typeof(TestProductItemHandler);
     public IProductItemHandler Create(IImportSettingsProvider importSettingsProvider, IImportSettings settings)
@@ -129,15 +128,16 @@ public class TestProductStatefulService(
 public class TestProductStatefulServiceFactory(
     ILogger<TestProductStatefulService> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-    IEnumerable<IProductItemHandlerFactory> productItemHandlerFactories,
+    IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TestCategoryProducts>> categoryPagingList,
     IEnumerable<IItemSerializer<TestCategoryProducts>> categorySerializerList,
+    IEnumerable<IFactory<IItemSerializer<TestCategoryProducts>>> categorySerializerFactoryList,
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : ProductStatefulServiceFactory<TestProductStatefulService, TestCategoryProducts, TestProductItem, TestProductCatalogCategory, ProductServiceOptions>(
         logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList,
-        keyHasherList, serviceStateRepositoryFactoryList, logFactory)
+        categorySerializerFactoryList, keyHasherList, serviceStateRepositoryFactoryList, logFactory)
 {
     public override Type GetServiceType() => typeof(TestProductStatefulService);
 

@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Factory.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,9 +19,10 @@ public static class DependencyInjectionExtensions
             var logger = sd.GetRequiredService<ILogger<ProductServiceImpl<TCategory, TProductItem>>>();
             var loggerFactory = sd.GetService<IImportServiceLogFactory>();
             var loaderServiceFactories = sd.GetServices<ILoaderServiceFactory>();
-            var productItemHandlerFactories = sd.GetServices<IProductItemHandlerFactory>();
+            var productItemHandlerFactories = sd.GetServices<IFactory<IProductItemHandler>>();
             var categoryPagingList = sd.GetServices<ICategoryPaging<TCategory>>();
             var categorySerializerList = sd.GetServices<IItemSerializer<TCategory>>();
+            var categorySerializerFactoryList = sd.GetServices<IFactory<IItemSerializer<TCategory>>>();
 
             return new ProductServiceFactoryImpl<TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
                 logger,
@@ -30,6 +30,7 @@ public static class DependencyInjectionExtensions
                 productItemHandlerFactories,
                 categoryPagingList,
                 categorySerializerList,
+                categorySerializerFactoryList,
                 loggerFactory);
         });
     }
@@ -44,9 +45,10 @@ public static class DependencyInjectionExtensions
             var logger = sd.GetRequiredService<ILogger<ProductServiceImpl<TCategory, TProductItem>>>();
             var loggerFactory = sd.GetService<IImportServiceLogFactory>();
             var loaderServiceFactories = sd.GetServices<ILoaderServiceFactory>();
-            var productItemHandlerFactories = sd.GetServices<IProductItemHandlerFactory>();
+            var productItemHandlerFactories = sd.GetServices<IFactory<IProductItemHandler>>();
             var categoryPagingList = sd.GetServices<ICategoryPaging<TCategory>>();
             var categorySerializerList = sd.GetServices<IItemSerializer<TCategory>>();
+            var categorySerializerFactoryList = sd.GetServices<IFactory<IItemSerializer<TCategory>>>();
 
             return new ProductServiceFactoryImpl<TCategory, TProductItem, ProductCatalogCategoryImpl, TProductServiceOptions>(
                 logger,
@@ -54,6 +56,7 @@ public static class DependencyInjectionExtensions
                 productItemHandlerFactories,
                 categoryPagingList,
                 categorySerializerList,
+                categorySerializerFactoryList,
                 loggerFactory);
         });
     }

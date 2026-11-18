@@ -6,7 +6,6 @@
     <Project Path="Import.Catalog.Category.Service.Test/Import.Catalog.Category.Service.Test.csproj" />  
     <Project Path="Import.Catalog.Category.Service.Factory/Import.Catalog.Category.Service.Factory.csproj" />
     <Project Path="Import.Catalog.Category.Service.Factory.Test/Import.Catalog.Category.Service.Factory.Test.csproj" />  
-    <Project Path="Import.Catalog.Category.Factory.Interfaces/Import.Catalog.Category.Factory.Interfaces.csproj" />  
   </Folder>
   <Folder Name="/Factory/">
     <Project Path="Import.Factory.Interfaces/Import.Factory.Interfaces.csproj" />
@@ -36,7 +35,6 @@
    </Folder>
    <Folder Name="/Catalog/Product/"> 
    <Project Path="Import.Catalog.Product.Interfaces/Import.Catalog.Product.Interfaces.csproj" />
-    <Project Path="Import.Catalog.Product.Factory.Interfaces/Import.Catalog.Product.Factory.Interfaces.csproj" />
     <Project Path="Import.Catalog.Product.Service/Import.Catalog.Product.Service.csproj" />
     <Project Path="Import.Catalog.Product.Service.Stateful/Import.Catalog.Product.Service.Stateful.csproj" />  
     <Project Path="Import.Catalog.Product.Service.Test/Import.Catalog.Product.Service.Test.csproj" />

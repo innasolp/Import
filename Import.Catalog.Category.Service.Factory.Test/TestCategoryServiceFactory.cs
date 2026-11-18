@@ -1,5 +1,4 @@
 using System.Collections;
-using Import.Catalog.Category.Factory.Interfaces;
 using Import.Catalog.Category.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -69,7 +68,7 @@ internal class TestCategoryItemHandler2<TCategory> : ICategoryItemHandler<TCateg
         => Task.FromResult(ResultStatus.Success);
 }
 
-internal class TestCategoryItemHandler1Factory<TCategory> : ICategoryItemHandlerFactory<TCategory>
+internal class TestCategoryItemHandler1Factory<TCategory> : IFactory<ICategoryItemHandler<TCategory>>
     where TCategory : ICategory
 {
     public Type GetServiceType() => typeof(TestCategoryItemHandler1<TCategory>);
@@ -77,7 +76,7 @@ internal class TestCategoryItemHandler1Factory<TCategory> : ICategoryItemHandler
         => new TestCategoryItemHandler1<TCategory>();
 }
 
-internal class TestCategoryItemHandler2Factory<TCategory> : ICategoryItemHandlerFactory<TCategory>
+internal class TestCategoryItemHandler2Factory<TCategory> : IFactory<ICategoryItemHandler<TCategory>>
     where TCategory : ICategory
 {
     public Type GetServiceType() => typeof(TestCategoryItemHandler2<TCategory>);
@@ -124,7 +123,7 @@ public class TestCategoryServiceFactory<TTreeItem, TCategory>(
     ILogger<TestCategoryService<TTreeItem, TCategory>> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
     IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
-    IEnumerable<ICategoryItemHandlerFactory<TCategory>> categoryItemHandlerFactories,
+    IEnumerable<IFactory<ICategoryItemHandler<TCategory>>> categoryItemHandlerFactories,
     IImportServiceLogFactory? logFactory = null)
     : CategoryServiceFactory<TestCategoryService<TTreeItem, TCategory>, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
     where TTreeItem : TreeItem.TreeItem, new()

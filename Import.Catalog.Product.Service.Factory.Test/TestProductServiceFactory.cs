@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -44,7 +43,7 @@ internal class TestProductItemHandler : IProductItemHandler
         => Task.FromResult(ResultStatus.Success);
 }
 
-internal class TestProductItemHandlerFactory : IProductItemHandlerFactory
+internal class TestProductItemHandlerFactory : IFactory<IProductItemHandler>
 {
     public Type GetServiceType() => typeof(TestProductItemHandler);
 
@@ -139,9 +138,10 @@ public class TestProductService<TCategory, TProductItem>(
 public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogCategory>(
     ILogger<TestProductService<TCategory, TProductItem>> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-    IEnumerable<IProductItemHandlerFactory> productItemHandlerFactories,
+    IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
+    IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : ProductServiceFactory<TestProductService<TCategory, TProductItem>, TCategory, TProductItem, TProductCatalogCategory, ProductServiceOptions>(
         logger,
@@ -149,6 +149,7 @@ public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogC
         productItemHandlerFactories,
         categoryPagingList,
         categorySerializerList,
+        categorySerializerFactoryList,
         logFactory)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()

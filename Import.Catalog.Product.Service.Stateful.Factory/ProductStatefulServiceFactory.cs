@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service.Factory;
 using Import.Factory.Interfaces;
@@ -17,14 +16,15 @@ public abstract class ProductStatefulServiceFactory<TProductStatefulService,
  TProductServiceOptions>(
     ILogger<TProductStatefulService> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-    IEnumerable<IProductItemHandlerFactory> productItemHandlerFactories,
+    IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
+    IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : ProductServiceFactory<TProductStatefulService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>
-    (logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList, logFactory)
+    (logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList, categorySerializerFactoryList, logFactory)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
     where TProductCatalogCategory : class, IProductCatalogCategory, new()
