@@ -1,4 +1,3 @@
-using Import.Catalog.Category.Factory.Interfaces;
 using Import.Catalog.Category.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -11,7 +10,7 @@ namespace Import.Catalog.Category.Service.Factory;
 public abstract class CategoryTimerServiceFactory<TCategoryTimerService, TTreeItem, TCategory>(ILogger<TCategoryTimerService> logger,
  IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
   IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
-   IEnumerable<ICategoryItemHandlerFactory<TCategory>> categoryItemHandlerFactories,
+   IEnumerable<IFactory<ICategoryItemHandler<TCategory>>> categoryItemHandlerFactories,
    IImportServiceLogFactory? logFactory = null)
     : CategoryServiceFactory<TCategoryTimerService, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
 where TTreeItem : TreeItem.TreeItem, new()

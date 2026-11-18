@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using Import.Catalog.Category.Factory.Interfaces;
+using Import.Catalog.Category.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Settings.Interfaces;
 using Import.Settings.Json;
@@ -30,7 +30,7 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
+        var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>
         {
             new TestCategoryItemHandler1Factory<Cat>(),
             new TestCategoryItemHandler2Factory<Cat>(),
@@ -76,7 +76,7 @@ public class CategoryServiceFactoryTest
             loaderServiceMock.Object,
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
+        var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>
         {
             new TestCategoryItemHandler1Factory<Cat>(),
             new TestCategoryItemHandler2Factory<Cat>(),
@@ -115,7 +115,7 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
+        var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>
         {
             new TestCategoryItemHandler2Factory<Cat>(),
         };
@@ -154,7 +154,7 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
+        var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>
         {
             new TestCategoryItemHandler2Factory<Cat>(),
         };
@@ -195,7 +195,7 @@ public class CategoryServiceFactoryTest
 
         var loaderServiceFactories = new List<ILoaderServiceFactory>();
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
+        var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>
         {
             new TestCategoryItemHandler2Factory<Cat>(),
         };
@@ -233,7 +233,7 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>();
+        var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>();
 
         var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
             new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
@@ -264,7 +264,7 @@ public class CategoryServiceFactoryTest
             new TestLoaderService2Factory(),
         };
 
-        var categoryItemHandlerFactories = new List<ICategoryItemHandlerFactory<Cat>>
+        var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>
         {
             new TestCategoryItemHandler2Factory<Cat>(),
         };

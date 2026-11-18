@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -10,9 +9,10 @@ namespace Import.Catalog.Product.Service.Factory;
 public abstract class ProductServiceFactory<TProductService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
     ILogger<TProductService> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-    IEnumerable<IProductItemHandlerFactory> productItemHandlerFactories,
+    IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
+    IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : IServiceFactory
     where TCategory : class, ICategoryProducts, new()
@@ -71,8 +71,12 @@ public abstract class ProductServiceFactory<TProductService, TCategory, TProduct
         var categoryPaging = categoryPagingList.GetItemBySettings(importSettingsProvider, importSettings, CategoryPaging, name)
         ?? throw new Exception($"Can't find {nameof(CategoryPaging)}.");
 
-        var categorySerializer = categorySerializerList.GetItemBySettings(importSettingsProvider, importSettings, CategorySerializer, name)
-            ?? throw new Exception($"Can't find {nameof(CategorySerializer)}.");
+        if(!categorySerializerList.TryGetItemBySettings(importSettingsProvider, importSettings, CategorySerializer, out var categorySerializer)
+           || categorySerializer == null)
+        { 
+           var categorySerializerFactory = categorySerializerFactoryList.GetFactoryBySettings(importSettingsProvider, importSettings, CategorySerializer, name);
+           categorySerializer = categorySerializerFactory.Create(importSettingsProvider, importSettings);
+        } 
 
         if (!importSettingsProvider.TryGet<IEnumerable<TProductCatalogCategory>>(importSettings, CatalogCategories, out var catalogCategories)
         || catalogCategories == null)

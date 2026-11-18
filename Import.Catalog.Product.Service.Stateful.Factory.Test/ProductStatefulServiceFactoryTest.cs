@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service;
 using Import.Factory.Interfaces;
@@ -21,7 +20,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -52,6 +51,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -75,7 +75,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -106,6 +106,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -129,7 +130,7 @@ public class ProductStatefulServiceFactoryTest
     {
         var loaderServiceFactories = new List<ILoaderServiceFactory>();
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -160,6 +161,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -183,7 +185,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>();
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>();
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
         {
@@ -211,6 +213,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -234,7 +237,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -262,6 +265,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -285,7 +289,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -313,6 +317,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -336,7 +341,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -364,6 +369,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -387,7 +393,7 @@ public class ProductStatefulServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -415,6 +421,7 @@ public class ProductStatefulServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object

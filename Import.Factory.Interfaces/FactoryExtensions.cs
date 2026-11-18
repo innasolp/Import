@@ -56,6 +56,25 @@ public static class FactoryExtensions
           ?? throw new InvalidDataException($"No service {key} of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
     }
 
+    public static bool TryGetItemBySettings<T>(this IEnumerable<T> items, IImportSettingsProvider importSettingsProvider,
+     IImportSettings importSettings, string key, out T? value)
+    {
+        value = default;
+        if (!importSettingsProvider.TryGetServiceSettings(importSettings, key, out var serviceSettings)
+        || string.IsNullOrEmpty(serviceSettings?.ImplementationTypeName))
+            return false;
+
+        var expectedName = NormalizeTypeName(serviceSettings.ImplementationTypeName);
+
+        value = items.FirstOrDefault
+          (i =>
+          {
+              return NormalizeTypeName(i.GetType().Name).Equals(expectedName, StringComparison.InvariantCultureIgnoreCase);
+          });
+
+         return value != null;
+    }
+
     public static T GetFactoryByImplementationName<T>(this IEnumerable<T> factories, string implementationTypeName, string sourceName)
     {
         var expectedName = NormalizeTypeName(implementationTypeName);

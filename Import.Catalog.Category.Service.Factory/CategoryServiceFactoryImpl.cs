@@ -1,4 +1,3 @@
-using Import.Catalog.Category.Factory.Interfaces;
 using Import.Catalog.Category.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -12,7 +11,7 @@ internal class CategoryServiceFactoryImpl<TTreeItem, TCategory>(
     ILogger<CategoryServiceImpl<TTreeItem, TCategory>> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
     IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
-    IEnumerable<ICategoryItemHandlerFactory<TCategory>> categoryItemHandlerFactories,
+    IEnumerable<IFactory<ICategoryItemHandler<TCategory>>> categoryItemHandlerFactories,
     IImportServiceLogFactory? logFactory = null)
     : CategoryServiceFactory<CategoryServiceImpl<TTreeItem, TCategory>, TTreeItem, TCategory>(
         logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
@@ -47,7 +46,7 @@ internal class CategoryServiceFactoryImpl(
     ILogger<CategoryServiceImpl> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
     IEnumerable<ITreeItemLoaderFactory<CategoryTreeItem>> treeItemLoaderFactories,
-    IEnumerable<ICategoryItemHandlerFactory<Interfaces.Category>> categoryItemHandlerFactories,
+    IEnumerable<IFactory<ICategoryItemHandler<Interfaces.Category>>> categoryItemHandlerFactories,
     IImportServiceLogFactory? logFactory = null)
     : CategoryServiceFactory<CategoryServiceImpl, CategoryTreeItem, Interfaces.Category>(
         logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)

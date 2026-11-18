@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Settings.Interfaces;
@@ -18,7 +17,7 @@ public class ProductServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -39,6 +38,7 @@ public class ProductServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             new Mock<IImportServiceLogFactory>().Object
         );
 
@@ -63,7 +63,7 @@ public class ProductServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -84,6 +84,7 @@ public class ProductServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             new Mock<IImportServiceLogFactory>().Object
         );
 
@@ -105,7 +106,7 @@ public class ProductServiceFactoryTest
     {
         var loaderServiceFactories = new List<ILoaderServiceFactory>();
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -126,6 +127,7 @@ public class ProductServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             new Mock<IImportServiceLogFactory>().Object
         );
 
@@ -148,7 +150,7 @@ public class ProductServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>();
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>();
 
         var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
         {
@@ -166,6 +168,7 @@ public class ProductServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             new Mock<IImportServiceLogFactory>().Object
         );
 
@@ -188,7 +191,7 @@ public class ProductServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -206,6 +209,7 @@ public class ProductServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             new Mock<IImportServiceLogFactory>().Object
         );
 
@@ -228,7 +232,7 @@ public class ProductServiceFactoryTest
             new TestProductLoaderServiceFactory(),
         };
 
-        var productItemHandlerFactories = new List<IProductItemHandlerFactory>
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
             new TestProductItemHandlerFactory(),
         };
@@ -246,6 +250,7 @@ public class ProductServiceFactoryTest
             productItemHandlerFactories,
             categoryPagingList,
             categorySerializerList,
+            [],
             new Mock<IImportServiceLogFactory>().Object
         );
 

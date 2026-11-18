@@ -1,4 +1,3 @@
-using Import.Catalog.Product.Factory.Interfaces;
 using Import.Catalog.Product.Interfaces;
 using Import.Factory.Interfaces;
 using Import.Interfaces;
@@ -10,9 +9,10 @@ namespace Import.Catalog.Product.Service.Factory;
 internal class ProductServiceFactoryImpl<TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
     ILogger<ProductServiceImpl<TCategory, TProductItem>> logger,
     IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
-    IEnumerable<IProductItemHandlerFactory> productItemHandlerFactories,
+    IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
+    IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : ProductServiceFactory<ProductServiceImpl<TCategory, TProductItem>, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
         logger,
@@ -20,6 +20,7 @@ internal class ProductServiceFactoryImpl<TCategory, TProductItem, TProductCatalo
         productItemHandlerFactories,
         categoryPagingList,
         categorySerializerList,
+        categorySerializerFactoryList,
         logFactory)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
