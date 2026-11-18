@@ -71,11 +71,10 @@ public abstract class ProductServiceFactory<TProductService, TCategory, TProduct
         var categoryPaging = categoryPagingList.GetItemBySettings(importSettingsProvider, importSettings, CategoryPaging, name)
         ?? throw new Exception($"Can't find {nameof(CategoryPaging)}.");
 
-        var categorySerializer = categorySerializerList.GetItemBySettings(importSettingsProvider, importSettings, CategorySerializer, name);
-        if(categorySerializer == null)
+        if(!categorySerializerList.TryGetItemBySettings(importSettingsProvider, importSettings, CategorySerializer, out var categorySerializer)
+           || categorySerializer == null)
         { 
-          var categorySerializerFactory = categorySerializerFactoryList.GetFactoryBySettings(importSettingsProvider, importSettings, CategorySerializer, name)
-            ?? throw new Exception($"Can't find factory of {nameof(CategorySerializer)}.");
+           var categorySerializerFactory = categorySerializerFactoryList.GetFactoryBySettings(importSettingsProvider, importSettings, CategorySerializer, name);
            categorySerializer = categorySerializerFactory.Create(importSettingsProvider, importSettings);
         } 
 
