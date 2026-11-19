@@ -40,7 +40,10 @@ public class JsonImportSettingsProvider : IImportSettingsProvider
         return false;
     }
 
-    private static bool TryLoadFromFile<T>(JsonNode jsonNode, out FileSettings? fileSettings,  out JsonObject? parsedFileJson,  out T? result)
+    private static bool IsFileReference(FileSettings? fileSettings)
+        => fileSettings != null && !string.IsNullOrEmpty(fileSettings.FilePath);
+
+    private static bool TryLoadFromFile<T>(JsonNode jsonNode, out FileSettings? fileSettings, out JsonObject? parsedFileJson, out T? result)
     {
         result = default;
 
@@ -167,6 +170,19 @@ public class JsonImportSettingsProvider : IImportSettingsProvider
 
         if (importSettings.Services.TryGetValue(key, out var service) && service != null)
         {
+            if (service is JsonNode serviceNode)
+            {
+                if (TryLoadJsonFromFile(serviceNode, out var fileSettings, out value) && value != null)
+                {
+                    importSettings.InternalServices[key] = Tuple.Create(serviceNode.AsObject(), fileSettings!, value);
+                    return true;
+                }
+
+                // A failed file reference must not be returned as an inline JSON object.
+                if (IsFileReference(fileSettings))
+                    return false;
+            }
+
             if (Helper.TryDeserialize(service.ToString(), out value) && value != null)
                 return true;
         }
@@ -198,10 +214,17 @@ public class JsonImportSettingsProvider : IImportSettingsProvider
             if (serviceValue is Tuple<JsonObject, FileSettings, JsonObject> tuple)
                 return TryLoadFromCache(tuple, out result);
 
-            if (serviceValue is JsonNode jsonNodeSvc && TryLoadFromFile(jsonNodeSvc, out var fileSettings, out var parsedFileJson, out result))
+            if (serviceValue is JsonNode jsonNodeSvc)
             {
-                importSettings.InternalServices[key] = Tuple.Create(jsonNodeSvc.AsObject(), fileSettings, parsedFileJson);
-                return true;
+                if (TryLoadFromFile(jsonNodeSvc, out var fileSettings, out var parsedFileJson, out result))
+                {
+                    importSettings.InternalServices[key] = Tuple.Create(jsonNodeSvc.AsObject(), fileSettings!, parsedFileJson!);
+                    return true;
+                }
+
+                // Do not deserialize a file descriptor when its file could not be loaded.
+                if (IsFileReference(fileSettings))
+                    return false;
             }
         }
 
@@ -221,7 +244,7 @@ public class JsonImportSettingsProvider : IImportSettingsProvider
 
         if (importSettings.InternalServices.TryGetValue(key, out var serviceValue))
         {
-            if (serviceValue is Tuple<JsonObject, FileSettings, JsonObject> tuple 
+            if (serviceValue is Tuple<JsonObject, FileSettings, JsonObject> tuple
                 && TryLoadFromCache<ServiceSettings>(tuple, out var serviceSettings)
                  && serviceSettings != null)
             {
@@ -229,9 +252,9 @@ public class JsonImportSettingsProvider : IImportSettingsProvider
                 return true;
             }
 
-            if (serviceValue is JsonNode jsonNodeSvc 
+            if (serviceValue is JsonNode jsonNodeSvc
               && TryLoadFromFile(jsonNodeSvc, out var fileSettings, out var parsedFileJson, out serviceSettings)
-              && serviceSettings!=null)
+              && serviceSettings != null)
             {
                 importSettings.InternalServices[key] = Tuple.Create(jsonNodeSvc.AsObject(), fileSettings, parsedFileJson);
                 result = serviceSettings;
