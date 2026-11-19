@@ -24,6 +24,15 @@ public class LoadStageSettings
     public required string TypeName { get; set; }
 }
 
+public class TestFileData
+{
+    [JsonPropertyName("LoadedFrom")]
+    public string? LoadedFrom { get; set; }
+
+    [JsonPropertyName("Value")]
+    public int Value { get; set; }
+}
+
 public class JsonSettingsTest
 {
     private readonly string _jsonContent;
@@ -42,8 +51,8 @@ public class JsonSettingsTest
         Assert.True(doc.RootElement.TryGetProperty("OzonCategories", out JsonElement sectionElement));
         var jsonObject = JsonObject.Create(sectionElement);
         Assert.NotNull(jsonObject);
-        var importSettings = new ImportSettings(jsonObject);
-        IImportSettingsProvider importSettingsProvider = new ImportSettingsProvider();
+        var importSettings = new JsonImportSettings(jsonObject);
+        IImportSettingsProvider importSettingsProvider = new JsonImportSettingsProvider();
 
         Assert.True(importSettings.ServiceSettings.ContainsKey("ImportService"));
         Assert.True(importSettings.ServiceSettings.ContainsKey("Loader"));
@@ -60,8 +69,8 @@ public class JsonSettingsTest
         Assert.True(doc.RootElement.TryGetProperty("OzonCategories", out JsonElement sectionElement));
         var jsonObject = JsonObject.Create(sectionElement);
         Assert.NotNull(jsonObject);
-        var importSettings = new ImportSettings(jsonObject);
-        IImportSettingsProvider importSettingsProvider = new ImportSettingsProvider();
+        var importSettings = new JsonImportSettings(jsonObject);
+        IImportSettingsProvider importSettingsProvider = new JsonImportSettingsProvider();
 
         var result = importSettingsProvider.TryGet<Dictionary<string, JsonElement>>(importSettings, out var value, out var exception);
 
@@ -89,8 +98,8 @@ public class JsonSettingsTest
         Assert.True(doc.RootElement.TryGetProperty("OzonCategories", out JsonElement sectionElement));
         var jsonObject = JsonObject.Create(sectionElement);
         Assert.NotNull(jsonObject);
-        var importSettings = new ImportSettings(jsonObject);
-        IImportSettingsProvider importSettingsProvider = new ImportSettingsProvider();
+        var importSettings = new JsonImportSettings(jsonObject);
+        IImportSettingsProvider importSettingsProvider = new JsonImportSettingsProvider();
 
         var result = importSettingsProvider.TryGet<OzonCategorySettings>(importSettings, out var value, out var exception);
 
@@ -105,5 +114,71 @@ public class JsonSettingsTest
 
         var loadStages = JsonSerializer.Deserialize<LoadStageSettings[]>(value.Services["LoadStages"].ToString());
         Assert.NotEmpty(loadStages);
+    }
+
+    [Fact]
+    public void TryGet_LoadsFromExternalFile_WhenFileExists()
+    {
+        var tempFilePath = Path.Combine(Path.GetTempPath(), $"test_data_{Guid.NewGuid()}.json");
+
+        var fileContent = new TestFileData { LoadedFrom = "external_file", Value = 42 };
+            File.WriteAllText(tempFilePath, JsonSerializer.Serialize(fileContent));
+
+            var fileSettingsJson = new JsonObject
+            {
+                ["FilePath"] = tempFilePath
+            };
+
+            var servicesJson = new JsonObject
+            {
+                ["ExternalData"] = fileSettingsJson
+            };
+
+            var settingsJson = new JsonObject
+            {
+                ["Services"] = servicesJson
+            };
+
+            var importSettings = new JsonImportSettings(settingsJson);
+            var provider = new JsonImportSettingsProvider();
+
+            Assert.True(JsonImportSettingsProvider.TryGet<TestFileData>(importSettings, "ExternalData", out var result));
+            Assert.NotNull(result);
+            Assert.Equal("external_file", result.LoadedFrom);
+            Assert.Equal(42, result.Value);
+
+            File.Delete(tempFilePath);
+
+            Assert.True(JsonImportSettingsProvider.TryGet<TestFileData>(importSettings, "ExternalData", out var cachedResult));
+            Assert.NotNull(cachedResult);
+            Assert.Equal("external_file", cachedResult.LoadedFrom);
+            Assert.Equal(42, cachedResult.Value);
+    }
+
+    [Fact]
+    public void TryGet_ReturnsFalse_WhenExternalFileDoesNotExist()
+    {
+        var nonExistentPath = Path.Combine(Path.GetTempPath(), $"nonexistent_{Guid.NewGuid()}.json");
+
+        var fileSettingsJson = new JsonObject
+        {
+            ["FilePath"] = nonExistentPath
+        };
+
+        var servicesJson = new JsonObject
+        {
+            ["ExternalData"] = fileSettingsJson
+        };
+
+        var settingsJson = new JsonObject
+        {
+            ["Services"] = servicesJson
+        };
+
+        var importSettings = new JsonImportSettings(settingsJson);
+        var provider = new JsonImportSettingsProvider();
+
+        Assert.False(JsonImportSettingsProvider.TryGet<TestFileData>(importSettings, "ExternalData", out var result));
+        Assert.Null(result);
     }
 }

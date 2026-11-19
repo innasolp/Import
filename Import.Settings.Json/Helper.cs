@@ -6,18 +6,23 @@ namespace Import.Settings.Json;
 
 internal static class Helper
 {
+    private static readonly JsonSerializerOptions _options = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public static bool TryDeserialize<T>(this string json, out T? result)
     {
         try
         {
-            result = JsonSerializer.Deserialize<T>(json);
+            result = JsonSerializer.Deserialize<T>(json, _options);
             return result != null;
         }
         catch (JsonException)
         {
             result = default;
             return false;
-        }
+        } 
     }
 
     public static bool TryDeserialize<T>(this string json, out T? result, out Exception? exception)
@@ -25,7 +30,7 @@ internal static class Helper
         exception = default;
         try
         {
-            result = JsonSerializer.Deserialize<T>(json);
+            result = JsonSerializer.Deserialize<T>(json, _options);
             return result != null;
         }
         catch (Exception e)

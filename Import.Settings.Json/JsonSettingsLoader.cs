@@ -7,6 +7,6 @@ public class JsonSettingsLoader : ISettingsLoader<JsonObject>
 {
     public IImportSettings Load(JsonObject source)
     {
-        return new ImportSettings(source);
+        return new JsonImportSettings(source);
     }
 }
