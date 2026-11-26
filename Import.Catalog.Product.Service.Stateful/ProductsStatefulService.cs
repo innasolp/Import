@@ -40,6 +40,7 @@ public abstract class ProductStatefulService<TLoadOptions, TCategory, TProductIt
     private readonly ServiceStateWorker<TCategory> _serviceStateWorker = new(serviceStateRepository);
     private bool _allCategoriesCompletedSuccessfully;
     private IProductCatalogCategory? _interruptedCategory;
+    private readonly IItemPathFormatter<ICategoryProductItem> _productItemPathFormatter = productItemPathFormatter;
 
     protected virtual object GetServiceStateKeyObject()
     {
@@ -50,7 +51,8 @@ public abstract class ProductStatefulService<TLoadOptions, TCategory, TProductIt
             Url = Host,
             ProductPathFormat,
             CategoryPathFormat,
-            ItemHandlerType = ItemHandler.GetType().Name
+            ItemHandlerType = ItemHandler.GetType().Name,
+            ItemPathFormatterType = _productItemPathFormatter.GetType().Name
         };
     }
 
