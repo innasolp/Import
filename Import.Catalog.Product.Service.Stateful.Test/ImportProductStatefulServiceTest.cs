@@ -154,7 +154,7 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
 
     private static string GetProductItemApiUrl(string productUrlFormat, ICategoryProductItem productItem)
     {
-        return string.Format(productUrlFormat, productItem.Name);
+        return new TestItemPathFormatter().GetAbsolutePath(productUrlFormat, PathFormatType.None, productItem);
     }
 
     private string GetCategoryPageMesageFromat()
@@ -208,6 +208,7 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
              ProductCatalogModelMock.Object,
              LoaderMock.Object,
              ProductItemHandlerMock.Object,
+             new TestItemPathFormatter(),
              _keyHasherMock.Object,
              _serviceStarepository,
              1000);

@@ -18,6 +18,7 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
              ProductCatalogModelMock.Object,
              LoaderMock.Object,
              ProductItemHandlerMock.Object,
+             new TestItemPathFormatter(),
              1000);
     }
 
@@ -29,6 +30,7 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
              ProductCatalogModelMock.Object,
              LoaderMock.Object,
              ProductItemHandlerMock.Object,
+             new TestItemPathFormatter(),
              pageProductCount);
     }
 

@@ -22,7 +22,8 @@ public class ImportCatalogProductServiceTest : ImportServiceExecutionTest<LoadDa
              name,
              ProductCatalogModelMock.Object,
              LoaderMock.Object,
-             ProductItemHandlerMock.Object);
+             ProductItemHandlerMock.Object,
+             new TestItemPathFormatter());
     }
 
     protected Mock<IProductCatalogModel> ProductCatalogModelMock { get; } = new Mock<IProductCatalogModel>();

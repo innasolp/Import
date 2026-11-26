@@ -13,6 +13,7 @@ public abstract class ProductServiceFactory<TLoadOptions, TProductService, TCate
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
     IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
+    IEnumerable<IFactory<IItemPathFormatter<ICategoryProductItem>>>? itemPathFormatterFactoryList = null,
     IImportServiceLogFactory? logFactory = null)
     : IServiceFactory
     where TCategory : class, ICategoryProducts, new()
@@ -30,6 +31,7 @@ public abstract class ProductServiceFactory<TLoadOptions, TProductService, TCate
     public const string CatalogCategories = "CatalogCategories";
     public const string ProductPathFormat = "ProductPathFormat";
     public const string CategoryPathFormat = "CategoryPathFormat";
+    public const string ItemPathFormatter = "ItemPathFormatter";
 
     public abstract Type GetServiceType();
 
@@ -45,6 +47,7 @@ public abstract class ProductServiceFactory<TLoadOptions, TProductService, TCate
         string url,
         ICategoryPaging<TCategory> categoryPaging,
         IItemSerializer<TCategory> categorySerializer,
+        IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
         TProductServiceOptions productServiceOptions);
 
     public IService Create(string name, IImportSource importSource, IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
@@ -56,38 +59,49 @@ public abstract class ProductServiceFactory<TLoadOptions, TProductService, TCate
             throw new Exception($"Can't find {nameof(productServiceOptions)}.");
 
         if (productServiceOptions?.ProductPathFormatType == default)
-            throw new Exception($"Can't find {nameof(productServiceOptions.ProductPathFormatType)}.");
+            throw new InvalidDataException($"Can't find {nameof(productServiceOptions.ProductPathFormatType)}.");
 
         if (productServiceOptions?.CategoryPathFormatType == default)
-            throw new Exception($"Can't find {nameof(productServiceOptions.CategoryPathFormatType)}.");
+            throw new InvalidDataException($"Can't find {nameof(productServiceOptions.CategoryPathFormatType)}.");
 
-        var loaderFactory = loaderServiceFactories.GetFactoryBySettings(importSettingsProvider, importSettings, Loader, name)
-            ?? throw new Exception($"Can't find {nameof(Loader)}.");
+        if(!loaderServiceFactories.TryGetFactoryBySettings(importSettingsProvider, importSettings, Loader, out var loaderFactory)
+            || loaderFactory == null)
+             throw new InvalidDataException($"Can't find {nameof(Loader)} in {name}.");
         var loader = loaderFactory.Create(name, importSettingsProvider, importSettings);
 
-        var productItemHandlerFactory = productItemHandlerFactories.GetFactoryBySettings(importSettingsProvider, importSettings, ProductItemHandler, name)
-            ?? throw new Exception($"Can't find {nameof(ProductItemHandler)}.");
+        if(!productItemHandlerFactories.TryGetFactoryBySettings(importSettingsProvider, importSettings, ProductItemHandler, out var productItemHandlerFactory)
+           || productItemHandlerFactory==null)
+            throw new InvalidDataException($"Can't find {nameof(ProductItemHandler)}.");
         var productItemHandler = productItemHandlerFactory.Create(importSettingsProvider, importSettings);
 
-        var categoryPaging = categoryPagingList.GetItemBySettings(importSettingsProvider, importSettings, CategoryPaging, name)
-        ?? throw new Exception($"Can't find {nameof(CategoryPaging)}.");
+        if(!categoryPagingList.TryGetItemBySettings(importSettingsProvider, importSettings, CategoryPaging, out var categoryPaging)
+            || categoryPaging == null)
+          throw new InvalidDataException($"Can't find {nameof(CategoryPaging)}.");
 
         if(!categorySerializerList.TryGetItemBySettings(importSettingsProvider, importSettings, CategorySerializer, out var categorySerializer)
            || categorySerializer == null)
         { 
-           var categorySerializerFactory = categorySerializerFactoryList.GetFactoryBySettings(importSettingsProvider, importSettings, CategorySerializer, name);
+           if(!categorySerializerFactoryList.TryGetFactoryBySettings(importSettingsProvider, importSettings, CategorySerializer, out var categorySerializerFactory)
+             || categorySerializerFactory == null)
+             throw new InvalidDataException($"Can't find {nameof(CategorySerializer)} in {name}.");
+           
            categorySerializer = categorySerializerFactory.Create(importSettingsProvider, importSettings);
         } 
 
         if (!importSettingsProvider.TryGet<TProductCatalogCategory[]>(importSettings, CatalogCategories, out var catalogCategories)
         || catalogCategories == null)
-            throw new Exception($"Can't find {nameof(CatalogCategories)}.");
+            throw new InvalidDataException($"Can't find {nameof(CatalogCategories)}.");
 
         if (!importSettingsProvider.TryGetString(importSettings, ProductPathFormat, out var productPathFormat) || string.IsNullOrEmpty(productPathFormat))
-            throw new Exception($"Can't find {nameof(ProductPathFormat)}.");
+            throw new InvalidDataException($"Can't find {nameof(ProductPathFormat)}.");
 
         if (!importSettingsProvider.TryGetString(importSettings, CategoryPathFormat, out var categoryPathFormat) || string.IsNullOrEmpty(categoryPathFormat))
-            throw new Exception($"Can't find {nameof(CategoryPathFormat)}.");
+            throw new InvalidDataException($"Can't find {nameof(CategoryPathFormat)}.");
+
+        if(!itemPathFormatterFactoryList.TryGetFactoryBySettings(importSettingsProvider, importSettings, ItemPathFormatter, out var itemPathFormatterFactory)
+           || itemPathFormatterFactory == null) 
+            throw new InvalidDataException($"Can't find {nameof(ItemPathFormatter)} in {name}.");
+        var itemPathFormatter = itemPathFormatterFactory.Create(importSettingsProvider, importSettings);
 
         return Create(importSettingsProvider, importSettings,
             serviceLogger,
@@ -101,6 +115,7 @@ public abstract class ProductServiceFactory<TLoadOptions, TProductService, TCate
             importSource.Url,
             categoryPaging,
             categorySerializer,
+            itemPathFormatter,
             productServiceOptions);
     }
 }
