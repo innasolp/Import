@@ -29,13 +29,15 @@ public class TestImportProductService<TCategory, TProductItem>(
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
 {
+    private readonly IItemPathFormatter<ICategoryProductItem> _productItemPathFormatter = productItemPathFormatter;
+
     private readonly IProductCatalogModel _productCatalogModel = catalogModel;
 
     public override string Name { get; } = name;
 
     public string GetTestApiUrl(ICategoryProductItem productItem)
     {
-        return productItemPathFormatter.GetAbsolutePath(
+        return _productItemPathFormatter.GetAbsolutePath(
             _productCatalogModel.ProductUrl,
             PathFormatType.Path,
             productItem);
