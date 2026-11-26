@@ -98,6 +98,12 @@ internal class TestItemSerializer : IItemSerializer<TestCategoryProducts>
         => Task.FromResult<TestCategoryProducts?>(new TestCategoryProducts());
 }
 
+internal class TestItemPathFormatter : IItemPathFormatter<ICategoryProductItem>
+{
+    public string GetAbsolutePath(string pathFormat, PathFormatType pathFormatType, ICategoryProductItem item)
+        => pathFormat;
+}
+
 public class TestProductService<TCategory, TProductItem>(
     ILogger logger,
     string name,
@@ -110,6 +116,7 @@ public class TestProductService<TCategory, TProductItem>(
     string sourceName,
     ICategoryPaging<TCategory> categoryPaging,
     IItemSerializer<TCategory> categorySerializer,
+    IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
     ProductServiceOptions<object> productServiceOptions)
     : ProductService<object, TCategory, TProductItem>(
         logger,
@@ -122,13 +129,12 @@ public class TestProductService<TCategory, TProductItem>(
         sourceName,
         categoryPaging,
         categorySerializer,
+        productItemPathFormatter,
         productServiceOptions)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
 {
     public override string Name { get; } = name;
-
-    protected override string PreparePath(string path) => path;
 }
 
 public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogCategory>(
@@ -138,6 +144,7 @@ public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogC
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
     IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
+    IEnumerable<IFactory<IItemPathFormatter<ICategoryProductItem>>> itemPathFormatterFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : ProductServiceFactory<object, TestProductService<TCategory, TProductItem>, TCategory, TProductItem, TProductCatalogCategory, ProductServiceOptions<object>>(
         logger,
@@ -146,6 +153,7 @@ public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogC
         categoryPagingList,
         categorySerializerList,
         categorySerializerFactoryList,
+        itemPathFormatterFactoryList,
         logFactory)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
@@ -164,7 +172,8 @@ public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogC
          string url,
           ICategoryPaging<TCategory> categoryPaging,
            IItemSerializer<TCategory> categorySerializer,
-           ProductServiceOptions<object> productServiceOptions)
+           IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
+            ProductServiceOptions<object> productServiceOptions)
     {
         return new TestProductService<TCategory, TProductItem>(
            logger,
@@ -178,6 +187,7 @@ public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogC
            sourceName,
            categoryPaging,
            categorySerializer,
+           productItemPathFormatter,
            productServiceOptions);
     }
 }

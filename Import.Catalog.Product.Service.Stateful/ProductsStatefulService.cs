@@ -17,6 +17,7 @@ public abstract class ProductStatefulService<TLoadOptions, TCategory, TProductIt
     string sourceName,
     ICategoryPaging<TCategory> categoryPaging,
     IItemSerializer<TCategory> categorySerializer,
+    IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
     ProductServiceOptions<TLoadOptions> importProductServiceOptions,
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository)
@@ -31,6 +32,7 @@ public abstract class ProductStatefulService<TLoadOptions, TCategory, TProductIt
         sourceName,
         categoryPaging,
         categorySerializer,
+        productItemPathFormatter,
         importProductServiceOptions)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
@@ -38,6 +40,7 @@ public abstract class ProductStatefulService<TLoadOptions, TCategory, TProductIt
     private readonly ServiceStateWorker<TCategory> _serviceStateWorker = new(serviceStateRepository);
     private bool _allCategoriesCompletedSuccessfully;
     private IProductCatalogCategory? _interruptedCategory;
+    private readonly IItemPathFormatter<ICategoryProductItem> _productItemPathFormatter = productItemPathFormatter;
 
     protected virtual object GetServiceStateKeyObject()
     {
@@ -48,7 +51,8 @@ public abstract class ProductStatefulService<TLoadOptions, TCategory, TProductIt
             Url = Host,
             ProductPathFormat,
             CategoryPathFormat,
-            ItemHandlerType = ItemHandler.GetType().Name
+            ItemHandlerType = ItemHandler.GetType().Name,
+            ItemPathFormatterType = _productItemPathFormatter.GetType().Name
         };
     }
 

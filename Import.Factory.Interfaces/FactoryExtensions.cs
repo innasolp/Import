@@ -20,7 +20,7 @@ public static class FactoryExtensions
         || $"{expected}FactoryImpl".Equals(actual, StringComparison.InvariantCultureIgnoreCase);
     }
 
-    private static T? GetFactoryByServiceSettings<T>(this IEnumerable<T> items, IServiceSettings serviceSettings, string sourceName)
+    private static T? GetFactoryByServiceSettings<T>(this IEnumerable<T> items, IServiceSettings serviceSettings)
      where T : IFactory
     {
         var expectedName = NormalizeTypeName(serviceSettings.ImplementationTypeName);
@@ -35,18 +35,33 @@ public static class FactoryExtensions
      where T : IFactory
     {
         if (!importSettingsProvider.TryGetServiceSettings(importSettings, key, out var serviceSettings)
-        || string.IsNullOrEmpty(serviceSettings.ImplementationTypeName))
+        || string.IsNullOrEmpty(serviceSettings?.ImplementationTypeName))
             throw new InvalidDataException($"No settings {key} for type {typeof(T).Name}  for service {sourceName}.");
 
-        return items.GetFactoryByServiceSettings(serviceSettings, sourceName)
+        return items.GetFactoryByServiceSettings(serviceSettings)
           ?? throw new InvalidDataException($"No service {key} of type {serviceSettings.ImplementationTypeName} for service {sourceName}.");
+    }
+
+    public static bool TryGetFactoryBySettings<T>(this IEnumerable<T> items, IImportSettingsProvider importSettingsProvider,
+       IImportSettings importSettings, string key, out T? value)
+     where T : IFactory
+    {
+        value = default;
+
+        value = default;
+        if (!importSettingsProvider.TryGetServiceSettings(importSettings, key, out var serviceSettings)
+        || string.IsNullOrEmpty(serviceSettings?.ImplementationTypeName))
+            return false;
+
+        value = items.GetFactoryByServiceSettings(serviceSettings);
+        return value != null;
     }
 
     public static T GetItemBySettings<T>(this IEnumerable<T> items, IImportSettingsProvider importSettingsProvider,
      IImportSettings importSettings, string key, string sourceName)
     {
         if (!importSettingsProvider.TryGetServiceSettings(importSettings, key, out var serviceSettings)
-        || string.IsNullOrEmpty(serviceSettings.ImplementationTypeName))
+        || string.IsNullOrEmpty(serviceSettings?.ImplementationTypeName))
             throw new InvalidDataException($"No settings {key} for type {typeof(T).Name}  for service {sourceName}.");
 
         var expectedName = NormalizeTypeName(serviceSettings.ImplementationTypeName);

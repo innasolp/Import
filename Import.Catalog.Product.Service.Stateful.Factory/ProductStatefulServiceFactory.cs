@@ -20,11 +20,12 @@ public abstract class ProductStatefulServiceFactory<TLoadOptions, TProductStatef
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
     IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
+    IEnumerable<IFactory<IItemPathFormatter<ICategoryProductItem>>> itemPathFormatterFactoryList,
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : ProductServiceFactory<TLoadOptions, TProductStatefulService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>
-    (logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList, categorySerializerFactoryList, logFactory)
+    (logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList, categorySerializerFactoryList, itemPathFormatterFactoryList, logFactory)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
     where TProductCatalogCategory : class, IProductCatalogCategory, new()
@@ -48,6 +49,7 @@ public abstract class ProductStatefulServiceFactory<TLoadOptions, TProductStatef
     string url,
      ICategoryPaging<TCategory> categoryPaging,
      IItemSerializer<TCategory> categorySerializer,
+     IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
       TProductServiceOptions productServiceOptions)
     {
         var keyHasher = keyHasherList.GetItemBySettings(importSettingsProvider, importSettings, KeyHasher, name)
@@ -80,6 +82,7 @@ public abstract class ProductStatefulServiceFactory<TLoadOptions, TProductStatef
             url,
             categoryPaging,
             categorySerializer,
+            productItemPathFormatter,
             productServiceOptions,
             keyHasher,
             serviceStateRepository);
@@ -97,6 +100,7 @@ public abstract class ProductStatefulServiceFactory<TLoadOptions, TProductStatef
     string url,
      ICategoryPaging<TCategory> categoryPaging,
      IItemSerializer<TCategory> categorySerializer,
+     IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
       TProductServiceOptions productServiceOptions,
       IKeyHasher keyHasher,
       IServiceStateRepository serviceStateRepository);

@@ -13,6 +13,18 @@ namespace Import.Catalog.Product.Service.Stateful.Factory.Test;
 
 public class ProductStatefulServiceFactoryTest
 {
+    private readonly Mock<IItemPathFormatter<ICategoryProductItem>> _itemPathFormatterMock = new();
+    private readonly Mock<IFactory<IItemPathFormatter<ICategoryProductItem>>> _itemPathFormatterFactoryMock = new();
+
+    public ProductStatefulServiceFactoryTest()
+    {
+        _itemPathFormatterMock.Setup(f => f.GetAbsolutePath(It.IsAny<string>(), It.IsAny<PathFormatType>(), It.IsAny<ICategoryProductItem>()))
+            .Returns((string path, PathFormatType type, ICategoryProductItem item) => path);
+        _itemPathFormatterFactoryMock.Setup(f => f.GetServiceType()).Returns(typeof(TestItemPathFormatter));
+        _itemPathFormatterFactoryMock.Setup(f => f.Create(It.IsAny<IImportSettingsProvider>(), It.IsAny<IImportSettings>()))
+            .Returns(_itemPathFormatterMock.Object);
+    }
+
     [Fact]
     public void TestCreateProductStatefulServiceWhenSettingsAreValid()
     {
@@ -53,6 +65,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -108,6 +121,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -164,6 +178,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -216,6 +231,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -268,6 +284,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -320,6 +337,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -332,7 +350,7 @@ public class ProductStatefulServiceFactoryTest
         var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
         var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
-        Assert.Contains("TestItemSerializer", exception.Message);
+        Assert.Contains("CategorySerializer", exception.Message);
     }
 
     [Fact]
@@ -372,6 +390,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -384,7 +403,7 @@ public class ProductStatefulServiceFactoryTest
         var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
         var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
-        Assert.Contains("TestKeyHasher", exception.Message);
+        Assert.Contains("KeyHasher", exception.Message);
     }
 
     [Fact]
@@ -424,6 +443,7 @@ public class ProductStatefulServiceFactoryTest
             categoryPagingList,
             categorySerializerList,
             [],
+            [_itemPathFormatterFactoryMock.Object],
             keyHasherList,
             serviceStateRepositoryFactoryList,
             new Mock<IImportServiceLogFactory>().Object
@@ -436,7 +456,63 @@ public class ProductStatefulServiceFactoryTest
         var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
 
         var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
-        Assert.Contains("TestServiceStateRepositoryFactory", exception.Message);
+        Assert.Contains("ServiceState", exception.Message);
+    }
+
+    [Fact]
+    public void TestCreateProductStatefulServiceThrowsInvalidDataExceptionWhenItemPathFormatterFactoryListIsEmpty()
+    {
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
+        {
+            new TestProductLoaderServiceFactory(),
+        };
+
+        var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
+        {
+            new TestProductItemHandlerFactory(),
+        };
+
+        var categoryPagingList = new List<ICategoryPaging<TestCategoryProducts>>
+        {
+            new TestCategoryPaging(),
+        };
+
+        var categorySerializerList = new List<IItemSerializer<TestCategoryProducts>>
+        {
+            new TestItemSerializer(),
+        };
+
+        var keyHasherList = new List<IKeyHasher>
+        {
+            new TestKeyHasher(),
+        };
+
+        var serviceStateRepositoryFactoryList = new List<IServiceStateRepositoryFactory>
+        {
+            new TestServiceStateRepositoryFactory(),
+        };
+
+        var serviceFactory = new TestProductStatefulServiceFactory(
+            new Mock<ILogger<TestProductStatefulService>>().Object,
+            loaderServiceFactories,
+            productItemHandlerFactories,
+            categoryPagingList,
+            categorySerializerList,
+            [],
+            [],
+            keyHasherList,
+            serviceStateRepositoryFactoryList,
+            new Mock<IImportServiceLogFactory>().Object
+        );
+
+        var importSourceMock = new Mock<IImportSource>();
+        importSourceMock.Setup(x => x.Name).Returns("TestSource");
+        importSourceMock.Setup(x => x.Url).Returns("http://TestSource");
+
+        var (importSettings, importSettingsProvider) = CreateImportSettingsMock();
+
+        var exception = Assert.Throws<InvalidDataException>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProvider, importSettings));
+        Assert.Contains("ItemPathFormatter", exception.Message);
     }
 
     private static (IImportSettings, IImportSettingsProvider) CreateImportSettingsMock()
@@ -482,6 +558,13 @@ public class ProductStatefulServiceFactoryTest
             ImplementationTypeName = "TestItemSerializer"
         };
         importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "CategorySerializer"), out categorySerializerSettings))
+            .Returns(true);
+
+        IServiceSettings itemPathFormatterSettings = new ServiceSettings
+        {
+            ImplementationTypeName = "TestItemPathFormatter"
+        };
+        importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, It.Is<string>(s => s == "ItemPathFormatter"), out itemPathFormatterSettings))
             .Returns(true);
 
         IServiceSettings keyHasherSettings = new ServiceSettings

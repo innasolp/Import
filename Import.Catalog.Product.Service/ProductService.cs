@@ -17,11 +17,11 @@ public abstract class ProductService<TLoadOptions, TCategory, TProductItem>(
     string sourceName,
     ICategoryPaging<TCategory> categoryPaging,
     IItemSerializer<TCategory> categorySerializer,
+    IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
     ProductServiceOptions<TLoadOptions> importProductServiceOptions)
     : ImportService<LoadData<TLoadOptions>>(logger, loader, url), IListener<IProductCatalogCategory>
     where TCategory : class, ICategoryProducts, new()
-    where TProductItem : class, IProductItem, new()
-    
+    where TProductItem : class, IProductItem, new()    
 {
     public enum AttemptResult
     {
@@ -309,7 +309,9 @@ public abstract class ProductService<TLoadOptions, TCategory, TProductItem>(
         ICategoryProductItem categoryProductItem,
         CancellationToken cancellationToken)
     {
-        var path = GetProductAbsolutePath(ProductPathFormat, categoryProductItem);
+        var path =  productItemPathFormatter.GetAbsolutePath(ProductPathFormat, 
+                                            importProductServiceOptions.ProductPathFormatType,
+                                            categoryProductItem);
         var (success, stream) = await TryLoadProductItemAsync(categoryProductItem, path, cancellationToken)
             .ConfigureAwait(false);
 
@@ -453,21 +455,10 @@ public abstract class ProductService<TLoadOptions, TCategory, TProductItem>(
             : null;
     }
 
-    protected virtual string GetProductAbsolutePath(string productPathFormat, ICategoryProductItem productItem)
-    {
-        return ImportProductServiceOptions.ProductPathFormatType switch
-        {
-            PathFormatType.ItemId => string.Format(productPathFormat, productItem.Id),
-            PathFormatType.Path => string.Format(productPathFormat, PreparePath(productItem.ItemPath)),
-            PathFormatType.CategoryWithItemId => string.Format(productPathFormat, productItem.Id, PreparePath(productItem.ItemPath)),
-            _ => string.Format(productPathFormat, productItem.ItemPath),
-        };
-    }
-
+    
     protected virtual Task OnPageProcessedAsync(TCategory? category, CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
     }
 
-    protected abstract string PreparePath(string path);
 }

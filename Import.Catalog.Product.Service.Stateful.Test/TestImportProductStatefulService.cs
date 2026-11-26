@@ -7,48 +7,50 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Stateful.Test;
 
-public class TestImportProductStatefulService<TCategory, TProductItem>(ILogger logger,
+public class TestImportProductStatefulService<TCategory, TProductItem>(
+    ILogger logger,
     string name,
     IProductCatalogModel catalogModel,
     ILoaderService<LoadData<object>> loader,
     IProductItemHandler itemHandler,
+    IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository,
     int pageProductCount = 1000)
-    : ProductStatefulService<object, TCategory, TProductItem>(logger,
+    : ProductStatefulService<object, TCategory, TProductItem>(
+        logger,
         loader,
         catalogModel.Url,
         catalogModel.Categories,
         itemHandler,
         catalogModel.ProductUrl,
-            catalogModel.CategoryUrlFormat,
-            catalogModel.Name,
-            new TestCategoryPaging<TCategory>(),
-            new SimpleCategoryJsonSerializer<TCategory>(),
-            new ProductServiceOptions<object> { PageProductCount = pageProductCount },
-            keyHasher,
-            serviceStateRepository)
+        catalogModel.CategoryUrlFormat,
+        catalogModel.Name,
+        new TestCategoryPaging<TCategory>(),
+        new SimpleCategoryJsonSerializer<TCategory>(),
+        productItemPathFormatter,
+        new ProductServiceOptions<object> { PageProductCount = pageProductCount },
+        keyHasher,
+        serviceStateRepository)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
 {
+    private readonly IItemPathFormatter<ICategoryProductItem> _productItemPathFormatter = productItemPathFormatter;
+
     private readonly IProductCatalogModel _productCatalogModel = catalogModel;
 
     public override string Name { get; } = name;
 
-    protected override string GetProductAbsolutePath(string productUrlFormat, ICategoryProductItem productItem)
-    {
-        return string.Format(productUrlFormat, productItem.Name);
-    }
-
     public string GetTestApiUrl(ICategoryProductItem productItem)
     {
-        return GetProductAbsolutePath(_productCatalogModel.ProductUrl, productItem);
+        return _productItemPathFormatter.GetAbsolutePath(
+            _productCatalogModel.ProductUrl,
+            PathFormatType.Path,
+            productItem);
     }
 
     protected override bool? IsEndOfCategory(TCategory category, int processProductCount)
     {
         return !(category.CategoryProductItems?.Length > 0);
     }
-
-    protected override string PreparePath(string path) => path;
 }

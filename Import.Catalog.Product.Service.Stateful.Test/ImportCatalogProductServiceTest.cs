@@ -30,6 +30,7 @@ public class ImportCatalogProductServiceTest : ImportServiceExecutionTest<LoadDa
              ProductCatalogModelMock.Object,
              LoaderMock.Object,
              ProductItemHandlerMock.Object,
+             new TestItemPathFormatter(),
              _keyHasherMock.Object,
              _serviceStarepositoryMock.Object);
     }

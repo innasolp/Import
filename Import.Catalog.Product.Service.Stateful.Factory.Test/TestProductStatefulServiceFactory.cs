@@ -83,6 +83,12 @@ internal class TestItemSerializer : IItemSerializer<TestCategoryProducts>
         => Task.FromResult<TestCategoryProducts?>(new TestCategoryProducts());
 }
 
+internal class TestItemPathFormatter : IItemPathFormatter<ICategoryProductItem>
+{
+    public string GetAbsolutePath(string pathFormat, PathFormatType pathFormatType, ICategoryProductItem item)
+        => pathFormat;
+}
+
 internal class TestKeyHasher : IKeyHasher
 {
     public byte[] Hash<T>(T key)
@@ -114,15 +120,15 @@ public class TestProductStatefulService(
     string sourceName,
     ICategoryPaging<TestCategoryProducts> categoryPaging,
     IItemSerializer<TestCategoryProducts> categorySerializer,
+    IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
     ProductServiceOptions<object> productServiceOptions,
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository)
     : ProductStatefulService<object, TestCategoryProducts, TestProductItem>(
         logger, loader, url, catalogCategories, productItemHandler, productPathFormat, categoryPathFormat, sourceName,
-        categoryPaging, categorySerializer, productServiceOptions, keyHasher, serviceStateRepository)
+        categoryPaging, categorySerializer, productItemPathFormatter, productServiceOptions, keyHasher, serviceStateRepository)
 {
     public override string Name { get; } = name;
-    protected override string PreparePath(string path) => path;
 }
 
 public class TestProductStatefulServiceFactory(
@@ -132,12 +138,13 @@ public class TestProductStatefulServiceFactory(
     IEnumerable<ICategoryPaging<TestCategoryProducts>> categoryPagingList,
     IEnumerable<IItemSerializer<TestCategoryProducts>> categorySerializerList,
     IEnumerable<IFactory<IItemSerializer<TestCategoryProducts>>> categorySerializerFactoryList,
+    IEnumerable<IFactory<IItemPathFormatter<ICategoryProductItem>>> itemPathFormatterFactoryList,
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
     : ProductStatefulServiceFactory<object, TestProductStatefulService, TestCategoryProducts, TestProductItem, TestProductCatalogCategory, ProductServiceOptions<object>>(
         logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList,
-        categorySerializerFactoryList, keyHasherList, serviceStateRepositoryFactoryList, logFactory)
+        categorySerializerFactoryList, itemPathFormatterFactoryList, keyHasherList, serviceStateRepositoryFactoryList, logFactory)
 {
     public override Type GetServiceType() => typeof(TestProductStatefulService);
 
@@ -153,6 +160,7 @@ public class TestProductStatefulServiceFactory(
          string url,
           ICategoryPaging<TestCategoryProducts> categoryPaging,
           IItemSerializer<TestCategoryProducts> categorySerializer,
+          IItemPathFormatter<ICategoryProductItem> productItemPathFormatter,
            ProductServiceOptions<object> productServiceOptions,
             IKeyHasher keyHasher,
             IServiceStateRepository serviceStateRepository)
@@ -169,6 +177,7 @@ public class TestProductStatefulServiceFactory(
             sourceName,
             categoryPaging,
             categorySerializer,
+            productItemPathFormatter,
             productServiceOptions,
             keyHasher,
             serviceStateRepository);
