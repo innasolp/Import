@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using Import.Catalog.Category.Interfaces;
 using Import.Factory.Interfaces;
+using Import.Interfaces;
 using Import.Settings.Interfaces;
 using Import.Settings.Json;
 using Import.TreeItem;
@@ -24,7 +25,7 @@ public class CategoryServiceFactoryTest
             new JsonTreeItemLoaderFactory<TestCategory>(),
         };
 
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestLoaderService1Factory(),
             new TestLoaderService2Factory(),
@@ -36,8 +37,8 @@ public class CategoryServiceFactoryTest
             new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
-            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<object, TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<object, TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -63,14 +64,14 @@ public class CategoryServiceFactoryTest
             new JsonTreeItemLoaderFactory<TestCategory>(),
         };
 
-        var loaderServiceMock = new Mock<ILoaderServiceFactory>();
+        var loaderServiceMock = new Mock<ILoaderServiceFactory<LoadData<object>>>();
         var exceptionMessage = "TestLoaderService2Factory invalid";
         loaderServiceMock.Setup(x => x.Create(It.IsAny<string>(), It.IsAny<IImportSettingsProvider>(),
          It.IsAny<IImportSettings>()))
             .Throws(new InvalidOperationException(exceptionMessage));
         loaderServiceMock.Setup(x => x.GetServiceType()).Returns(typeof(TestLoaderService2));
 
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestLoaderService1Factory(),
             loaderServiceMock.Object,
@@ -82,8 +83,8 @@ public class CategoryServiceFactoryTest
             new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
-            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<object, TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<object, TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -110,7 +111,7 @@ public class CategoryServiceFactoryTest
             new JsonTreeItemLoaderFactory<TestCategory>(),
         };
 
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestLoaderService2Factory(),
         };
@@ -120,8 +121,8 @@ public class CategoryServiceFactoryTest
             new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
-            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<object, TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<object, TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -149,7 +150,7 @@ public class CategoryServiceFactoryTest
             new JsonTreeItemLoaderFactory<TestCategory>(),
         };
 
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestLoaderService2Factory(),
         };
@@ -159,8 +160,8 @@ public class CategoryServiceFactoryTest
             new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
-            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<object, TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<object, TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -193,15 +194,15 @@ public class CategoryServiceFactoryTest
             new JsonTreeItemLoaderFactory<TestCategory>(),
         };
 
-        var loaderServiceFactories = new List<ILoaderServiceFactory>();
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>();
 
         var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>
         {
             new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
-            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<object, TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<object, TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -228,15 +229,15 @@ public class CategoryServiceFactoryTest
             new JsonTreeItemLoaderFactory<TestCategory>(),
         };
 
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestLoaderService2Factory(),
         };
 
         var categoryItemHandlerFactories = new List<IFactory<ICategoryItemHandler<Cat>>>();
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
-            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<object, TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<object, TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,
@@ -259,7 +260,7 @@ public class CategoryServiceFactoryTest
     {
         var treeItemLoadFactories = new List<ITreeItemLoaderFactory<TestCategory>>();
 
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestLoaderService2Factory(),
         };
@@ -269,8 +270,8 @@ public class CategoryServiceFactoryTest
             new TestCategoryItemHandler2Factory<Cat>(),
         };
 
-        var serviceFactory = new TestCategoryServiceFactory<TestCategory, Cat>(
-            new Mock<ILogger<TestCategoryService<TestCategory, Cat>>>().Object,
+        var serviceFactory = new TestCategoryServiceFactory<object, TestCategory, Cat>(
+            new Mock<ILogger<TestCategoryService<object, TestCategory, Cat>>>().Object,
             loaderServiceFactories,
             treeItemLoadFactories,
             categoryItemHandlerFactories,

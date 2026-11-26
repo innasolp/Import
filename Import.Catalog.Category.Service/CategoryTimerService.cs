@@ -5,9 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service;
 
-public class CategoryTimerService<TTreeCategory, TCategory> : CategoryService<TTreeCategory, TCategory>
+public class CategoryTimerService<TLoadOptions, TTreeCategory, TCategory> : CategoryService<TLoadOptions, TTreeCategory, TCategory>
    where TTreeCategory : ITreeItem
    where TCategory : ICategory, new()
+   where TLoadOptions : class
 {
     private readonly int _defaultInterval = 3600;
 
@@ -15,14 +16,14 @@ public class CategoryTimerService<TTreeCategory, TCategory> : CategoryService<TT
 
     public CategoryTimerService(ILogger logger,
                                 string name,
-                                ILoaderService loader,
+                                ILoaderService<LoadData<TLoadOptions>> loader,
                                 string categorySourceUrl,
                                 string sourceName,
                                 string url,
                                 IEnumerable<ITreeItemLoader<TTreeCategory>> categoryLoadStages,
                                 ICategoryItemHandler<TCategory> itemHandler,
                                 int? timerSecondsInterval = null,
-     object? categoryLoadData = null) : base(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
+     TLoadOptions? categoryLoadData = null) : base(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
     {
         _timer = new(TimeSpan.FromSeconds(timerSecondsInterval ?? _defaultInterval));
     }
@@ -37,10 +38,9 @@ public class CategoryTimerService<TTreeCategory, TCategory> : CategoryService<TT
     {
         await base.ProcessAsync(stoppingToken);
 
-        var categoryLoadData = GetLoadData();
         while ((await _timer.WaitForNextTickAsync(stoppingToken).AsTask()) && !stoppingToken.IsCancellationRequested)
         {
-            await LoadCategoriesAsync(categoryLoadData, stoppingToken);
+            await LoadCategoriesAsync(stoppingToken);
         }
     }
 }

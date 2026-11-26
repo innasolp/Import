@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Factory;
 
-public abstract class ProductServiceFactory<TProductService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
+public abstract class ProductServiceFactory<TLoadOptions, TProductService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
     ILogger<TProductService> logger,
-    IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
+    IEnumerable<ILoaderServiceFactory<LoadData<TLoadOptions>>> loaderServiceFactories,
     IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
@@ -18,8 +18,9 @@ public abstract class ProductServiceFactory<TProductService, TCategory, TProduct
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
     where TProductCatalogCategory : class, IProductCatalogCategory, new()
-    where TProductServiceOptions : ProductServiceOptions
-    where TProductService : ProductService<TCategory, TProductItem>
+    where TProductServiceOptions : ProductServiceOptions<TLoadOptions>, new()
+    where TProductService : ProductService<TLoadOptions, TCategory, TProductItem>
+    where TLoadOptions : class
 {
     public const string ProductItemHandler = "ProductItemHandler";
     public const string ProductServiceOptions = "ProductServiceOptions";
@@ -35,7 +36,7 @@ public abstract class ProductServiceFactory<TProductService, TCategory, TProduct
     protected abstract TProductService Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
         ILogger<TProductService> logger,
         string name,
-        ILoaderService loader,
+        ILoaderService<LoadData<TLoadOptions>> loader,
         IEnumerable<IProductCatalogCategory> catalogCategories,
         IProductItemHandler productItemHandler,
         string productPathFormat,
@@ -78,7 +79,7 @@ public abstract class ProductServiceFactory<TProductService, TCategory, TProduct
            categorySerializer = categorySerializerFactory.Create(importSettingsProvider, importSettings);
         } 
 
-        if (!importSettingsProvider.TryGet<IEnumerable<TProductCatalogCategory>>(importSettings, CatalogCategories, out var catalogCategories)
+        if (!importSettingsProvider.TryGet<TProductCatalogCategory[]>(importSettings, CatalogCategories, out var catalogCategories)
         || catalogCategories == null)
             throw new Exception($"Can't find {nameof(CatalogCategories)}.");
 

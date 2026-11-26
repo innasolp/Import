@@ -2,13 +2,13 @@
 
 namespace Import.Catalog.Product.Service;
 
-public class ProductServiceOptions
+public class ProductServiceOptions<TLoadData>
 {
     public int? PageProductCount { get; set; }
 
-    public object? ProductLoadData { get; set; }
+    public TLoadData? ProductLoadData { get; set; }
 
-    public object? CategoryLoadData { get; set; }
+    public TLoadData? CategoryLoadData { get; set; }
 
     public PathFormatType ProductPathFormatType { get; set; }
 

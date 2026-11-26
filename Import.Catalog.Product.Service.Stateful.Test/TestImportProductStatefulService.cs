@@ -10,12 +10,12 @@ namespace Import.Catalog.Product.Service.Stateful.Test;
 public class TestImportProductStatefulService<TCategory, TProductItem>(ILogger logger,
     string name,
     IProductCatalogModel catalogModel,
-    ILoaderService loader,
+    ILoaderService<LoadData<object>> loader,
     IProductItemHandler itemHandler,
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository,
     int pageProductCount = 1000)
-    : ProductStatefulService<TCategory, TProductItem>(logger,
+    : ProductStatefulService<object, TCategory, TProductItem>(logger,
         loader,
         catalogModel.Url,
         catalogModel.Categories,
@@ -25,7 +25,7 @@ public class TestImportProductStatefulService<TCategory, TProductItem>(ILogger l
             catalogModel.Name,
             new TestCategoryPaging<TCategory>(),
             new SimpleCategoryJsonSerializer<TCategory>(),
-            new ProductServiceOptions { PageProductCount = pageProductCount },
+            new ProductServiceOptions<object> { PageProductCount = pageProductCount },
             keyHasher,
             serviceStateRepository)
     where TCategory : class, ICategoryProducts, new()

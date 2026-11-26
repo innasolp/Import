@@ -23,7 +23,7 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
         SetupKeyHasher();
 
         ImportProductsStatefulResourceManager = new ResourceManager("Import.Catalog.Product.Service.Stateful.ImportProductStatefulLogMessages",
-                               typeof(ProductStatefulService<TestCategory, TestProductItem>).Assembly);
+                               typeof(ProductStatefulService<object, TestCategory, TestProductItem>).Assembly);
     }
 
     private void SetupKeyHasher()
@@ -34,7 +34,8 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
         });
     }
 
-    private void SetupCategoriesLoadingWithDelayOnIteration(object requestData, List<IProductCatalogCategory> productCategories, int categoryPauseIteration, int delayMilliseconds = 1000)
+    private void SetupCategoriesLoadingWithDelayOnIteration(List<IProductCatalogCategory> productCategories, 
+    int categoryPauseIteration, int delayMilliseconds = 1000)
     {
         bool delayed = false;
 
@@ -68,19 +69,15 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
 
             Func<TestCategory, CancellationToken, Task>? onLoad = (i == categoryPauseIteration) ? delayOnCategoryLoadAsync : null;
 
-            LoaderMock.SetupLoadItem(categoryUrl, requestData, categoryProducts, onLoad);
+            LoaderMock.SetupLoadItem(categoryUrl, categoryProducts, onLoad);
         }
     }
 
-    private object SetupLoader()
+    private void SetupLoader()
     {
         LoaderMock.Reset();
         LoaderMock.SetupStartSuccess();
         LoaderMock.Setup(s => s.Name).Returns($"{Guid.NewGuid()}");
-
-        var requestData = new object();
-        LoaderMock.SetupGetRequestData(requestData);
-        return requestData;
     }
 
     private List<Mock<IProductCatalogCategory>> SetupProductCategories()
@@ -99,7 +96,7 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
         return productCategoriesMock;
     }
 
-    private void SetupCategories(object requestData, List<IProductCatalogCategory> productCategories, out TestCategory[] testCategories)
+    private void SetupCategories(List<IProductCatalogCategory> productCategories, out TestCategory[] testCategories)
     {
         testCategories = new TestCategory[productCategories.Count];
 
@@ -111,11 +108,11 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
             var categoryProducts = TestHelper.CreateCategoryWithProducts(productCount, productCount, 1);
             testCategories[i] = categoryProducts;
 
-            LoaderMock.SetupLoadItem(categoryUrl, requestData, categoryProducts);
+            LoaderMock.SetupLoadItem(categoryUrl, categoryProducts);
         }
     }
 
-    private void SetupProductItemsWithDelayOnIteration(TestCategory[] testCategories, object requestData, int categoryNumber, int productNumber)
+    private void SetupProductItemsWithDelayOnIteration(TestCategory[] testCategories, int categoryNumber, int productNumber)
     {
         bool delayed = false;
 
@@ -151,7 +148,7 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
 
             var productItems = testCategories[i].CategoryProductItems.ToDictionary(
                 p => GetProductItemApiUrl(ProductCatalogModelMock.Object.ProductUrl, p), TestHelper.CreateProductItem);
-            LoaderMock.SetupLoadItemsSuccessfull(productItems, requestData, delayOnProductLoadAsync);
+            LoaderMock.SetupLoadItemsSuccessfull(productItems, delayOnProductLoadAsync);
         }
     }
 
@@ -281,10 +278,10 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
     {
         var productCategoryMocks = SetupProductCategories();
 
-        object requestData = SetupLoader();
+        SetupLoader();        
 
         var pauseIteration = new Random().Next(1, productCategoryMocks.Count - 2);
-        SetupCategoriesLoadingWithDelayOnIteration(requestData, [.. productCategoryMocks.Select(c => c.Object)], pauseIteration);
+        SetupCategoriesLoadingWithDelayOnIteration([.. productCategoryMocks.Select(c => c.Object)], pauseIteration);
 
         var serviceName = Guid.NewGuid().ToString();
         await using var service = CreateService(serviceName);
@@ -315,12 +312,12 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
     {
         var productCategoryMocks = SetupProductCategories();
 
-        object requestData = SetupLoader();
+        SetupLoader();        
 
         var categoryNumber = new Random().Next(1, productCategoryMocks.Count - 1);
-        SetupCategories(requestData, [.. productCategoryMocks.Select(c => c.Object)], out var testCategories);
+        SetupCategories([.. productCategoryMocks.Select(c => c.Object)], out var testCategories);
         var productNumber = new Random().Next(1, testCategories[categoryNumber].CategoryProductItems.Length - 1);
-        SetupProductItemsWithDelayOnIteration(testCategories, requestData, categoryNumber, productNumber);
+        SetupProductItemsWithDelayOnIteration(testCategories, categoryNumber, productNumber);
 
         var serviceName = Guid.NewGuid().ToString();
         await using var service = CreateService(serviceName);
@@ -357,10 +354,10 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
     {
         var productCategoryMocks = SetupProductCategories();
 
-        object requestData = SetupLoader();
+        SetupLoader();
 
         var pauseIteration = new Random().Next(1, productCategoryMocks.Count - 2);
-        SetupCategoriesLoadingWithDelayOnIteration(requestData, [.. productCategoryMocks.Select(c => c.Object)], pauseIteration);
+        SetupCategoriesLoadingWithDelayOnIteration([.. productCategoryMocks.Select(c => c.Object)], pauseIteration);
 
         var serviceName = Guid.NewGuid().ToString();
         await using var service = CreateService(serviceName);
@@ -392,9 +389,10 @@ public class ImportProductStatefulServiceTest : ImportProductsTest<TestImportPro
     public async Task HandledCategoriesBeforeCanceledItemRemovedAfterServiceRestartIfServiceStateNotEmpty()
     {
         var productCategoryMocks = SetupProductCategories();
-        object requestData = SetupLoader();
+        SetupLoader();
+        
         var pauseIteration = new Random().Next(1, productCategoryMocks.Count - 2);
-        SetupCategoriesLoadingWithDelayOnIteration(requestData, [.. productCategoryMocks.Select(c => c.Object)], pauseIteration);
+        SetupCategoriesLoadingWithDelayOnIteration([.. productCategoryMocks.Select(c => c.Object)], pauseIteration);
 
         var serviceName = Guid.NewGuid().ToString();
         await using var service = CreateService(serviceName);

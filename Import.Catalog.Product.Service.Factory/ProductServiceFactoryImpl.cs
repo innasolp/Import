@@ -6,15 +6,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Factory;
 
-internal class ProductServiceFactoryImpl<TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
-    ILogger<ProductServiceImpl<TCategory, TProductItem>> logger,
-    IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
+internal class ProductServiceFactoryImpl<TLoadOptions, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
+    ILogger<ProductServiceImpl<TLoadOptions, TCategory, TProductItem>> logger,
+    IEnumerable<ILoaderServiceFactory<LoadData<TLoadOptions>>> loaderServiceFactories,
     IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
     IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
     IImportServiceLogFactory? logFactory = null)
-    : ProductServiceFactory<ProductServiceImpl<TCategory, TProductItem>, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
+    : ProductServiceFactory<TLoadOptions, ProductServiceImpl<TLoadOptions, TCategory, TProductItem>, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>(
         logger,
         loaderServiceFactories,
         productItemHandlerFactories,
@@ -25,17 +25,18 @@ internal class ProductServiceFactoryImpl<TCategory, TProductItem, TProductCatalo
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
     where TProductCatalogCategory : class, IProductCatalogCategory, new()
-    where TProductServiceOptions : ProductServiceOptions
+    where TProductServiceOptions : ProductServiceOptions<TLoadOptions>, new()
+    where TLoadOptions : class
 {
     public override Type GetServiceType()
     {
-        return typeof(ProductServiceImpl<TCategory, TProductItem>);
+        return typeof(ProductServiceImpl<TLoadOptions, TCategory, TProductItem>);
     }
 
-    protected override ProductServiceImpl<TCategory, TProductItem> Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
-        ILogger<ProductServiceImpl<TCategory, TProductItem>> logger,
+    protected override ProductServiceImpl<TLoadOptions, TCategory, TProductItem> Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
+        ILogger<ProductServiceImpl<TLoadOptions, TCategory, TProductItem>> logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<TLoadOptions>> loader,
      IEnumerable<IProductCatalogCategory> catalogCategories,
       IProductItemHandler productItemHandler,
       string productPathFormat,
@@ -46,7 +47,7 @@ internal class ProductServiceFactoryImpl<TCategory, TProductItem, TProductCatalo
        IItemSerializer<TCategory> categorySerializer,
         TProductServiceOptions productServiceOptions)
     {
-        return new ProductServiceImpl<TCategory, TProductItem>(
+        return new ProductServiceImpl<TLoadOptions, TCategory, TProductItem>(
            logger,
            name,
            loader,

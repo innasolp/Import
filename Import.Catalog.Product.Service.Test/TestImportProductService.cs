@@ -8,17 +8,17 @@ namespace Import.Catalog.Product.Service.Test;
 public class TestImportProductService<TCategory, TProductItem>(ILogger logger,
     string name,
     IProductCatalogModel catalogModel,
-    ILoaderService loader,
+    ILoaderService<LoadData<object>> loader,
     IProductItemHandler itemHandler
     , int pageProductCount = 1000)
-    : ProductService<TCategory, TProductItem>(logger, loader, catalogModel.Url,
+    : ProductService<object, TCategory, TProductItem>(logger, loader, catalogModel.Url,
         catalogModel.Categories, itemHandler,
         catalogModel.ProductUrl,
             catalogModel.CategoryUrlFormat,
             catalogModel.Name,
             new TestCategoryPaging<TCategory>(),
             new SimpleCategoryJsonSerializer<TCategory>(),
-            new ProductServiceOptions { PageProductCount = pageProductCount })
+            new ProductServiceOptions<object> { PageProductCount = pageProductCount })
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
 {

@@ -7,9 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service;
 
-public abstract class CategoryService<TTreeCategory, TCategory> : ImportService
+public abstract class CategoryService<TLoadOptions, TTreeCategory, TCategory> : ImportService<LoadData<TLoadOptions>>
     where TTreeCategory : ITreeItem
     where TCategory : ICategory, new()
+    where TLoadOptions: class
 {
     private const int ConcurrencyDegree = 8;
     private readonly object _visitedIdsLock = new();
@@ -25,20 +26,20 @@ public abstract class CategoryService<TTreeCategory, TCategory> : ImportService
     private readonly string _categorySourceUrl;
     private readonly string _sourceName;
     private readonly ICategoryItemHandler<TCategory> _itemHandler;
-    private readonly object? _categoryLoadData;
+    private readonly TLoadOptions? _categoryLoadOptions;
     private readonly IEnumerable<ITreeItemLoader<TTreeCategory>> _categoryLoadStages;
     private readonly SemaphoreSlim _handleSemaphore = new(ConcurrencyDegree, ConcurrencyDegree);
 
     public CategoryService(
         ILogger logger,
         string name,
-        ILoaderService loader,
+        ILoaderService<LoadData<TLoadOptions>> loader,
         string categorySourceUrl,
         string sourceName,
         string url,
         IEnumerable<ITreeItemLoader<TTreeCategory>> categoryLoadStages,
         ICategoryItemHandler<TCategory> itemHandler,
-        object? categoryLoadData = null) : base(logger, loader, url)
+        TLoadOptions? categoryLoadOptions = null) : base(logger, loader, url)
     {
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
         Name = name;
@@ -52,33 +53,25 @@ public abstract class CategoryService<TTreeCategory, TCategory> : ImportService
         ArgumentNullException.ThrowIfNull(itemHandler, nameof(itemHandler));
         _itemHandler = itemHandler;
 
-        _categoryLoadData = categoryLoadData;
+        _categoryLoadOptions = categoryLoadOptions;
 
         if (!categoryLoadStages.Any())
             throw new ArgumentException("Collection cannot be empty.", nameof(categoryLoadStages));
         _categoryLoadStages = categoryLoadStages;
     }
 
-    protected object? GetLoadData()
-    {
-        var loaderData = GetLoaderData();
-        return loaderData is not null && _categoryLoadData is not null
-            ? new object?[] { loaderData, _categoryLoadData }
-            : loaderData ?? _categoryLoadData;
-    }
-
     protected override async Task ProcessAsync(CancellationToken stoppingToken)
     {
-        var categoryLoadData = GetLoadData();
-        await LoadCategoriesAsync(categoryLoadData, stoppingToken).ConfigureAwait(false);
+        await LoadCategoriesAsync(stoppingToken).ConfigureAwait(false);
     }
 
-    protected async Task LoadCategoriesAsync(object? categoryLoadData, CancellationToken stoppingToken)
+    protected async Task LoadCategoriesAsync(CancellationToken stoppingToken)
     {
         var nextStageParentCategories = new List<TTreeCategory>();
         var parentCategories = new List<TTreeCategory>();
         var visitedIds = new HashSet<int>();
         bool isFirstStage = true;
+        var categoryLoadData = new LoadData<TLoadOptions>{ Options = _categoryLoadOptions };
 
         try
         {
@@ -157,7 +150,7 @@ public abstract class CategoryService<TTreeCategory, TCategory> : ImportService
         string urlFormat,
         ITreeItemLoader<TTreeCategory> stage,
         IEnumerable<TTreeCategory> parentCategories,
-        object? categoryLoadData,
+        LoadData<TLoadOptions>? categoryLoadData,
         CancellationToken stoppingToken,
         HashSet<int> visitedIds)
     {
@@ -217,7 +210,7 @@ public abstract class CategoryService<TTreeCategory, TCategory> : ImportService
 
     private async Task<(bool success, IReadOnlyList<TTreeCategory> result)> LoadCategoryChildrenAsync(
         string url,
-        object? categoryLoadData,
+        LoadData<TLoadOptions>? categoryLoadData,
         ITreeItemLoader<TTreeCategory> stage,
         TTreeCategory? parentCategory,
         bool required = true,

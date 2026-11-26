@@ -26,7 +26,8 @@ public class TestCategoryProduct : ICategoryProductItem
     public string Name { get; set; }
 
     public int CategoryItemId { get; set; }
-    public string Brand { get; set; }
+    
+    public string? Brand { get; set; }
 }
 
 public class TestProductItem : IProductItem

@@ -6,9 +6,9 @@ using System.Collections.Concurrent;
 
 namespace Import.Catalog.Product.Service;
 
-public abstract class ProductService<TCategory, TProductItem>(
+public abstract class ProductService<TLoadOptions, TCategory, TProductItem>(
     ILogger logger,
-    ILoaderService loader,
+    ILoaderService<LoadData<TLoadOptions>> loader,
     string url,
     IEnumerable<IProductCatalogCategory> catalogCategories,
     IProductItemHandler itemHandler,
@@ -17,10 +17,11 @@ public abstract class ProductService<TCategory, TProductItem>(
     string sourceName,
     ICategoryPaging<TCategory> categoryPaging,
     IItemSerializer<TCategory> categorySerializer,
-    ProductServiceOptions importProductServiceOptions)
-    : ImportService(logger, loader, url), IListener<IProductCatalogCategory>
+    ProductServiceOptions<TLoadOptions> importProductServiceOptions)
+    : ImportService<LoadData<TLoadOptions>>(logger, loader, url), IListener<IProductCatalogCategory>
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
+    
 {
     public enum AttemptResult
     {
@@ -51,7 +52,7 @@ public abstract class ProductService<TCategory, TProductItem>(
     protected virtual int MaxUnsuccessRequestCount => 10;
     protected virtual int ConcurrentCategoryTaskCount => 10;
 
-    protected ProductServiceOptions ImportProductServiceOptions { get; } = importProductServiceOptions;
+    protected ProductServiceOptions<TLoadOptions> ImportProductServiceOptions { get; } = importProductServiceOptions;
 
     Task IListener<IProductCatalogCategory>.On(IProductCatalogCategory message, CancellationToken cancellationToken)
     {
@@ -255,14 +256,12 @@ public abstract class ProductService<TCategory, TProductItem>(
         int page,
         CancellationToken stoppingToken)
     {
-        var loaderData = GetLoaderData();
-        var requestData = ImportProductServiceOptions.CategoryLoadData != null
-            ? new object?[] { loaderData, ImportProductServiceOptions.CategoryLoadData, new string[] { $"{categoryItemId}", $"{page}" } }
-            : loaderData;
-
+        var loadData = new LoadData<TLoadOptions>{ Options = ImportProductServiceOptions.CategoryLoadData, 
+            Parameters = [$"{categoryItemId}", $"{page}"] };
+        
         var (success, category) = await TryGetCategoryFromPathAsync(
             categoryPagePath,
-            requestData,
+            loadData,
             categoryPath,
             page,
             stoppingToken).ConfigureAwait(false);
@@ -311,9 +310,7 @@ public abstract class ProductService<TCategory, TProductItem>(
         CancellationToken cancellationToken)
     {
         var path = GetProductAbsolutePath(ProductPathFormat, categoryProductItem);
-        var loaderData = GetLoaderData();
-
-        var (success, stream) = await TryLoadProductItemAsync(categoryProductItem, path, loaderData, cancellationToken)
+        var (success, stream) = await TryLoadProductItemAsync(categoryProductItem, path, cancellationToken)
             .ConfigureAwait(false);
 
         if (!success || stream is null)
@@ -337,14 +334,12 @@ public abstract class ProductService<TCategory, TProductItem>(
     protected async Task<(bool success, Stream? stream)> TryLoadProductItemAsync(
         ICategoryProductItem categoryProductItem,
         string path,
-        object? loaderData,
         CancellationToken cancellationToken)
     {
         try
         {
-            var requestData = ImportProductServiceOptions.ProductLoadData is not null
-                ? new object?[] { loaderData, ImportProductServiceOptions.ProductLoadData, new string[] { $"{categoryProductItem.Id}" } }
-                : loaderData;
+            var requestData = new LoadData<TLoadOptions>{ Options = ImportProductServiceOptions.ProductLoadData, 
+               Parameters = [$"{categoryProductItem.Id}"]};
 
             return await TryLoadFromUrlAsync(path, requestData, cancellationToken).ConfigureAwait(false);
         }
@@ -386,7 +381,7 @@ public abstract class ProductService<TCategory, TProductItem>(
 
     protected virtual async Task<(bool success, TCategory? result)> TryGetCategoryFromPathAsync(
         string dataPath,
-        object? requestData,
+        LoadData<TLoadOptions>? requestData,
         string categoryPath,
         int page,
         CancellationToken token)

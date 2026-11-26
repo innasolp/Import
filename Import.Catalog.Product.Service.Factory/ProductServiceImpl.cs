@@ -4,16 +4,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Factory;
 
-internal class ProductServiceImpl<TCategory, TProductItem> : ProductService<TCategory, TProductItem>
+internal class ProductServiceImpl<TLoadOptions, TCategory, TProductItem> : ProductService<TLoadOptions, TCategory, TProductItem>
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
+    where TLoadOptions : class
 {
     public override string Name { get; }
 
     internal ProductServiceImpl(
-        ILogger<ProductServiceImpl<TCategory, TProductItem>> logger,
+        ILogger<ProductServiceImpl<TLoadOptions, TCategory, TProductItem>> logger,
         string name,
-        ILoaderService loader,
+        ILoaderService<LoadData<TLoadOptions>> loader,
         string url,
         IEnumerable<IProductCatalogCategory> catalogCategories,
         IProductItemHandler productItemHandler,
@@ -22,7 +23,7 @@ internal class ProductServiceImpl<TCategory, TProductItem> : ProductService<TCat
         string sourceName,
         ICategoryPaging<TCategory> categoryPaging,
         IItemSerializer<TCategory> categorySerializer,
-        ProductServiceOptions productServiceOptions)
+        ProductServiceOptions<TLoadOptions> productServiceOptions)
         : base(logger,
         loader,
         url,

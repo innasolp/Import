@@ -9,13 +9,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Stateful.Factory;
 
-public abstract class ProductStatefulServiceFactory<TProductStatefulService,
+public abstract class ProductStatefulServiceFactory<TLoadOptions, TProductStatefulService,
  TCategory,
  TProductItem,
  TProductCatalogCategory,
  TProductServiceOptions>(
     ILogger<TProductStatefulService> logger,
-    IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
+    IEnumerable<ILoaderServiceFactory<LoadData<TLoadOptions>>> loaderServiceFactories,
     IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
@@ -23,13 +23,14 @@ public abstract class ProductStatefulServiceFactory<TProductStatefulService,
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
-    : ProductServiceFactory<TProductStatefulService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>
+    : ProductServiceFactory<TLoadOptions, TProductStatefulService, TCategory, TProductItem, TProductCatalogCategory, TProductServiceOptions>
     (logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList, categorySerializerFactoryList, logFactory)
     where TCategory : class, ICategoryProducts, new()
     where TProductItem : class, IProductItem, new()
     where TProductCatalogCategory : class, IProductCatalogCategory, new()
-    where TProductServiceOptions : ProductServiceOptions
-    where TProductStatefulService : ProductStatefulService<TCategory, TProductItem>
+    where TProductServiceOptions : ProductServiceOptions<TLoadOptions>, new()
+    where TProductStatefulService : ProductStatefulService<TLoadOptions, TCategory, TProductItem>
+    where TLoadOptions : class
 {
     public const string KeyHasher = "KeyHasher";
 
@@ -38,7 +39,7 @@ public abstract class ProductStatefulServiceFactory<TProductStatefulService,
     protected override TProductStatefulService Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
     ILogger<TProductStatefulService> logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<TLoadOptions>> loader,
     IEnumerable<IProductCatalogCategory> catalogCategories,
     IProductItemHandler productItemHandler,
     string productPathFormat,
@@ -87,7 +88,7 @@ public abstract class ProductStatefulServiceFactory<TProductStatefulService,
     protected abstract TProductStatefulService Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
     ILogger<TProductStatefulService> logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<TLoadOptions>> loader,
     IEnumerable<IProductCatalogCategory> catalogCategories,
     IProductItemHandler productItemHandler,
     string productPathFormat,
