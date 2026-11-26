@@ -505,8 +505,8 @@ public class ProductStatefulServiceFactoryTest
         importSettingsProviderMock.Setup(x => x.TryGetService<ServiceStateSettings>(importSettingsMock.Object, It.Is<string>(s => s == "ServiceState"), out serviceStateSettings))
             .Returns(true);
 
-        IEnumerable<TestProductCatalogCategory>? capturedCategories = new TestProductCatalogCategory[1];
-        importSettingsProviderMock.Setup(x => x.TryGet<IEnumerable<TestProductCatalogCategory>>(importSettingsMock.Object, It.Is<string>(s => s == "CatalogCategories"), out capturedCategories))
+        TestProductCatalogCategory[]? capturedCategories = new TestProductCatalogCategory[1];
+        importSettingsProviderMock.Setup(x => x.TryGet<TestProductCatalogCategory[]>(importSettingsMock.Object, It.Is<string>(s => s == "CatalogCategories"), out capturedCategories))
             .Returns(true);
 
         string productPathFormat = "products/{0}";

@@ -312,8 +312,8 @@ public class ProductServiceFactoryTest
         importSettingsProviderMock.Setup(x => x.TryGetServiceSettings(importSettingsMock.Object, "CategorySerializer", out categorySerializerSettings))
             .Returns(true);
 
-        IEnumerable<TestProductCatalogCategory>? capturedCategories = new TestProductCatalogCategory[1];
-        importSettingsProviderMock.Setup(x => x.TryGet<IEnumerable<TestProductCatalogCategory>>(importSettingsMock.Object, "CatalogCategories", out capturedCategories))
+        TestProductCatalogCategory[]? capturedCategories = new TestProductCatalogCategory[1];
+        importSettingsProviderMock.Setup(x => x.TryGet<TestProductCatalogCategory[]>(importSettingsMock.Object, "CatalogCategories", out capturedCategories))
             .Returns(true);
 
         string productPathFormat = "products/{0}";
