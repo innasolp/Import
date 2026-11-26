@@ -74,7 +74,8 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
         var service = CreateService(name, pageCount);
 
         var productItems = categoryProducts.CategoryProductItems.ToDictionary(service.GetTestApiUrl, TestHelper.CreateProductItem);
-        LoaderMock.SetupLoadItemsThrowsExceptions(productItems.Keys, getItemException, new LoadData<object>{ Options = new object() });
+        var loadData = new LoadData<object>{ Options = new object() };
+        LoaderMock.SetupLoadItemsThrowsExceptions(productItems.Keys, getItemException, loadData);
 
         ProductItemHandlerMock.Setup(s => s.HandleItem(It.IsAny<IImportProduct>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(ResultStatus.Success));
 
