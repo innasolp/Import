@@ -3,7 +3,7 @@ using Import.Interfaces;
 
 namespace Import.Factory.Interfaces;
 
-public interface ILoaderServiceFactory : IFactory
+public interface ILoaderServiceFactory<TData> : IFactory
 {
-    ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider, IImportSettings importSettings);
+    ILoaderService<TData> Create(string name, IImportSettingsProvider importSettingsProvider, IImportSettings importSettings);
 }

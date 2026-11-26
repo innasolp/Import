@@ -1,4 +1,5 @@
 using Import.Catalog.Category.Interfaces;
+using Import.Interfaces;
 using Import.Service.Test.Infrastructure;
 using Import.TreeItem;
 using Microsoft.Extensions.Logging;
@@ -8,7 +9,7 @@ using Cat = global::Import.Catalog.Category.Interfaces.Category;
 
 namespace Import.Catalog.Category.Service.Test;
 
-public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTimerServiceTest, ILogger<CategoryTimerServiceTest>>
+public class ImportCategoryServiceTest : ImportServiceExecutionTest<LoadData<object>, CategoryTimerServiceTest, ILogger<CategoryTimerServiceTest>>
 {
     private readonly Mock<ICategoryCatalogModel> _categoryCatalogModelMock = new();
 
@@ -37,8 +38,8 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
              LoaderMock.Object,
              _categoryCatalogModelMock.Object,
              _categoryLoadersMock.Select(m => m.Object),
-             _secondsInterval,
-             _categoryItemHandlerMock.Object
+             _categoryItemHandlerMock.Object,
+             _secondsInterval
              );
     }
 
@@ -56,18 +57,19 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
 
         var requestData = new { id = 2 };
         var category = Helper.CreateCategoryWithChildren();
-        LoaderMock.SetupLoadItem(_categoryCatalogModelMock.Object.CategorySourceUrl, requestData, category);
+        LoaderMock.SetupLoadItem(_categoryCatalogModelMock.Object.CategorySourceUrl, category);
 
         var categoryStream = await TestExtensions.LoadItemAsync(category, CancellationToken.None);
 
-        LoaderMock.SetupGetRequestData(requestData);
         LoaderMock.Setup(w =>
            w.Load(_categoryCatalogModelMock.Object.CategorySourceUrl,
-           It.Is<object?>(data => data == requestData),
+           It.IsAny<LoadData<object>>(),
            It.IsAny<CancellationToken>()))
            .ReturnsAsync(categoryStream);
 
-        _categoryLoaderMock.Setup(s => s.LoadAsync(null, It.Is<Stream>(s => s == categoryStream), It.IsAny<CancellationToken>())).
+        _categoryLoaderMock.Setup(s => s.LoadAsync(null,
+                    It.Is<Stream>(s => s == categoryStream),
+                    It.IsAny<CancellationToken>())).
            ReturnsAsync([category]);
 
         await ShouldLogServiceStartedWhenLoaderExecutesSuccessfullyAsync(1000);
@@ -80,11 +82,9 @@ public class ImportCategoryServiceTest : ImportServiceExecutionTest<CategoryTime
 
         var requestData = new { id = 2 };
         var category = Helper.CreateCategoryWithChildren();
-        LoaderMock.SetupLoadItem(_categoryCatalogModelMock.Object.CategorySourceUrl, requestData, category);
+        LoaderMock.SetupLoadItem(_categoryCatalogModelMock.Object.CategorySourceUrl, category);
 
         var categoryStream = await TestExtensions.LoadItemAsync(category, CancellationToken.None);
-
-        LoaderMock.SetupGetRequestData(requestData);
 
         _categoryLoaderMock.Setup(s => s.LoadAsync(null, It.Is<Stream>(s => s == categoryStream), It.IsAny<CancellationToken>())).
             ReturnsAsync([category]);

@@ -34,7 +34,6 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
 
     public ImportCatalogProductCategoryProcessTest(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        LoaderMock.SetupLoadCookies();
         ProductCatalogModelMock.Setup(s => s.ProductUrl).Returns("Product_{0}");
         ProductCatalogModelMock.Setup(s => s.CategoryUrlFormat).Returns("Category_{0}_page{1}");
     }
@@ -50,7 +49,7 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
         ProductCatalogModelMock.Setup(s => s.CategoryUrlFormat).Returns($"{Guid.NewGuid()}_{{0}}");
 
         var url = ProductCatalogModelMock.Object.GetCategoryPageUrl(categoryMock.Object, 1);
-        LoaderMock.Setup(w => w.Load(url, It.IsAny<object>(), It.IsAny<CancellationToken>())).Throws(exception);
+        LoaderMock.Setup(w => w.Load(url, It.IsAny<LoadData<object>?>(), It.IsAny<CancellationToken>())).Throws(exception);
 
         categoryUrl = url;
     }
@@ -70,15 +69,12 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
         var productCount = new Random().Next(10, 20);
         var categoryProducts = TestHelper.CreateCategoryWithProducts(productCount, productCount, 1);
 
-        var requestData = new object();
-        LoaderMock.SetupGetRequestData(requestData);
-
-        LoaderMock.SetupLoadItem(categoryUrl, requestData, categoryProducts);
+        LoaderMock.SetupLoadItem(categoryUrl, categoryProducts);
 
         var service = CreateService(name, pageCount);
 
         var productItems = categoryProducts.CategoryProductItems.ToDictionary(service.GetTestApiUrl, TestHelper.CreateProductItem);
-        LoaderMock.SetupLoadItemsThrowsExceptions(productItems.Keys, getItemException, requestData);
+        LoaderMock.SetupLoadItemsThrowsExceptions(productItems.Keys, getItemException, new LoadData<object>{ Options = new object() });
 
         ProductItemHandlerMock.Setup(s => s.HandleItem(It.IsAny<IImportProduct>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(ResultStatus.Success));
 
@@ -99,9 +95,6 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
 
         ProductCatalogModelMock.Setup(s => s.CategoryUrlFormat).Returns($"{Guid.NewGuid()}_{{0}}_{{1}}");
 
-        var requestData = new object();
-        LoaderMock.SetupGetRequestData(requestData);
-
         var service = CreateService(name, 10);
 
         categoryPageUrls = new string[pageCount];
@@ -112,10 +105,10 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
             var categoryPageUrl = ProductCatalogModelMock.Object.GetCategoryPageUrl(categoryMock.Object, i + 1);
             var productCount = 10;
             var categoryProducts = TestHelper.CreateCategoryWithProducts(productCount, productCount * pageCount, i + 1);
-            LoaderMock.SetupLoadItem(categoryPageUrl, requestData, categoryProducts);
+            LoaderMock.SetupLoadItem(categoryPageUrl, categoryProducts);
 
             var productItems = categoryProducts.CategoryProductItems.ToDictionary(service.GetTestApiUrl, TestHelper.CreateProductItem);
-            LoaderMock.SetupLoadItemsSuccessfull(productItems, requestData);
+            LoaderMock.SetupLoadItemsSuccessfull(productItems);
 
             categoryPageUrls[i] = categoryPageUrl;
             testCategoryPages[i] = categoryProducts;
@@ -141,7 +134,7 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
 
         await service.Start(tokenSource.Token);
 
-        LoaderMock.Verify(l => l.Load(It.Is<string>(v => v == categoryUrl), It.IsAny<object>(), It.IsAny<CancellationToken>()));
+        LoaderMock.Verify(l => l.Load(It.Is<string>(v => v == categoryUrl), It.IsAny<LoadData<object>?>(), It.IsAny<CancellationToken>()));
 
         foreach (var item in categoryProducts.CategoryProductItems)
         {
@@ -163,7 +156,7 @@ public class ImportCatalogProductCategoryProcessTest : ImportProductsTest<TestIm
         await service.Start(tokenSource.Token);
 
         foreach (var categoryUrl in categoryUrls)
-            LoaderMock.Verify(l => l.Load(It.Is<string>(v => v.Contains(categoryUrl)), It.IsAny<object>(), It.IsAny<CancellationToken>()));
+            LoaderMock.Verify(l => l.Load(It.Is<string>(v => v.Contains(categoryUrl)), It.IsAny<LoadData<object>?>(), It.IsAny<CancellationToken>()));
 
         foreach (var item in categoryProducts.SelectMany(c => c.CategoryProductItems))
         {

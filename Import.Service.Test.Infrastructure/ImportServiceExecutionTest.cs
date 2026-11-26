@@ -6,10 +6,11 @@ using Xunit.Abstractions;
 
 namespace Import.Service.Test.Infrastructure;
 
-public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputHelper outputHelper)
-    : ImportServiceTest<TService, TLogger>(outputHelper)
-    where TService : ImportService
+public abstract class ImportServiceExecutionTest<TLoadData, TService, TLogger>(ITestOutputHelper outputHelper)
+    : ImportServiceTest<TLoadData, TService, TLogger>(outputHelper)
+    where TService : ImportService<TLoadData>
     where TLogger : class, ILogger
+    where TLoadData : class, new()
 {
     protected async Task ShouldLogImportWasStoppedWithErrorWhenLoaderNotExecutedAsync(int cancellationTimeoutInMilliseconds)
     {
@@ -71,8 +72,8 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
-        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .Returns(async (string url, object? data, CancellationToken token) =>
+        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<TLoadData?>(), It.IsAny<CancellationToken>()))
+            .Returns(async (string url, TLoadData? data, CancellationToken token) =>
             {
                 await Task.Delay(1000, token);
                 return null;
@@ -97,11 +98,8 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
-        var requestData = new object();
-        LoaderMock.SetupGetRequestData(requestData);
-
         var loaderServiceException = new ResetLoaderServiceException("loading failed.");
-        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).ThrowsAsync(loaderServiceException);
+        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<TLoadData?>(), It.IsAny<CancellationToken>())).ThrowsAsync(loaderServiceException);
 
         using var tokenSource = new CancellationTokenSource();
 
@@ -124,11 +122,8 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
         LoaderMock.Setup(l => l.Name).Returns($"{Guid.NewGuid()}");
         LoaderMock.SetupStartSuccess();
 
-        var requestData = new object();
-        LoaderMock.SetupGetRequestData(requestData);
-
         var exception = new Exception("loading failed.");
-        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).ThrowsAsync(exception);
+        LoaderMock.Setup(l => l.Load(It.IsAny<string>(), It.IsAny<TLoadData?>(), It.IsAny<CancellationToken>())).ThrowsAsync(exception);
 
         using var tokenSource = new CancellationTokenSource();
 
@@ -153,7 +148,7 @@ public abstract class ImportServiceExecutionTest<TService, TLogger>(ITestOutputH
 
         DateTime? loadingAttemptStartTime = null;
         var successMessage = "loading success after retry";
-        LoaderMock.Setup(w => w.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+        LoaderMock.Setup(w => w.Load(It.IsAny<string>(), It.IsAny<TLoadData?>(), It.IsAny<CancellationToken>()))
             .Returns((string path, object? data, CancellationToken cancellationToken) =>
             {
                 if (!loadingAttemptStartTime.HasValue)

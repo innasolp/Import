@@ -1,6 +1,13 @@
 ﻿namespace Import.Interfaces;
 
-public interface ILoaderService : IAsyncDisposable
+public class LoadData<TOptions>
+{
+    public TOptions? Options { get; set; }
+
+    public string[]? Parameters { get; set; }
+}
+
+public interface ILoaderService<TData> : IAsyncDisposable
 {
     string Name { get; }
 
@@ -12,9 +19,5 @@ public interface ILoaderService : IAsyncDisposable
 
     bool IsStarted { get; }
 
-    Task<object> GetData(string host, CancellationToken cancellationToken = default);
-
-    Task UpdateData(string url, CancellationToken cancellationToken = default);
-
-    Task<Stream> Load(string url, object? data, CancellationToken cancellationToken = default);
+    Task<Stream> Load(string url, TData? data, CancellationToken cancellationToken = default);
 }

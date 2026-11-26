@@ -7,46 +7,22 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory;
 
-public abstract class CategoryTimerServiceFactory<TCategoryTimerService, TTreeItem, TCategory>(ILogger<TCategoryTimerService> logger,
- IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
+public abstract class CategoryTimerServiceFactory<TLoadOptions, TCategoryTimerService, TTreeItem, TCategory>(ILogger<TCategoryTimerService> logger,
+ IEnumerable<ILoaderServiceFactory<LoadData<TLoadOptions>>> loaderServiceFactories,
   IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
    IEnumerable<IFactory<ICategoryItemHandler<TCategory>>> categoryItemHandlerFactories,
    IImportServiceLogFactory? logFactory = null)
-    : CategoryServiceFactory<TCategoryTimerService, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
+    : CategoryServiceFactory<TLoadOptions, TCategoryTimerService, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
 where TTreeItem : TreeItem.TreeItem, new()
-where TCategoryTimerService : CategoryTimerService<TTreeItem, TCategory>
 where TCategory : ICategory, new()
+where TLoadOptions : class
+where TCategoryTimerService : CategoryTimerService<TLoadOptions, TTreeItem, TCategory>
 {
-    private const string DefaultInterval = "DefaultInterval";
-
-    public override Type GetServiceType()
-    {
-        return typeof(CategoryTimerServiceImpl<TTreeItem, TCategory>);
-    }
-
-    protected override TCategoryTimerService Create(ILogger<TCategoryTimerService> logger,
-    string name,
-    ILoaderService loader,
-    string categorySourceUrl,
-    string sourceName,
-     string url,
-      IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
-      ICategoryItemHandler<TCategory> categoryItemHandler,
-      IImportSettingsProvider importSettingsProvider,
-      IImportSettings importSettings,
-       object? categoryLoadData = null)
-    {
-        int? interval = importSettingsProvider.TryGet<int>(importSettings, DefaultInterval, out var configuredInterval) && configuredInterval > 0
-            ? configuredInterval
-            : null;
-
-        return Create(logger, name, loader, categorySourceUrl, sourceName, url
-               , categoryLoadStages, categoryItemHandler, importSettingsProvider, importSettings, categoryLoadData, interval);
-    }
+    public const string Interval = "Interval";
 
     protected abstract TCategoryTimerService Create(ILogger<TCategoryTimerService> logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<TLoadOptions>> loader,
     string categorySourceUrl,
     string sourceName,
      string url,
@@ -54,6 +30,37 @@ where TCategory : ICategory, new()
       ICategoryItemHandler<TCategory> categoryItemHandler,
       IImportSettingsProvider importSettingsProvider,
       IImportSettings importSettings,
-       object? categoryLoadData = null,
+       TLoadOptions? categoryLoadData = null,
        int? interval = null);
+
+    protected override TCategoryTimerService Create(ILogger<TCategoryTimerService> logger, 
+    string name, 
+    ILoaderService<LoadData<TLoadOptions>> loader,
+     string categorySourceUrl,
+      string sourceName, 
+      string url, 
+      IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages, 
+      ICategoryItemHandler<TCategory> categoryItemHandler,
+       IImportSettingsProvider importSettingsProvider, 
+       IImportSettings importSettings, 
+       TLoadOptions? categoryLoadData = null)
+    {
+        var interval = importSettingsProvider.TryGet<int>(importSettings, Interval, out var intervalValue) && intervalValue > 0
+        ? (int?)intervalValue : null;
+
+        return Create(logger, 
+        name,
+         loader,
+          categorySourceUrl,
+           sourceName, 
+           url, 
+           categoryLoadStages, 
+           categoryItemHandler, 
+           importSettingsProvider,
+            importSettings, 
+            categoryLoadData, 
+            interval);
+    }
+
+    public override Type GetServiceType() => typeof(TCategoryTimerService);
 }

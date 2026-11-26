@@ -1,5 +1,6 @@
 using Import.Catalog.Product.Interfaces;
 using Import.Factory.Interfaces;
+using Import.Interfaces;
 using Import.Settings.Interfaces;
 using Import.Settings.Json;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ public class ProductServiceFactoryTest
     [Fact]
     public void TestCreateProductServiceWhenSettingsAreValid()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -58,7 +59,7 @@ public class ProductServiceFactoryTest
     [Fact]
     public void TestCreateProductServiceThrowsExceptionWhenProductServiceOptionsNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -94,7 +95,7 @@ public class ProductServiceFactoryTest
 
         var importSettingsMock = new Mock<IImportSettings>();
         var importSettingsProviderMock = new Mock<IImportSettingsProvider>();
-        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions>(importSettingsMock.Object, "ProductServiceOptions", out It.Ref<ProductServiceOptions>.IsAny))
+        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions<object>>(importSettingsMock.Object, "ProductServiceOptions", out It.Ref<ProductServiceOptions<object>>.IsAny))
             .Returns(false);
 
         var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProviderMock.Object, importSettingsMock.Object));
@@ -104,7 +105,7 @@ public class ProductServiceFactoryTest
     [Fact]
     public void TestCreateProductServiceThrowsInvalidDataExceptionWhenLoaderFactoryNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>();
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>();
 
         var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
@@ -145,7 +146,7 @@ public class ProductServiceFactoryTest
     [Fact]
     public void TestCreateProductServiceThrowsInvalidDataExceptionWhenProductItemHandlerNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -186,7 +187,7 @@ public class ProductServiceFactoryTest
     [Fact]
     public void TestCreateProductServiceThrowsInvalidDataExceptionWhenCategoryPagingNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -227,7 +228,7 @@ public class ProductServiceFactoryTest
     [Fact]
     public void TestCreateProductServiceThrowsInvalidDataExceptionWhenCategorySerializerNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -275,12 +276,12 @@ public class ProductServiceFactoryTest
     {
         var importSettingsProviderMock = new Mock<IImportSettingsProvider>();
 
-        var productServiceOptions = new ProductServiceOptions
+        var productServiceOptions = new ProductServiceOptions<object>
         {
             ProductPathFormatType = PathFormatType.ItemId,
             CategoryPathFormatType = PathFormatType.Path
         };
-        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions>(importSettingsMock.Object, "ProductServiceOptions", out productServiceOptions))
+        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions<object>>(importSettingsMock.Object, "ProductServiceOptions", out productServiceOptions))
             .Returns(true);
 
         IServiceSettings loaderServiceSettings = new ServiceSettings

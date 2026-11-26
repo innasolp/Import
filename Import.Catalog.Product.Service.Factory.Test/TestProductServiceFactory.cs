@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Factory.Test;
 
-internal class TestProductLoaderService : ILoaderService
+internal class TestProductLoaderService : ILoaderService<LoadData<object>>
 {
     public string Name => "TestProductLoader";
 
@@ -16,22 +16,18 @@ internal class TestProductLoaderService : ILoaderService
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-    public Task<object> GetData(string host, CancellationToken cancellationToken = default) => Task.FromResult<object>(null);
-
-    public Task<Stream> Load(string url, object? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
+    public Task<Stream> Load(string url, LoadData<object>? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
 
     public Task Reset(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
     public Task Start(CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-    public Task UpdateData(string url, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
 
-internal class TestProductLoaderServiceFactory : ILoaderServiceFactory
+internal class TestProductLoaderServiceFactory : ILoaderServiceFactory<LoadData<object>>
 {
     public Type GetServiceType() => typeof(TestProductLoaderService);
 
-    public ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider,
+    public ILoaderService<LoadData<object>> Create(string name, IImportSettingsProvider importSettingsProvider,
       IImportSettings importSettings) => new TestProductLoaderService();
 }
 
@@ -105,7 +101,7 @@ internal class TestItemSerializer : IItemSerializer<TestCategoryProducts>
 public class TestProductService<TCategory, TProductItem>(
     ILogger logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<object>> loader,
     string url,
     IEnumerable<IProductCatalogCategory> catalogCategories,
     IProductItemHandler productItemHandler,
@@ -114,8 +110,8 @@ public class TestProductService<TCategory, TProductItem>(
     string sourceName,
     ICategoryPaging<TCategory> categoryPaging,
     IItemSerializer<TCategory> categorySerializer,
-    ProductServiceOptions productServiceOptions)
-    : ProductService<TCategory, TProductItem>(
+    ProductServiceOptions<object> productServiceOptions)
+    : ProductService<object, TCategory, TProductItem>(
         logger,
         loader,
         url,
@@ -137,13 +133,13 @@ public class TestProductService<TCategory, TProductItem>(
 
 public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogCategory>(
     ILogger<TestProductService<TCategory, TProductItem>> logger,
-    IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
+    IEnumerable<ILoaderServiceFactory<LoadData<object>>> loaderServiceFactories,
     IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TCategory>> categoryPagingList,
     IEnumerable<IItemSerializer<TCategory>> categorySerializerList,
     IEnumerable<IFactory<IItemSerializer<TCategory>>> categorySerializerFactoryList,
     IImportServiceLogFactory? logFactory = null)
-    : ProductServiceFactory<TestProductService<TCategory, TProductItem>, TCategory, TProductItem, TProductCatalogCategory, ProductServiceOptions>(
+    : ProductServiceFactory<object, TestProductService<TCategory, TProductItem>, TCategory, TProductItem, TProductCatalogCategory, ProductServiceOptions<object>>(
         logger,
         loaderServiceFactories,
         productItemHandlerFactories,
@@ -159,7 +155,7 @@ public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogC
 
     protected override TestProductService<TCategory, TProductItem> Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
      ILogger<TestProductService<TCategory, TProductItem>> logger,
-      string name, ILoaderService loader,
+      string name, ILoaderService<LoadData<object>> loader,
       IEnumerable<IProductCatalogCategory> catalogCategories,
        IProductItemHandler productItemHandler,
         string productPathFormat,
@@ -168,7 +164,7 @@ public class TestProductServiceFactory<TCategory, TProductItem, TProductCatalogC
          string url,
           ICategoryPaging<TCategory> categoryPaging,
            IItemSerializer<TCategory> categorySerializer,
-           ProductServiceOptions productServiceOptions)
+           ProductServiceOptions<object> productServiceOptions)
     {
         return new TestProductService<TCategory, TProductItem>(
            logger,

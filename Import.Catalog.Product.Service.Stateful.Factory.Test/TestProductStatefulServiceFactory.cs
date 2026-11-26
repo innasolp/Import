@@ -10,23 +10,23 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Stateful.Factory.Test;
 
-internal class TestProductLoaderService : ILoaderService
+internal class TestProductLoaderService : ILoaderService<LoadData<object>>
 {
     public string Name => "TestProductLoader";
     public bool IsStarted => true;
     public Task Close(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     public Task<object> GetData(string host, CancellationToken cancellationToken = default) => Task.FromResult<object>(null);
-    public Task<Stream> Load(string url, object? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
+    public Task<Stream> Load(string url, LoadData<object>? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
     public Task Reset(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task Start(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task UpdateData(string url, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
 
-internal class TestProductLoaderServiceFactory : ILoaderServiceFactory
+internal class TestProductLoaderServiceFactory : ILoaderServiceFactory<LoadData<object>>
 {
     public Type GetServiceType() => typeof(TestProductLoaderService);
-    public ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider,
+    public ILoaderService<LoadData<object>> Create(string name, IImportSettingsProvider importSettingsProvider,
       IImportSettings importSettings) => new TestProductLoaderService();
 }
 
@@ -105,7 +105,7 @@ internal class TestServiceStateRepositoryFactory : IServiceStateRepositoryFactor
 public class TestProductStatefulService(
     ILogger<TestProductStatefulService> logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<object>> loader,
     string url,
     IEnumerable<IProductCatalogCategory> catalogCategories,
     IProductItemHandler productItemHandler,
@@ -114,10 +114,10 @@ public class TestProductStatefulService(
     string sourceName,
     ICategoryPaging<TestCategoryProducts> categoryPaging,
     IItemSerializer<TestCategoryProducts> categorySerializer,
-    ProductServiceOptions productServiceOptions,
+    ProductServiceOptions<object> productServiceOptions,
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository)
-    : ProductStatefulService<TestCategoryProducts, TestProductItem>(
+    : ProductStatefulService<object, TestCategoryProducts, TestProductItem>(
         logger, loader, url, catalogCategories, productItemHandler, productPathFormat, categoryPathFormat, sourceName,
         categoryPaging, categorySerializer, productServiceOptions, keyHasher, serviceStateRepository)
 {
@@ -127,7 +127,7 @@ public class TestProductStatefulService(
 
 public class TestProductStatefulServiceFactory(
     ILogger<TestProductStatefulService> logger,
-    IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
+    IEnumerable<ILoaderServiceFactory<LoadData<object>>> loaderServiceFactories,
     IEnumerable<IFactory<IProductItemHandler>> productItemHandlerFactories,
     IEnumerable<ICategoryPaging<TestCategoryProducts>> categoryPagingList,
     IEnumerable<IItemSerializer<TestCategoryProducts>> categorySerializerList,
@@ -135,7 +135,7 @@ public class TestProductStatefulServiceFactory(
     IEnumerable<IKeyHasher> keyHasherList,
     IEnumerable<IServiceStateRepositoryFactory> serviceStateRepositoryFactoryList,
     IImportServiceLogFactory? logFactory = null)
-    : ProductStatefulServiceFactory<TestProductStatefulService, TestCategoryProducts, TestProductItem, TestProductCatalogCategory, ProductServiceOptions>(
+    : ProductStatefulServiceFactory<object, TestProductStatefulService, TestCategoryProducts, TestProductItem, TestProductCatalogCategory, ProductServiceOptions<object>>(
         logger, loaderServiceFactories, productItemHandlerFactories, categoryPagingList, categorySerializerList,
         categorySerializerFactoryList, keyHasherList, serviceStateRepositoryFactoryList, logFactory)
 {
@@ -144,7 +144,7 @@ public class TestProductStatefulServiceFactory(
     protected override TestProductStatefulService Create(IImportSettingsProvider importSettingsProvider, IImportSettings importSettings,
      ILogger<TestProductStatefulService> logger,
      string name,
-     ILoaderService loader,
+     ILoaderService<LoadData<object>> loader,
       IEnumerable<IProductCatalogCategory> catalogCategories,
        IProductItemHandler productItemHandler,
        string productPathFormat,
@@ -153,7 +153,7 @@ public class TestProductStatefulServiceFactory(
          string url,
           ICategoryPaging<TestCategoryProducts> categoryPaging,
           IItemSerializer<TestCategoryProducts> categorySerializer,
-           ProductServiceOptions productServiceOptions,
+           ProductServiceOptions<object> productServiceOptions,
             IKeyHasher keyHasher,
             IServiceStateRepository serviceStateRepository)
     {

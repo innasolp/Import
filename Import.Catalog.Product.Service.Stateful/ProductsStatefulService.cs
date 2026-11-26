@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Product.Service.Stateful;
 
-public abstract class ProductStatefulService<TCategory, TProductItem>(
+public abstract class ProductStatefulService<TLoadOptions, TCategory, TProductItem>(
     ILogger logger,
-    ILoaderService loader,
+    ILoaderService<LoadData<TLoadOptions>> loader,
     string url,
     IEnumerable<IProductCatalogCategory> catalogCategories,
     IProductItemHandler itemHandler,
@@ -17,10 +17,10 @@ public abstract class ProductStatefulService<TCategory, TProductItem>(
     string sourceName,
     ICategoryPaging<TCategory> categoryPaging,
     IItemSerializer<TCategory> categorySerializer,
-    ProductServiceOptions importProductServiceOptions,
+    ProductServiceOptions<TLoadOptions> importProductServiceOptions,
     IKeyHasher keyHasher,
     IServiceStateRepository serviceStateRepository)
-    : ProductService<TCategory, TProductItem>(
+    : ProductService<TLoadOptions,TCategory, TProductItem>(
         logger,
         loader,
         url,
@@ -156,7 +156,7 @@ public abstract class ProductStatefulService<TCategory, TProductItem>(
 
     protected override async Task<(bool success, TCategory? result)> TryGetCategoryFromPathAsync(
         string dataPath,
-        object? requestData,
+        LoadData<TLoadOptions>? requestData,
         string categoryPath,
         int page,
         CancellationToken token)

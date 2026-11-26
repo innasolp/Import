@@ -1,5 +1,6 @@
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service.Test.Infrastructure;
+using Import.Interfaces;
 using Import.KeyHash;
 using Import.Service.Test.Infrastructure;
 using Import.ServiceState;
@@ -10,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace Import.Catalog.Product.Service.Stateful.Test;
 
-public class ImportCatalogProductServiceTest : ImportServiceExecutionTest<TestImportProductStatefulService<TestCategory, TestProductItem>, ILogger>
+public class ImportCatalogProductServiceTest : ImportServiceExecutionTest<LoadData<object>, TestImportProductStatefulService<TestCategory, TestProductItem>, ILogger>
 {
     private readonly Mock<IKeyHasher> _keyHasherMock = new();
 
@@ -63,14 +64,10 @@ public class ImportCatalogProductServiceTest : ImportServiceExecutionTest<TestIm
 
         ProductCatalogModelMock.Setup(s => s.CategoryUrlFormat).Returns($"{Guid.NewGuid()}_{{0}}_{{1}}");
 
-        var requestData = new object();
-        LoaderMock.SetupGetRequestData(requestData);
-
-        LoaderMock.Setup(s => s.Load(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<CancellationToken>())).
-            Returns(async (string path, object? data, CancellationToken cancellationToken) =>
+        LoaderMock.Setup(s => s.Load(It.IsAny<string>(), It.IsAny<LoadData<object>?>(), It.IsAny<CancellationToken>())).
+            Returns((string path, LoadData<object>? data, CancellationToken cancellationToken) =>
             {
-                await Task.Delay(100, cancellationToken);
-                return default;
+                return Task.FromResult<Stream>(default!);
             });
 
         await ShouldLogImportStoppedWhenCancellationRequestedAsync(500);

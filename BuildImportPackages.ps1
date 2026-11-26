@@ -30,9 +30,25 @@ if ($null -ne $env:NUGET_PACKAGES -and (Test-Path $env:NUGET_PACKAGES)) {
 $PackageFilter = "Import.*" 
 
 # ==========================================
-# 1. СБОРКА ПРОЕКТА (Rebuild)
+# 1. ОЧИСТКА SourcePackagesDir
 # ==========================================
-Write-Host ">>> Шаг 1: Очистка и сборка решения $SolutionPath..." -ForegroundColor Cyan
+Write-Host ">>> Шаг 1: Очистка $SourcePackagesDir..." -ForegroundColor Cyan
+
+if (Test-Path $SourcePackagesDir) {
+    Get-ChildItem -Path $SourcePackagesDir -File | ForEach-Object {
+        Remove-Item -Path $_.FullName -Force -ErrorAction Stop
+        Write-Host "  [Удалён] $($_.Name)" -ForegroundColor Gray
+    }
+    Write-Host "✔ Очистка завершена.`n" -ForegroundColor Green
+} else {
+    New-Item -ItemType Directory -Path $SourcePackagesDir | Out-Null
+    Write-Host "✔ Папка создана: $SourcePackagesDir`n" -ForegroundColor Green
+}
+
+# ==========================================
+# 2. СБОРКА ПРОЕКТА (Rebuild)
+# ==========================================
+Write-Host ">>> Шаг 2: Очистка и сборка решения $SolutionPath..." -ForegroundColor Cyan
 
 # dotnet build с флагом --no-incremental выполняет полную пересборку (аналог rebuild)
 dotnet build $SolutionPath --configuration Release --no-incremental
@@ -43,9 +59,9 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "✔ Сборка успешно завершена.`n" -ForegroundColor Green
 
 # ==========================================
-# 2. КОПИРОВАНИЕ ПАКЕТОВ
+# 3. КОПИРОВАНИЕ ПАКЕТОВ
 # ==========================================
-Write-Host ">>> Шаг 2: Копирование пакетов из $SourcePackagesDir в $TargetPackagesDir..." -ForegroundColor Cyan
+Write-Host ">>> Шаг 3: Копирование пакетов из $SourcePackagesDir в $TargetPackagesDir..." -ForegroundColor Cyan
 
 if (-not (Test-Path $SourcePackagesDir)) {
     Write-Warning "Исходная папка пакетов не найдена: $SourcePackagesDir. Проверьте путь генерации артефактов."
@@ -65,9 +81,9 @@ if (-not (Test-Path $SourcePackagesDir)) {
 }
 
 # ==========================================
-# 3. ОЧИСТКА ГЛОБАЛЬНОГО КЭША NUGET
+# 4. ОЧИСТКА ГЛОБАЛЬНОГО КЭША NUGET
 # ==========================================
-Write-Host ">>> Шаг 3: Удаление старых пакетов из глобального кэша NuGet ($NugetCacheDir)..." -ForegroundColor Cyan
+Write-Host ">>> Шаг 4: Удаление старых пакетов из глобального кэша NuGet ($NugetCacheDir)..." -ForegroundColor Cyan
 
 if (Test-Path $NugetCacheDir) {
     # Ищем папки пакетов, соответствующие фильтру

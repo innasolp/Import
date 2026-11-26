@@ -1,5 +1,6 @@
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service.Test.Infrastructure;
+using Import.Interfaces;
 using Import.Service.Test.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -7,7 +8,7 @@ using Xunit.Abstractions;
 
 namespace Import.Catalog.Product.Service.Test;
 
-public class ImportCatalogProductServiceTest : ImportServiceExecutionTest<TestImportProductService<TestCategory, TestProductItem>, ILogger>
+public class ImportCatalogProductServiceTest : ImportServiceExecutionTest<LoadData<object>, TestImportProductService<TestCategory, TestProductItem>, ILogger>
 {
     public ImportCatalogProductServiceTest(ITestOutputHelper outputHelper) : base(outputHelper)
     {

@@ -4,12 +4,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Service;
 
-public abstract class ImportService(ILogger logger, ILoaderService loaderService, string host)
+public abstract class ImportService<TData>(ILogger logger, ILoaderService<TData> loaderService, string host)
     : Service(logger)
 {
-    protected ILoaderService LoaderService { get; } = loaderService;
-
-    private object? LoaderData { get; set; }
+    protected ILoaderService<TData> LoaderService { get; } = loaderService;
 
     protected string Host { get; } = host;
 
@@ -38,17 +36,6 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             }
             else
             {
-                try
-                {
-                    await LoadData(cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, LogMessages.ServiceFailedWithError, Name);
-                    await InvokeConnectedAsync(false, ex, cancellationToken);
-                    return false;
-                }
-
                 await InvokeConnectedAsync(true, cancellationToken: cancellationToken);
 
                 Logger.LogInformation(LogMessages.ServiceStarted, Name);
@@ -87,14 +74,6 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             Logger.LogWarning(ex, LogMessages.FailedToCloseLoaderForService, Name);
         }
     }
-
-    private async Task LoadData(CancellationToken cancellationToken)
-    {
-        LoaderData = await LoaderService.GetData(Host, cancellationToken).ConfigureAwait(false);
-        Logger.LogInformation(LogMessages.LoaderDataReceivedSuccessfully, LoaderService.Name);
-    }
-
-    protected object? GetLoaderData() => LoaderData;
 
     protected abstract Task ProcessAsync(CancellationToken cancellationToken);
 
@@ -188,7 +167,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
         try
         {
-            await ResetLoaderAsync(url, cancellationToken).ConfigureAwait(false);
+            await ResetLoaderAsync(cancellationToken).ConfigureAwait(false);
             Logger.LogInformation(LogMessages.LoaderResetSuccessfully);
         }
         catch (OperationCanceledException)
@@ -200,15 +179,13 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
             Logger.LogError(resetException, LogMessages.LoaderServiceResettingFailed, LoaderService.Name, resetException.Message);
         }
     }
-    private async Task ResetLoaderAsync(string url, CancellationToken cancellationToken = default)
+    private async Task ResetLoaderAsync(CancellationToken cancellationToken = default)
     {
         Logger.LogInformation(LogMessages.LoaderIsResetting, _resetTryCount + 1);
 
         try
         {
             await LoaderService.Reset(cancellationToken).ConfigureAwait(false);
-            await LoaderService.UpdateData(url, cancellationToken).ConfigureAwait(false);
-            await LoadData(cancellationToken);
         }
         finally
         {
@@ -218,7 +195,7 @@ public abstract class ImportService(ILogger logger, ILoaderService loaderService
 
     protected virtual async Task<(bool success, Stream? stream)> TryLoadFromUrlAsync(
     string url,
-    object? data,
+    TData? data,
     CancellationToken cancellationToken = default)
     {
         await _loadSemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);

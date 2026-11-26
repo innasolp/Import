@@ -1,6 +1,7 @@
 using Import.Catalog.Product.Interfaces;
 using Import.Catalog.Product.Service;
 using Import.Factory.Interfaces;
+using Import.Interfaces;
 using Import.KeyHash;
 using Import.ServiceState;
 using Import.Settings.Interfaces;
@@ -15,7 +16,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceWhenSettingsAreValid()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -70,7 +71,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceThrowsExceptionWhenProductServiceOptionsNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -118,7 +119,8 @@ public class ProductStatefulServiceFactoryTest
 
         var importSettingsMock = new Mock<IImportSettings>();
         var importSettingsProviderMock = new Mock<IImportSettingsProvider>();
-        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions>(importSettingsMock.Object, It.Is<string>(s => s == "ProductServiceOptions"), out It.Ref<ProductServiceOptions>.IsAny))
+        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions<object>>(importSettingsMock.Object, It.Is<string>(s => s == "ProductServiceOptions"),
+         out It.Ref<ProductServiceOptions<object>>.IsAny))
             .Returns(false);
 
         var exception = Assert.Throws<Exception>(() => serviceFactory.Create("TestService", importSourceMock.Object, importSettingsProviderMock.Object, importSettingsMock.Object));
@@ -128,7 +130,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceThrowsInvalidDataExceptionWhenLoaderFactoryNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>();
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>();
 
         var productItemHandlerFactories = new List<IFactory<IProductItemHandler>>
         {
@@ -180,7 +182,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceThrowsInvalidDataExceptionWhenProductItemHandlerNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -232,7 +234,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceThrowsInvalidDataExceptionWhenCategoryPagingNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -284,7 +286,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceThrowsInvalidDataExceptionWhenCategorySerializerNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -336,7 +338,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceThrowsInvalidDataExceptionWhenKeyHasherNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -388,7 +390,7 @@ public class ProductStatefulServiceFactoryTest
     [Fact]
     public void TestCreateProductStatefulServiceThrowsInvalidDataExceptionWhenStateRepositoryFactoryNotFound()
     {
-        var loaderServiceFactories = new List<ILoaderServiceFactory>
+        var loaderServiceFactories = new List<ILoaderServiceFactory<LoadData<object>>>
         {
             new TestProductLoaderServiceFactory(),
         };
@@ -446,12 +448,12 @@ public class ProductStatefulServiceFactoryTest
         importSettingsProviderMock.Setup(x => x.TryGetString(importSettingsMock.Object, It.Is<string>(s => s == "ProductSourceUrl"), out productSourceUrl))
             .Returns(true);
 
-        var productServiceOptions = new ProductServiceOptions
+        var productServiceOptions = new ProductServiceOptions<object>
         {
             ProductPathFormatType = PathFormatType.ItemId,
             CategoryPathFormatType = PathFormatType.Path
         };
-        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions>(importSettingsMock.Object, It.Is<string>(s => s == "ProductServiceOptions"), out productServiceOptions))
+        importSettingsProviderMock.Setup(x => x.TryGetService<ProductServiceOptions<object>>(importSettingsMock.Object, It.Is<string>(s => s == "ProductServiceOptions"), out productServiceOptions))
             .Returns(true);
 
         IServiceSettings loaderServiceSettings = new ServiceSettings

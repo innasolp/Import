@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Catalog.Category.Service.Factory.Test;
 
-internal class TestLoaderService1 : ILoaderService
+internal class TestLoaderService1 : ILoaderService<LoadData<object>>
 {
     public string Name => "TestLoaderService1";
     public bool IsStarted => true;
@@ -16,13 +16,13 @@ internal class TestLoaderService1 : ILoaderService
     public Task Close(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     public Task<object> GetData(string host, CancellationToken cancellationToken = default) => Task.FromResult<object>(null);
-    public Task<Stream> Load(string url, object? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
+    public Task<Stream> Load(string url, LoadData<object>? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
     public Task Reset(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task Start(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task UpdateData(string url, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
 
-internal class TestLoaderService2 : ILoaderService
+internal class TestLoaderService2 : ILoaderService<LoadData<object>>
 {
     public string Name => "TestLoaderService2";
     public bool IsStarted => true;
@@ -30,23 +30,23 @@ internal class TestLoaderService2 : ILoaderService
     public Task Close(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     public Task<object> GetData(string host, CancellationToken cancellationToken = default) => Task.FromResult<object>(null);
-    public Task<Stream> Load(string url, object? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
+    public Task<Stream> Load(string url, LoadData<object>? data, CancellationToken cancellationToken = default) => Task.FromResult<Stream>(null);
     public Task Reset(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task Start(CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task UpdateData(string url, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
 
-internal class TestLoaderService1Factory : ILoaderServiceFactory
+internal class TestLoaderService1Factory : ILoaderServiceFactory<LoadData<object>>
 {
     public Type GetServiceType() => typeof(TestLoaderService1);
-    public ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
+    public ILoaderService<LoadData<object>> Create(string name, IImportSettingsProvider importSettingsProvider, IImportSettings importSettings)
      => new TestLoaderService1();
 }
 
-internal class TestLoaderService2Factory : ILoaderServiceFactory
+internal class TestLoaderService2Factory : ILoaderServiceFactory<LoadData<object>>
 {
     public Type GetServiceType() => typeof(TestLoaderService2);
-    public ILoaderService Create(string name, IImportSettingsProvider importSettingsProvider,
+    public ILoaderService<LoadData<object>> Create(string name, IImportSettingsProvider importSettingsProvider,
       IImportSettings importSettings) => new TestLoaderService2();
 }
 
@@ -102,39 +102,41 @@ public class TestCategory : TreeItem.TreeItem
     }
 }
 
-public class TestCategoryService<TTreeItem, TCategory>(
+public class TestCategoryService<TLoadOptions, TTreeItem, TCategory>(
     ILogger logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<TLoadOptions>> loader,
     string categorySourceUrl,
     string sourceName,
     string url,
     IEnumerable<ITreeItemLoader<TTreeItem>> categoryLoadStages,
     ICategoryItemHandler<TCategory> itemHandler,
-    object? categoryLoadData = null)
-    : CategoryService<TTreeItem, TCategory>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
+    TLoadOptions? categoryLoadData = null)
+    : CategoryService<TLoadOptions, TTreeItem, TCategory>(logger, name, loader, categorySourceUrl, sourceName, url, categoryLoadStages, itemHandler, categoryLoadData)
     where TTreeItem : TreeItem.TreeItem, new()
     where TCategory : ICategory, new()
+    where TLoadOptions : class
 {
     public override string Name { get; } = name;
 }
 
-public class TestCategoryServiceFactory<TTreeItem, TCategory>(
-    ILogger<TestCategoryService<TTreeItem, TCategory>> logger,
-    IEnumerable<ILoaderServiceFactory> loaderServiceFactories,
+public class TestCategoryServiceFactory<TLoadOptions, TTreeItem, TCategory>(
+    ILogger<TestCategoryService<TLoadOptions, TTreeItem, TCategory>> logger,
+    IEnumerable<ILoaderServiceFactory<LoadData<TLoadOptions>>> loaderServiceFactories,
     IEnumerable<ITreeItemLoaderFactory<TTreeItem>> treeItemLoaderFactories,
     IEnumerable<IFactory<ICategoryItemHandler<TCategory>>> categoryItemHandlerFactories,
     IImportServiceLogFactory? logFactory = null)
-    : CategoryServiceFactory<TestCategoryService<TTreeItem, TCategory>, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
+    : CategoryServiceFactory<TLoadOptions, TestCategoryService<TLoadOptions, TTreeItem, TCategory>, TTreeItem, TCategory>(logger, loaderServiceFactories, treeItemLoaderFactories, categoryItemHandlerFactories, logFactory)
     where TTreeItem : TreeItem.TreeItem, new()
     where TCategory : ICategory, new()
+    where TLoadOptions : class
 {
-    public override Type GetServiceType() => typeof(TestCategoryService<TTreeItem, TCategory>);
+    public override Type GetServiceType() => typeof(TestCategoryService<TLoadOptions, TTreeItem, TCategory>);
 
-    protected override TestCategoryService<TTreeItem, TCategory> Create(
-        ILogger<TestCategoryService<TTreeItem, TCategory>> logger,
+    protected override TestCategoryService<TLoadOptions, TTreeItem, TCategory> Create(
+        ILogger<TestCategoryService<TLoadOptions, TTreeItem, TCategory>> logger,
         string name,
-        ILoaderService loader,
+        ILoaderService<LoadData<TLoadOptions>> loader,
         string categorySourceUrl,
         string sourceName,
         string url,
@@ -142,9 +144,9 @@ public class TestCategoryServiceFactory<TTreeItem, TCategory>(
         ICategoryItemHandler<TCategory> categoryItemHandler,
         IImportSettingsProvider importSettingsProvider,
         IImportSettings importSettings,
-        object? categoryLoadData = null)
+        TLoadOptions? categoryLoadData = null)
     {
-        return new TestCategoryService<TTreeItem, TCategory>(
+        return new TestCategoryService<TLoadOptions, TTreeItem, TCategory>(
             logger,
             name,
             loader,

@@ -8,11 +8,21 @@ namespace Import.Catalog.Category.Service.Test;
 
 public class CategoryTimerServiceTest(ILogger<CategoryTimerServiceTest> logger,
     string name,
-    ILoaderService loader,
+    ILoaderService<LoadData<object>>? loader,
     ICategoryCatalogModel catalog,
     IEnumerable<ITreeItemLoader<TestCategory>> categoryLoadStages,
+    ICategoryItemHandler<Cat> itemHandler,
     int timerSecondsInterval,
-    ICategoryItemHandler<Cat> itemHandler)
-    : CategoryService<TestCategory, Cat>(logger, name, loader, catalog.CategorySourceUrl, catalog.SourceName, catalog.SourceUrl, categoryLoadStages, itemHandler)//, timerSecondsInterval)
+    object? loadData = null)
+    : CategoryTimerService<object, TestCategory, Cat>(logger, 
+    name, 
+    loader, 
+    catalog.CategorySourceUrl, 
+    catalog.SourceName, 
+    catalog.SourceUrl, 
+    categoryLoadStages, 
+    itemHandler,
+     timerSecondsInterval,
+    loadData)
 {
 }
